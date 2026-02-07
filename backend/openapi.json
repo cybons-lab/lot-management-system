@@ -4819,7 +4819,7 @@
           "material_order_forecasts"
         ],
         "summary": "Import Forecast Csv",
-        "description": "材料発注フォーキャストCSVインポート.\n\nArgs:\n    file: CSV file (ヘッダーなし、1行目からデータ、60列)\n    target_month: 対象月（YYYY-MM、省略時はCSV A列から自動取得）\n    db: Database session\n    current_user: Current authenticated user\n\nReturns:\n    ImportResponse: インポート結果 + 警告リスト",
+        "description": "材料発注フォーキャストCSVインポート.\n\nArgs:\n    file: CSV file (ヘッダーなし、1行目からデータ、60列)\n    target_month: 対象月（YYYY-MM、互換入力用。実際はCSV列から自動取得）\n    db: Database session\n    current_user: Current authenticated user\n\nReturns:\n    ImportResponse: インポート結果 + 警告リスト",
         "operationId": "import_forecast_csv_api_material_order_forecasts_import_post",
         "requestBody": {
           "content": {
@@ -4860,7 +4860,89 @@
         ]
       }
     },
+    "/api/material-order-forecasts/{forecast_id}": {
+      "delete": {
+        "tags": [
+          "material_order_forecasts"
+        ],
+        "summary": "Delete Forecast",
+        "description": "フォーキャストデータ削除.",
+        "operationId": "delete_forecast_api_material_order_forecasts__forecast_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "forecast_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Forecast Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/material-order-forecasts": {
+      "delete": {
+        "tags": [
+          "material_order_forecasts"
+        ],
+        "summary": "Delete Forecasts By Target Month",
+        "description": "対象月のフォーキャストデータを一括削除.",
+        "operationId": "delete_forecasts_by_target_month_api_material_order_forecasts_delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "target_month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "対象月（YYYY-MM）",
+              "title": "Target Month"
+            },
+            "description": "対象月（YYYY-MM）"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": [
           "material_order_forecasts"
@@ -15055,6 +15137,80 @@
         }
       }
     },
+    "/api/admin/data-integrity": {
+      "get": {
+        "tags": [
+          "admin-data-integrity"
+        ],
+        "summary": "Scan Violations",
+        "description": "全テーブルの NOT NULL 違反をスキャンする.",
+        "operationId": "scan_violations_api_admin_data_integrity_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataIntegrityScanResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/admin/data-integrity/fix": {
+      "post": {
+        "tags": [
+          "admin-data-integrity"
+        ],
+        "summary": "Fix Violations",
+        "description": "REPAIR_RULES に基づき NULL 違反を修正する.",
+        "operationId": "fix_violations_api_admin_data_integrity_fix_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataIntegrityFixRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataIntegrityFixResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/admin/system-settings": {
       "get": {
         "tags": [
@@ -21324,6 +21480,69 @@
                 "schema": {
                   "$ref": "#/components/schemas/SmartReadPadRunRetryResponse"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/admin/upload-hybrid": {
+      "post": {
+        "tags": [
+          "smartread-admin"
+        ],
+        "summary": "Admin Upload Hybrid",
+        "description": "管理者用ハイブリッドアップロード.\n\n複数のファイルをアップロードし、CSVと詳細JSONをセットにしたZIPを返します。\n常に新規タスクを作成します。",
+        "operationId": "admin_upload_hybrid_api_rpa_smartread_admin_upload_hybrid_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "使用する設定のID",
+              "title": "Config Id"
+            },
+            "description": "使用する設定のID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "title": "Files"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -27935,6 +28154,188 @@
         "title": "DashboardStatsResponse",
         "description": "ダッシュボード統計レスポンス."
       },
+      "DataIntegrityFixRequest": {
+        "properties": {
+          "table_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Table Name"
+          },
+          "column_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column Name"
+          }
+        },
+        "type": "object",
+        "title": "DataIntegrityFixRequest",
+        "description": "修正リクエスト（省略時は全ルール実行）."
+      },
+      "DataIntegrityFixResponse": {
+        "properties": {
+          "fixed": {
+            "items": {
+              "$ref": "#/components/schemas/DataIntegrityFixResult"
+            },
+            "type": "array",
+            "title": "Fixed"
+          },
+          "skipped": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Skipped"
+          },
+          "total_rows_fixed": {
+            "type": "integer",
+            "title": "Total Rows Fixed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fixed",
+          "total_rows_fixed"
+        ],
+        "title": "DataIntegrityFixResponse",
+        "description": "修正レスポンス."
+      },
+      "DataIntegrityFixResult": {
+        "properties": {
+          "table": {
+            "type": "string",
+            "title": "Table"
+          },
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "rows_fixed": {
+            "type": "integer",
+            "title": "Rows Fixed"
+          },
+          "value_applied": {
+            "type": "string",
+            "title": "Value Applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "table",
+          "column",
+          "rows_fixed",
+          "value_applied"
+        ],
+        "title": "DataIntegrityFixResult",
+        "description": "修正された1件の結果."
+      },
+      "DataIntegrityScanResponse": {
+        "properties": {
+          "violations": {
+            "items": {
+              "$ref": "#/components/schemas/DataIntegrityViolation"
+            },
+            "type": "array",
+            "title": "Violations"
+          },
+          "total_violations": {
+            "type": "integer",
+            "title": "Total Violations"
+          },
+          "total_affected_rows": {
+            "type": "integer",
+            "title": "Total Affected Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "violations",
+          "total_violations",
+          "total_affected_rows"
+        ],
+        "title": "DataIntegrityScanResponse",
+        "description": "スキャン結果レスポンス."
+      },
+      "DataIntegrityViolation": {
+        "properties": {
+          "table_name": {
+            "type": "string",
+            "title": "Table Name"
+          },
+          "column_name": {
+            "type": "string",
+            "title": "Column Name"
+          },
+          "column_type": {
+            "type": "string",
+            "title": "Column Type"
+          },
+          "violation_count": {
+            "type": "integer",
+            "title": "Violation Count"
+          },
+          "sample_ids": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Sample Ids"
+          },
+          "fixable": {
+            "type": "boolean",
+            "title": "Fixable"
+          },
+          "default_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Value"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "auto or rule",
+            "default": "auto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "table_name",
+          "column_name",
+          "column_type",
+          "violation_count",
+          "fixable"
+        ],
+        "title": "DataIntegrityViolation",
+        "description": "スキャンで検出された1件の違反."
+      },
       "DefaultDestinationResponse": {
         "properties": {
           "customer_id": {
@@ -28027,17 +28428,24 @@
       "DeliveryPlaceCreate": {
         "properties": {
           "jiku_code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Jiku Code",
+            "description": "次区コード(SAP連携用)"
+          },
+          "jiku_match_pattern": {
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 50
+                "maxLength": 100
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Jiku Code",
-            "description": "次区コード(SAP連携用)"
+            "title": "Jiku Match Pattern",
+            "description": "次区マッチングルール（例: 2***）"
           },
           "delivery_place_code": {
             "type": "string",
@@ -28072,6 +28480,7 @@
         },
         "type": "object",
         "required": [
+          "jiku_code",
           "delivery_place_code",
           "delivery_place_name",
           "customer_id"
@@ -28092,6 +28501,12 @@
             "description": "Delivery place name"
           },
           "jiku_code": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Jiku Code",
+            "description": "Jiku code (SAP)"
+          },
+          "jiku_match_pattern": {
             "anyOf": [
               {
                 "type": "string"
@@ -28100,14 +28515,15 @@
                 "type": "null"
               }
             ],
-            "title": "Jiku Code",
-            "description": "Jiku code (SAP)"
+            "title": "Jiku Match Pattern",
+            "description": "Jiku match pattern (wildcard, e.g. 2***)"
           }
         },
         "type": "object",
         "required": [
           "delivery_place_code",
-          "delivery_place_name"
+          "delivery_place_name",
+          "jiku_code"
         ],
         "title": "DeliveryPlaceImportRow",
         "description": "Delivery place for import."
@@ -28126,6 +28542,19 @@
             ],
             "title": "Jiku Code",
             "description": "次区コード(SAP連携用)"
+          },
+          "jiku_match_pattern": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Match Pattern",
+            "description": "次区マッチングルール（例: 2***）"
           },
           "delivery_place_code": {
             "type": "string",
@@ -28219,13 +28648,26 @@
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 50
+                "maxLength": 50,
+                "minLength": 1
               },
               {
                 "type": "null"
               }
             ],
             "title": "Jiku Code"
+          },
+          "jiku_match_pattern": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Match Pattern"
           },
           "delivery_place_name": {
             "anyOf": [
@@ -40591,6 +41033,19 @@
             "title": "Jiku Code",
             "description": "次区（出荷先区分）"
           },
+          "jiku_match_pattern": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Match Pattern",
+            "description": "次区マッチングルール（例: 2***）"
+          },
           "warehouse_code": {
             "anyOf": [
               {
@@ -40892,6 +41347,19 @@
             "maxLength": 50,
             "title": "Jiku Code",
             "description": "次区（出荷先区分）"
+          },
+          "jiku_match_pattern": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Match Pattern",
+            "description": "次区マッチングルール（例: 2***）"
           },
           "warehouse_code": {
             "anyOf": [
@@ -41197,6 +41665,17 @@
             "type": "integer",
             "title": "Version",
             "description": "楽観的ロック用バージョン"
+          },
+          "jiku_match_pattern": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Match Pattern"
           },
           "warehouse_code": {
             "anyOf": [
