@@ -23,6 +23,7 @@ export default [
       "../backend/**",
       "scripts/**",
       "src/shared/types/openapi.d.ts",
+      "src/types/api.d.ts",
     ],
   },
 
@@ -34,6 +35,7 @@ export default [
     files: ["src/**/*.{ts,tsx,js,jsx}"],
     ignores: [
       "src/shared/types/openapi.d.ts", // OpenAPI generated file
+      "src/types/api.d.ts", // OpenAPI generated file
     ],
     plugins: {
       "@typescript-eslint": tseslint.plugin,
@@ -355,13 +357,6 @@ export default [
       "max-params": ["error", 6],
     },
   },
-  {
-    files: ["src/types/api.d.ts"],
-    rules: {
-      "max-lines": "off",
-    },
-  },
-
   {
     files: ["**/*.mjs"],
     languageOptions: {
