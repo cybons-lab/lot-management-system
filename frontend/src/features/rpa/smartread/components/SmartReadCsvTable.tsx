@@ -25,7 +25,7 @@ export function SmartReadCsvTable({ data, errors, className }: SmartReadCsvTable
   }
 
   // カラムヘッダー取得（データから動的に生成し、定義順にソート）
-  const headers = sortColumnHeaders(Object.keys(data[0]));
+  const headers = sortColumnHeaders(Object.keys(data[0]!));
 
   // エラーを (row, field) で高速検索できるようにマップ化
   // rowはバックエンドのenumerate()から来るため0-indexed。

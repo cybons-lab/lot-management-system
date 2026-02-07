@@ -63,7 +63,7 @@ function applyUnallocatedFilter(line: OrderLineRow): boolean {
  */
 function applyInactiveCustomersFilter(line: OrderLineRow, showInactiveCustomers: boolean): boolean {
   if (showInactiveCustomers || !line.customer_valid_to) return true;
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = new Date().toISOString().split("T")[0]!;
   return line.customer_valid_to >= todayStr;
 }
 
@@ -100,9 +100,13 @@ export function useOrdersListLogic() {
     error,
     refetch,
   } = useOrderLines({
-    customer_code: filters.values.customer_code || undefined,
-    status: filters.values.status !== "all" ? filters.values.status : undefined,
-    order_type: filters.values.order_type !== "all" ? filters.values.order_type : undefined,
+    ...(filters.values.customer_code
+      ? { customer_code: filters.values.customer_code as string }
+      : {}),
+    ...(filters.values.status !== "all" ? { status: filters.values.status as string } : {}),
+    ...(filters.values.order_type !== "all"
+      ? { order_type: filters.values.order_type as string }
+      : {}),
   });
 
   const { data: confirmedLines = [] } = useConfirmedOrderLines();

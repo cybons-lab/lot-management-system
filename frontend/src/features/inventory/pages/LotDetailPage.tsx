@@ -176,7 +176,7 @@ export function LotDetailPage() {
         </Button>
         <PageHeader
           title="ロット詳細"
-          subtitle={lot.lot_number ?? undefined}
+          {...(lot.lot_number ? { subtitle: lot.lot_number } : {})}
           actions={
             <Button variant="outline" onClick={handleWithdraw}>
               <ArrowUpFromLine className="mr-2 h-4 w-4" />

@@ -30,11 +30,11 @@ export function parseCustomerCsv(csvText: string): {
 
   // Skip header line
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+    const line = lines[i];
+    if (!line || !line.trim()) continue;
 
     try {
-      const cols = parseCSVLine(line);
+      const cols = parseCSVLine(line.trim());
 
       if (cols.length < 3) {
         errors.push(`行${i + 1}: 必須列が不足しています`);
@@ -44,19 +44,19 @@ export function parseCustomerCsv(csvText: string): {
       const [operation, customer_code, customer_name, address, contact_name, phone, email] = cols;
 
       // Validate operation
-      if (!["ADD", "UPD", "DEL"].includes(operation)) {
+      if (!operation || !["ADD", "UPD", "DEL"].includes(operation)) {
         errors.push(`行${i + 1}: 無効なOPERATION値 (${operation})`);
         continue;
       }
 
       rows.push({
         OPERATION: operation as "ADD" | "UPD" | "DEL",
-        customer_code: customer_code.trim(),
-        customer_name: customer_name.trim(),
-        address: address?.trim() || undefined,
-        contact_name: contact_name?.trim() || undefined,
-        phone: phone?.trim() || undefined,
-        email: email?.trim() || undefined,
+        customer_code: customer_code?.trim() ?? "",
+        customer_name: customer_name?.trim() ?? "",
+        ...(address && { address: address.trim() }),
+        ...(contact_name && { contact_name: contact_name.trim() }),
+        ...(phone && { phone: phone.trim() }),
+        ...(email && { email: email.trim() }),
         _rowNumber: i + 1,
       });
     } catch (e) {

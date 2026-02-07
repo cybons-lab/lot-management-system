@@ -109,7 +109,11 @@ export function DataTableHeader<T>({
       {table.getHeaderGroups().map((headerGroup) => (
         <tr key={headerGroup.id}>
           {headerGroup.headers.map((header) => (
-            <HeaderCell key={header.id} header={header} dense={dense} />
+            <HeaderCell
+              key={header.id}
+              header={header}
+              {...(dense !== undefined ? { dense } : {})}
+            />
           ))}
         </tr>
       ))}

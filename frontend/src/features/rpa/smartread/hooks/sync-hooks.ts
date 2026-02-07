@@ -78,7 +78,9 @@ function getBodyValidationErrors(body: unknown): SmartReadValidationError[] {
   return body.errors.filter(isValidationError);
 }
 
-function getBodyRequestStatus(body: unknown): SyncResult["requests_status"] | undefined {
+function getBodyRequestStatus(
+  body: unknown,
+): Exclude<SyncResult["requests_status"], undefined> | undefined {
   if (!isObject(body) || !isObject(body.requests_status)) return undefined;
   const status = body.requests_status;
   if (
@@ -141,8 +143,8 @@ async function cacheToIdb(
       long_data: res.long_data,
       errors: res.errors,
       filename: res.filename,
-      task_date: res.task_date,
-      data_version: res.data_version ?? undefined,
+      ...(res.task_date ? { task_date: res.task_date } : {}),
+      ...(res.data_version != null ? { data_version: res.data_version } : {}),
       saved_to_db: true,
     });
   } catch {
@@ -243,7 +245,9 @@ export function useSyncTaskResults() {
               source: "server" as const,
               state: "PENDING" as const,
               message: getBodyMessage(body) || "OCR処理中です...",
-              requests_status: getBodyRequestStatus(body),
+              ...(getBodyRequestStatus(body)
+                ? { requests_status: getBodyRequestStatus(body)! }
+                : {}),
             };
           }
 

@@ -30,13 +30,16 @@ export function ShippingMasterTable({
     );
   }
 
-  const columns = createShippingMasterColumns({ onEdit, onDelete });
+  const columns = createShippingMasterColumns({
+    ...(onEdit ? { onEdit } : {}),
+    ...(onDelete ? { onDelete } : {}),
+  });
 
   return (
     <DataTable
       data={items}
       columns={columns}
-      isLoading={isLoading}
+      {...(isLoading !== undefined ? { isLoading } : {})}
       emptyMessage="出荷用マスタデータがありません"
       enableVirtualization
     />

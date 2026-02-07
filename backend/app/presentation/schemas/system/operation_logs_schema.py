@@ -35,7 +35,7 @@ class OperationLogListResponse(BaseModel):
 class MasterChangeLogResponse(BaseModel):
     """マスタ変更履歴レスポンス."""
 
-    change_log_id: int
+    change_log_id: int = Field(..., validation_alias="id")
     table_name: str = Field(..., description="テーブル名")
     record_id: int = Field(..., description="レコードID")
     change_type: str = Field(..., description="変更種別（insert/update/delete）")

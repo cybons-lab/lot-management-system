@@ -47,7 +47,7 @@ function parseCsvLine(
 
   const rowData = buildRowData(headers, values);
   const { error, factor } = validateRowData(rowData, rowNumber);
-  if (error || factor === undefined) return { error };
+  if (error || factor === undefined) return { error: error ?? `行${rowNumber}: 不明なエラー` };
 
   return {
     row: {

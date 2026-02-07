@@ -57,9 +57,9 @@ function RpaSettingsFormContent({ onClose }: { onClose?: () => void }) {
 
   // Load initial values
   useEffect(() => {
-    if (step1UrlConfig) form.setValue("step1Url", step1UrlConfig.config_value);
+    if (step1UrlConfig) form.setValue("step1Url", step1UrlConfig.config_value || "");
     if (step1PayloadConfig) form.setValue("step1Payload", step1PayloadConfig.config_value);
-    if (step3UrlConfig) form.setValue("step3Url", step3UrlConfig.config_value);
+    if (step3UrlConfig) form.setValue("step3Url", step3UrlConfig.config_value || "");
     if (step3PayloadConfig) form.setValue("step3Payload", step3PayloadConfig.config_value);
   }, [step1UrlConfig, step1PayloadConfig, step3UrlConfig, step3PayloadConfig, form]);
 

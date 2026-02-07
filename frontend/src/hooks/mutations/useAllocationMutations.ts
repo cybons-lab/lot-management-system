@@ -73,7 +73,7 @@ export function useCreateAllocations(options?: {
 
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -115,7 +115,7 @@ export function useCancelAllocation(options?: {
 
       options?.onSuccess?.();
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -135,7 +135,7 @@ export function useBulkCancelAllocations(options?: {
   return useMutation({
     mutationFn: async (allocationIds: number[]) => {
       for (let i = 0; i < allocationIds.length; i++) {
-        await cancelAllocation(allocationIds[i]);
+        await cancelAllocation(allocationIds[i]!);
 
         // 進捗通知
         options?.onProgress?.(i + 1, allocationIds.length);
@@ -152,7 +152,7 @@ export function useBulkCancelAllocations(options?: {
 
       options?.onSuccess?.();
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -189,7 +189,7 @@ export function useCancelAllAllocationsForLine(options?: {
 
       options?.onSuccess?.();
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -247,6 +247,6 @@ export function useAutoAllocate(options?: {
 
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }

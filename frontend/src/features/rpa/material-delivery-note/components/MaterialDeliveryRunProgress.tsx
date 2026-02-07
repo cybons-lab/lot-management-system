@@ -142,7 +142,7 @@ export function MaterialDeliveryRunProgress({
         <div className="space-y-1.5">
           <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
             <span>Run ID: {runId}</span>
-            <RunStatusBadge status={status} runState={runState} />
+            <RunStatusBadge {...(status ? { status } : {})} runState={runState} />
           </div>
 
           <div className="grid gap-1.5 text-sm">

@@ -543,10 +543,10 @@ class SmartReadExportService(SmartReadBaseService):
         elapsed = time.time() - start_time
         logger.info(
             f"[SmartRead] DB SAVE SUCCESS: Config={config_id}, Task={task_id}, Date={task_date}\n"
-            f"  - Wide Rows: {new_wide_count} newly inserted / {len(wide_data)} total\n"
-            f"  - Long Rows: {long_count} inserted\n"
-            f"  - Filename: {filename}\n"
-            f"  - Elapsed: {elapsed:.2f}s"
+            f" - Wide Rows: {new_wide_count} newly inserted / {len(wide_data)} total\n"
+            f" - Long Rows: {long_count} inserted\n"
+            f" - Filename: {filename}\n"
+            f" - Elapsed: {elapsed:.2f}s"
         )
 
     def _save_long_data_to_csv(

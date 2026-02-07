@@ -96,7 +96,7 @@ describe("SearchableSelect", () => {
 
     // Find all buttons and get the clear button (X icon)
     const buttons = screen.getAllByRole("button");
-    const clearSpan = buttons[0].querySelector('[role="button"]');
+    const clearSpan = buttons[0]?.querySelector('[role="button"]');
 
     if (clearSpan) {
       fireEvent.click(clearSpan);

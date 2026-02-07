@@ -60,7 +60,7 @@ async function loadFromCache(configId: number, taskId: string): Promise<LoadData
         errors: cached.errors,
         filename: cached.filename,
         dataVersion: cached.data_version ?? null,
-        taskDate: cached.task_date,
+        ...(cached.task_date ? { taskDate: cached.task_date } : {}),
         cacheId: cached.id,
         savedToDb: cached.saved_to_db,
       };
@@ -89,7 +89,7 @@ async function saveCacheToDatabase(params: {
   const { configId, taskId, wideData, longData, filename, taskDate, dataVersion, cacheId } = params;
   const { exportCache } = await import("../db/export-cache");
   try {
-    const dateToUse = taskDate || new Date().toISOString().split("T")[0];
+    const dateToUse = taskDate ?? new Date().toISOString().split("T")[0] ?? "";
     await saveLongData(taskId, {
       config_id: configId,
       task_id: taskId,
@@ -147,7 +147,7 @@ export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderPar
               wideData: cached.wideData,
               longData: cached.longData,
               filename: cached.filename,
-              taskDate: cached.taskDate,
+              ...(cached.taskDate ? { taskDate: cached.taskDate } : {}),
               dataVersion: cached.dataVersion,
               cacheId: cached.cacheId,
             });

@@ -3,10 +3,6 @@
  * 受注関連のテストデータ生成ファクトリー
  */
 
-// Utility to convert null to undefined
-const nullToUndefined = <T>(value: T | null | undefined): T | undefined =>
-  value === null ? undefined : value;
-
 import { faker } from "@faker-js/faker/locale/ja";
 
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
@@ -24,25 +20,21 @@ export type OrderLineFactoryResult = OrderLine & OrderLineFactoryExtras;
 
 /** Helper: Resolve delivery date from overrides */
 function resolveDeliveryDate(overrides?: Partial<OrderLineFactoryResult>): string {
-  if (overrides && "delivery_date" in overrides && overrides.delivery_date) {
+  if (overrides?.delivery_date) {
     return overrides.delivery_date;
   }
-  if (overrides && "due_date" in overrides && overrides.due_date) {
+  if (overrides?.due_date) {
     return overrides.due_date;
   }
-  return faker.date.soon({ days: 30 }).toISOString().split("T")[0];
+  return faker.date.soon({ days: 30 }).toISOString().split("T")[0] ?? "";
 }
 
 /** Helper: Resolve extra fields (product_name, customer_code, customer_name) */
 function resolveExtraFields(overrides?: Partial<OrderLineFactoryResult>) {
-  const productName =
-    overrides && "product_name" in overrides
-      ? (overrides.product_name ?? undefined)
-      : faker.commerce.productName();
-  const customerCode =
-    overrides && "customer_code" in overrides ? (overrides.customer_code ?? undefined) : undefined;
-  const customerName =
-    overrides && "customer_name" in overrides ? (overrides.customer_name ?? undefined) : undefined;
+  const productName = overrides?.product_name ?? faker.commerce.productName();
+  // Ensure we don't return null if the target type is strict (intersection with OrderLine)
+  const customerCode = overrides?.customer_code ?? undefined;
+  const customerName = overrides?.customer_name ?? undefined;
   return { productName, customerCode, customerName };
 }
 
@@ -52,18 +44,24 @@ function resolveExtraFields(overrides?: Partial<OrderLineFactoryResult>) {
 export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
   const statuses = ["pending", "allocated", "shipped", "cancelled"] as const;
 
+  const customerCode =
+    overrides?.customer_code != null
+      ? overrides.customer_code
+      : `CUST-${faker.string.alphanumeric(4).toUpperCase()}`;
+  const customerName =
+    overrides?.customer_name != null ? overrides.customer_name : faker.company.name();
+
   return {
     id: faker.number.int({ min: 1, max: 10000 }),
-    order_date: faker.date.recent({ days: 30 }).toISOString().split("T")[0],
+    order_date: faker.date.recent({ days: 30 }).toISOString().split("T")[0] ?? "",
     customer_id: faker.number.int({ min: 1, max: 100 }), // DDL v2.2: FK to customers
 
     status: faker.helpers.arrayElement(statuses),
     created_at: faker.date.past().toISOString(),
     updated_at: faker.date.recent().toISOString(),
     // Legacy fields for backward compatibility
-    // order_no: overrides?.order_no ?? `ORD-${faker.string.alphanumeric(6).toUpperCase()}`,
-    customer_code: overrides?.customer_code ?? `CUST-${faker.string.alphanumeric(4).toUpperCase()}`,
-    customer_name: overrides?.customer_name ?? faker.company.name(),
+    customer_code: customerCode,
+    customer_name: customerName,
     ...overrides,
   };
 }
@@ -84,12 +82,17 @@ export function createOrderLine(
       sum + Number(allocation.allocated_quantity ?? allocation.allocated_qty ?? 0),
     0,
   );
-  const defaultAllocated = Math.min(
-    Number(orderQuantity),
-    allocatedFromLots > 0
-      ? allocatedFromLots
-      : faker.number.int({ min: 0, max: Number(orderQuantity) }),
-  );
+
+  let defaultAllocated = 0;
+  if (allocatedFromLots > 0) {
+    defaultAllocated = Math.min(Number(orderQuantity), allocatedFromLots);
+  } else {
+    defaultAllocated = Math.min(
+      Number(orderQuantity),
+      faker.number.int({ min: 0, max: Number(orderQuantity) }),
+    );
+  }
+
   const allocatedQuantity =
     overrides?.allocated_quantity ?? overrides?.allocated_qty ?? String(defaultAllocated);
 
@@ -125,9 +128,9 @@ export function createOrderLine(
     forecast_qty: overrides?.forecast_qty ?? null,
     forecast_version_no: overrides?.forecast_version_no ?? null,
     allocated_lots: allocatedLots,
-    product_name: productName,
-    customer_code: customerCode ?? undefined,
-    customer_name: customerName ?? undefined,
+    product_name: productName ?? null,
+    ...(customerCode != null ? { customer_code: customerCode } : {}),
+    ...(customerName != null ? { customer_name: customerName } : {}),
   };
 }
 
@@ -146,27 +149,41 @@ export function createOrderWithLines(
     ? overrides.lines
     : Array.from({ length: lineCount }, (_, index) => ({ line_no: index + 1 }));
 
-  const lines = baseLines.map((line, index) =>
-    createOrderLine({
-      line_no:
-        (line as { line_no?: number })?.line_no ??
-        (line as { line_number?: number })?.line_number ??
-        index + 1,
-      id: "id" in line ? (line.id as number) : index + 1,
+  const lines = baseLines.map((line, index) => {
+    // Resolve helper values
+    const lineId = "id" in line ? (line.id as number) : index + 1;
+    const lineNo =
+      (line as { line_no?: number })?.line_no ??
+      (line as { line_number?: number })?.line_number ??
+      index + 1;
+
+    // Resolve customer info for line
+    let customerCode: string | undefined;
+    if ("customer_code" in line && line.customer_code != null) {
+      customerCode = line.customer_code as string;
+    } else if (overrides?.customer_code != null) {
+      customerCode = overrides.customer_code;
+    } else if (order.customer_code != null) {
+      customerCode = order.customer_code;
+    }
+
+    let customerName: string | undefined;
+    if ("customer_name" in line && line.customer_name != null) {
+      customerName = line.customer_name as string;
+    } else if (overrides?.customer_name != null) {
+      customerName = overrides.customer_name;
+    } else if (order.customer_name != null) {
+      customerName = order.customer_name;
+    }
+
+    return createOrderLine({
+      line_no: lineNo,
+      id: lineId,
       ...line,
-      customer_code:
-        "customer_code" in line
-          ? nullToUndefined(line.customer_code as string | null | undefined)
-          : nullToUndefined(overrides?.customer_code ?? order.customer_code),
-      customer_name:
-        "customer_name" in line
-          ? nullToUndefined(line.customer_name as string | null | undefined)
-          : nullToUndefined(
-              (overrides as { customer_name?: string | null })?.customer_name ??
-                (order as { customer_name?: string | null }).customer_name,
-            ),
-    }),
-  );
+      ...(customerCode != null ? { customer_code: customerCode } : {}),
+      ...(customerName != null ? { customer_name: customerName } : {}),
+    });
+  });
 
   return {
     ...order,

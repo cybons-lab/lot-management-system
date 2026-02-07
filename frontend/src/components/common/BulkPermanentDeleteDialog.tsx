@@ -34,10 +34,10 @@ export function BulkPermanentDeleteDialog({
       type="permanent"
       bulk={true}
       selectedCount={selectedCount}
-      title={title}
-      description={description}
+      {...(title ? { title } : {})}
+      {...(description ? { description } : {})}
       onConfirm={onConfirm}
-      isPending={isPending}
+      {...(isPending !== undefined ? { isPending } : {})}
     />
   );
 }

@@ -88,7 +88,7 @@ export default function MaterialOrderForecastsPage() {
 
   const { data, isLoading, isError, error, refetch } = useMaterialOrderForecasts({
     target_month: targetMonth,
-    maker_code: makerCode === "all" ? undefined : makerCode,
+    ...(makerCode !== "all" ? { maker_code: makerCode } : {}),
   });
   const deleteMonthMutation = useDeleteMaterialOrderForecastsByMonth();
 

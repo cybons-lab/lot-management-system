@@ -143,10 +143,7 @@ export const processingStateAtom = atom<ProcessingState>("idle");
 export const taskFiltersAtom = atomWithStorage<SmartReadTaskFilters>(
   "smartread:taskFilters",
   {
-    state: undefined,
     excludeSkipped: false,
-    dateFrom: undefined,
-    dateTo: undefined,
   },
   createSessionStorageAdapter<SmartReadTaskFilters>(),
   { getOnInit: true },

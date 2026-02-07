@@ -139,7 +139,7 @@ function useQuickMappingForm({
       .get<DeliveryPlace[]>(`masters/delivery-places?customer_id=${customerId}`, {
         signal: ctrl.signal,
       })
-      .then((ps) => (setDps(ps), setDpId(ps.length === 1 ? ps[0].id : 0)))
+      .then((ps) => (setDps(ps), setDpId(ps.length === 1 ? (ps[0]?.id ?? 0) : 0)))
       .catch((e) => e.name !== "AbortError" && toast.error("納入先取得失敗"))
       .finally(() => setLoadingDps(false));
     return () => ctrl.abort();

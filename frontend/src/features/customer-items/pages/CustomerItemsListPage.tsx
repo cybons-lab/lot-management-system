@@ -165,7 +165,8 @@ export function CustomerItemsListPage() {
     const selectableItems = isAdmin
       ? filteredItems
       : filteredItems.filter(
-          (item) => !item.valid_to || item.valid_to > new Date().toISOString().split("T")[0],
+          (item) =>
+            !item.valid_to || item.valid_to > (new Date().toISOString().split("T")[0] ?? ""),
         );
     const allKeys = selectableItems.map((item) => getItemKey(item));
     const allSelected = allKeys.length > 0 && allKeys.every((key) => selectedIds.has(key));
@@ -282,14 +283,14 @@ export function CustomerItemsListPage() {
       <CustomerItemsTable
         items={filteredItems}
         isLoading={isLoading}
-        onEdit={handleEdit}
-        onSoftDelete={openSoftDelete}
-        onPermanentDelete={openPermanentDelete}
-        onRestore={openRestore}
-        onRowClick={handleRowClick}
-        selectedIds={showCheckboxes ? selectedIds : undefined}
-        onToggleSelect={showCheckboxes ? handleToggleSelect : undefined}
-        onToggleSelectAll={showCheckboxes ? handleToggleSelectAll : undefined}
+        {...(handleEdit !== undefined ? { onEdit: handleEdit } : {})}
+        {...(openSoftDelete !== undefined ? { onSoftDelete: openSoftDelete } : {})}
+        {...(openPermanentDelete !== undefined ? { onPermanentDelete: openPermanentDelete } : {})}
+        {...(openRestore !== undefined ? { onRestore: openRestore } : {})}
+        {...(handleRowClick !== undefined ? { onRowClick: handleRowClick } : {})}
+        {...(showCheckboxes ? { selectedIds } : {})}
+        {...(showCheckboxes ? { onToggleSelect: handleToggleSelect } : {})}
+        {...(showCheckboxes ? { onToggleSelectAll: handleToggleSelectAll } : {})}
         isAdmin={isAdmin}
       />
 
@@ -313,14 +314,14 @@ export function CustomerItemsListPage() {
         item={selectedItem}
         open={isDetailDialogOpen}
         onOpenChange={setIsDetailDialogOpen}
-        onEdit={handleEdit}
+        {...(handleEdit !== undefined ? { onEdit: handleEdit } : {})}
       />
 
       {/* 編集ダイアログ */}
       <CustomerItemFormDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-        item={editingItem ?? undefined}
+        {...(editingItem ? { item: editingItem } : {})}
         onSubmit={handleUpdate}
         isSubmitting={isUpdating}
         mode="edit"

@@ -88,7 +88,7 @@ export function SupplierFilterSet({
   return (
     <>
       {/* 警告バナー（フィルタの上） */}
-      <SupplierAssignmentWarning className={warningClassName} />
+      <SupplierAssignmentWarning {...(warningClassName ? { className: warningClassName } : {})} />
 
       {/* フィルタ行（警告のみモードでなければ表示） */}
       {!warningOnly && (

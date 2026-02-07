@@ -162,7 +162,10 @@ export function ShippingMasterEditDialog({
 
     Object.keys(dirtyFields).forEach((key) => {
       if (key in FIELD_LABELS) {
-        changes.push(FIELD_LABELS[key]);
+        const label = FIELD_LABELS[key];
+        if (label) {
+          changes.push(label);
+        }
       }
     });
 

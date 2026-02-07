@@ -4,7 +4,7 @@ import tseslint from "typescript-eslint";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
-import importPlugin from "eslint-plugin-import";
+import importX from "eslint-plugin-import-x";
 import unusedImports from "eslint-plugin-unused-imports";
 // Note: tailwindcss eslint plugin removed due to Tailwind v4 incompatibility
 // Tailwind class ordering is handled by prettier-plugin-tailwindcss instead
@@ -42,7 +42,7 @@ export default [
       react,
       "react-hooks": reactHooks,
       "jsx-a11y": jsxA11y,
-      import: importPlugin,
+      import: importX,
       "unused-imports": unusedImports,
     },
     languageOptions: {
@@ -66,7 +66,7 @@ export default [
 
       // Relax strict rules for existing code
       "@typescript-eslint/no-non-null-assertion": "off",
-      "@typescript-eslint/no-explicit-any": "off", // Keep "off" or "warn" if possible, but CI requires 0 warnings
+      "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-empty-function": "off",
       "@typescript-eslint/no-invalid-void-type": "off",
       "@typescript-eslint/no-extraneous-class": "off",
@@ -365,6 +365,24 @@ export default [
   {
     rules: {
       "@typescript-eslint/consistent-generic-constructors": "off",
+    },
+  },
+  // 段階的移行期間中の any 緩和設定
+  // 目標: 2026-Q1末までに解消
+  {
+    files: [
+      "src/shared/components/data/DataTable.tsx",
+      "src/shared/components/data/DataTable/**/*.ts",
+      "src/shared/components/data/DataTable/**/*.tsx",
+      "src/features/customers/**/*.ts",
+      "src/features/customers/**/*.tsx",
+      "src/features/suppliers/**/*.ts",
+      "src/features/suppliers/**/*.tsx",
+      "src/features/warehouses/**/*.ts",
+      "src/features/warehouses/**/*.tsx",
+    ],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
 ];

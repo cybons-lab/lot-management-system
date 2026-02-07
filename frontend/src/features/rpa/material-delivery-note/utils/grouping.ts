@@ -146,7 +146,7 @@ export function computeGroupedRuns(
   let runIndex = 0;
 
   for (const groupKey of sortedGroupKeys) {
-    const groupItems = groups[groupKey];
+    const groupItems = groups[groupKey] || [];
 
     // max件数が指定されている場合はチャンク分割
     const effectiveMax = maxItemsPerRun && maxItemsPerRun > 0 ? maxItemsPerRun : groupItems.length;

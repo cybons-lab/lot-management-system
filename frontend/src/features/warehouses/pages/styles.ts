@@ -8,7 +8,7 @@ export const actionBar = "flex items-center justify-end gap-2";
 export const statsGrid = "mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4";
 
 export const statsCard = cva(
-  "group rounded-xl border bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md",
+  "group rounded-xl border bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md min-w-[240px]",
   {
     variants: {
       variant: {
@@ -21,7 +21,7 @@ export const statsCard = cva(
   },
 );
 
-export const statsLabel = "text-sm font-medium text-gray-600";
+export const statsLabel = "text-sm font-medium text-gray-600 whitespace-nowrap";
 export const statsValue = cva("mt-2 text-3xl font-bold", {
   variants: { color: { default: "text-gray-900", blue: "text-blue-600", green: "text-green-600" } },
   defaultVariants: { color: "default" },

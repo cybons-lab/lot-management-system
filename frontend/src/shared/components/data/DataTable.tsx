@@ -14,30 +14,30 @@ export type { Column, SortConfig };
 export interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
-  sort?: SortConfig;
-  onSortChange?: (sort: SortConfig) => void;
-  selectable?: boolean;
-  selectedIds?: (string | number)[];
-  onSelectionChange?: (selectedIds: (string | number)[]) => void;
-  getRowId?: (row: T) => string | number;
-  onRowClick?: (row: T) => void;
-  rowActions?: (row: T) => React.ReactNode;
-  renderHoverActions?: (row: T) => React.ReactNode;
-  emptyMessage?: string;
-  isLoading?: boolean;
-  className?: string;
-  getRowClassName?: (row: T) => string;
-  expandable?: boolean;
-  expandMode?: "single" | "multi";
-  expandedRowIds?: (string | number)[];
-  onExpandedRowsChange?: (ids: (string | number)[]) => void;
-  renderExpandedRow?: (row: T) => React.ReactNode;
-  headerSlot?: React.ReactNode;
-  enableVirtualization?: boolean;
-  scrollAreaHeight?: string | number;
-  isRowSelectable?: (row: T) => boolean;
-  dense?: boolean;
-  striped?: boolean;
+  sort?: SortConfig | undefined;
+  onSortChange?: ((sort: SortConfig) => void) | undefined;
+  selectable?: boolean | undefined;
+  selectedIds?: (string | number)[] | undefined;
+  onSelectionChange?: ((selectedIds: (string | number)[]) => void) | undefined;
+  getRowId?: ((row: T) => string | number) | undefined;
+  onRowClick?: ((row: T) => void) | undefined;
+  rowActions?: ((row: T) => React.ReactNode) | undefined;
+  renderHoverActions?: ((row: T) => React.ReactNode) | undefined;
+  emptyMessage?: string | undefined;
+  isLoading?: boolean | undefined;
+  className?: string | undefined;
+  getRowClassName?: ((row: T) => string) | undefined;
+  expandable?: boolean | undefined;
+  expandMode?: "single" | "multi" | undefined;
+  expandedRowIds?: (string | number)[] | undefined;
+  onExpandedRowsChange?: ((ids: (string | number)[]) => void) | undefined;
+  renderExpandedRow?: ((row: T) => React.ReactNode) | undefined;
+  headerSlot?: React.ReactNode | undefined;
+  enableVirtualization?: boolean | undefined;
+  scrollAreaHeight?: string | number | undefined;
+  isRowSelectable?: ((row: T) => boolean) | undefined;
+  dense?: boolean | undefined;
+  striped?: boolean | undefined;
 }
 
 /**
@@ -59,8 +59,8 @@ export function DataTable<T>({
     ...props,
     data,
     columns,
-    dense,
-    enableVirtualization,
+    ...(dense != null ? { dense } : {}),
+    ...(enableVirtualization != null ? { enableVirtualization } : {}),
     parentRef,
   });
   const rows = table.getRowModel().rows;
@@ -69,20 +69,20 @@ export function DataTable<T>({
     return (
       <DataTableLoading
         columnCount={columns.length + (props.selectable ? 1 : 0)}
-        dense={dense}
-        className={className}
+        {...(dense != null ? { dense } : {})}
+        {...(className != null ? { className } : {})}
       />
     );
   if (data.length === 0) return <DataTableEmpty message={emptyMessage} />;
 
   const paddingTop =
     enableVirtualization && rowVirtualizer.getVirtualItems().length > 0
-      ? rowVirtualizer.getVirtualItems()[0].start
+      ? rowVirtualizer.getVirtualItems()[0]!.start
       : 0;
   const paddingBottom =
     enableVirtualization && rowVirtualizer.getVirtualItems().length > 0
       ? rowVirtualizer.getTotalSize() -
-        rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1].end
+        rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1]!.end
       : 0;
 
   return (
@@ -103,8 +103,8 @@ export function DataTable<T>({
         <table className="responsive-table w-full" style={{ tableLayout: "fixed" }}>
           <DataTableHeader
             table={table}
-            dense={dense}
-            enableVirtualization={enableVirtualization}
+            {...(dense != null ? { dense } : {})}
+            {...(enableVirtualization != null ? { enableVirtualization } : {})}
           />
           <tbody>
             {paddingTop > 0 && (
@@ -116,18 +116,26 @@ export function DataTable<T>({
               </tr>
             )}
             {(enableVirtualization ? rowVirtualizer.getVirtualItems() : rows).map((v: any) => {
-              const row = enableVirtualization ? rows[v.index] : v;
+              const row = enableVirtualization ? rows[v.index]! : v;
               return (
                 <DataTableRow
                   key={row.id}
                   row={row}
-                  dense={dense}
-                  striped={props.striped}
-                  onRowClick={props.onRowClick}
-                  renderHoverActions={props.renderHoverActions}
-                  renderExpandedRow={props.renderExpandedRow}
-                  getRowClassName={props.getRowClassName}
-                  measureElement={enableVirtualization ? rowVirtualizer.measureElement : undefined}
+                  {...(dense != null ? { dense } : {})}
+                  {...(props.striped != null ? { striped: props.striped } : {})}
+                  {...(props.onRowClick != null ? { onRowClick: props.onRowClick } : {})}
+                  {...(props.renderHoverActions !== undefined && {
+                    renderHoverActions: props.renderHoverActions,
+                  })}
+                  {...(props.renderExpandedRow !== undefined && {
+                    renderExpandedRow: props.renderExpandedRow,
+                  })}
+                  {...(props.getRowClassName !== undefined && {
+                    getRowClassName: props.getRowClassName,
+                  })}
+                  {...(enableVirtualization
+                    ? { measureElement: rowVirtualizer.measureElement }
+                    : {})}
                 />
               );
             })}

@@ -172,8 +172,8 @@ describe("date utilities - calculation functions", () => {
       const dates = getDatesForMonth(january);
 
       expect(dates).toHaveLength(31);
-      expect(dates[0].getDate()).toBe(1);
-      expect(dates[30].getDate()).toBe(31);
+      expect(dates[0]!.getDate()).toBe(1);
+      expect(dates[30]!.getDate()).toBe(31);
     });
 
     it("returns all dates for February (28 days in non-leap year)", () => {
@@ -181,8 +181,8 @@ describe("date utilities - calculation functions", () => {
       const dates = getDatesForMonth(february);
 
       expect(dates).toHaveLength(28);
-      expect(dates[0].getDate()).toBe(1);
-      expect(dates[27].getDate()).toBe(28);
+      expect(dates[0]!.getDate()).toBe(1);
+      expect(dates[27]!.getDate()).toBe(28);
     });
 
     it("returns all dates for February (29 days in leap year)", () => {
@@ -190,7 +190,7 @@ describe("date utilities - calculation functions", () => {
       const dates = getDatesForMonth(february);
 
       expect(dates).toHaveLength(29);
-      expect(dates[28].getDate()).toBe(29);
+      expect(dates[28]!.getDate()).toBe(29);
     });
 
     it("returns all dates for April (30 days)", () => {
@@ -217,17 +217,17 @@ describe("date utilities - calculation functions", () => {
       const dates = getDatesForNextMonthFirst10Days(january);
 
       expect(dates).toHaveLength(10);
-      expect(dates[0].getMonth()).toBe(1); // February
-      expect(dates[0].getDate()).toBe(1);
-      expect(dates[9].getDate()).toBe(10);
+      expect(dates[0]!.getMonth()).toBe(1); // February
+      expect(dates[0]!.getDate()).toBe(1);
+      expect(dates[9]!.getDate()).toBe(10);
     });
 
     it("handles year boundary", () => {
       const december = new Date(2025, 11, 15);
       const dates = getDatesForNextMonthFirst10Days(december);
 
-      expect(dates[0].getFullYear()).toBe(2026);
-      expect(dates[0].getMonth()).toBe(0); // January
+      expect(dates[0]!.getFullYear()).toBe(2026);
+      expect(dates[0]!.getMonth()).toBe(0); // January
     });
   });
 

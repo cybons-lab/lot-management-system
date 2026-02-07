@@ -121,7 +121,7 @@ export function MakerForm({ initialData, onSubmit, onCancel, isSubmitting }: Mak
           name="maker_code"
           label="メーカーコード (層別コード)"
           placeholder="M001"
-          disabled={isCodeDisabled}
+          disabled={!!isCodeDisabled}
         />
 
         <MakerInputField
@@ -129,7 +129,7 @@ export function MakerForm({ initialData, onSubmit, onCancel, isSubmitting }: Mak
           name="maker_name"
           label="メーカー名"
           placeholder="株式会社サンプル"
-          disabled={isSubmitting}
+          disabled={!!isSubmitting}
         />
 
         <div className="grid grid-cols-2 gap-4">
@@ -137,24 +137,24 @@ export function MakerForm({ initialData, onSubmit, onCancel, isSubmitting }: Mak
             control={form.control}
             name="display_name"
             label="表示名"
-            disabled={isSubmitting}
+            disabled={!!isSubmitting}
           />
 
           <MakerInputField
             control={form.control}
             name="short_name"
             label="略称"
-            disabled={isSubmitting}
+            disabled={!!isSubmitting}
           />
         </div>
 
-        <MakerNotesField control={form.control} disabled={isSubmitting} />
+        <MakerNotesField control={form.control} disabled={!!isSubmitting} />
 
         <div className="flex justify-end space-x-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={!!isSubmitting}>
             キャンセル
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={!!isSubmitting}>
             {submitLabel}
           </Button>
         </div>

@@ -44,7 +44,7 @@ export function WithdrawalFormFiltered({
   isSubmitting = false,
 }: WithdrawalFormFilteredProps) {
   const state = useWithdrawalFormState({
-    preselectedLot,
+    ...(preselectedLot ? { preselectedLot } : {}),
     lots,
     onSubmit,
   });
@@ -66,12 +66,12 @@ export function WithdrawalFormFiltered({
 
       {/* Lot selector */}
       <LotSelector
-        preselectedLot={preselectedLot}
+        preselectedLot={preselectedLot ?? null}
         filteredLots={state.filteredLots}
         selectedLotId={state.formData.lot_id}
         availableQuantity={state.availableQuantity}
         isLoading={isLoadingLots}
-        error={state.errors.lot_id}
+        {...(state.errors.lot_id ? { error: state.errors.lot_id } : {})}
         onLotChange={(id) => state.updateFormData("lot_id", id)}
       />
 

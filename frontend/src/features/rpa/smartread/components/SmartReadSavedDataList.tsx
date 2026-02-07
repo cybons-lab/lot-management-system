@@ -72,11 +72,14 @@ function useLongDataColumns(longDataList: SmartReadLongData[] | undefined) {
     const sampleSize = Math.min(longDataList.length, 50);
 
     for (let i = 0; i < sampleSize; i++) {
-      Object.keys(longDataList[i].content).forEach((key) => {
-        if (key !== "明細番号" && !key.startsWith("エラー_")) {
-          contentKeys.add(key);
-        }
-      });
+      const row = longDataList[i];
+      if (row) {
+        Object.keys(row.content).forEach((key) => {
+          if (key !== "明細番号" && !key.startsWith("エラー_")) {
+            contentKeys.add(key);
+          }
+        });
+      }
     }
 
     // Sort keys: Common fields first, then others

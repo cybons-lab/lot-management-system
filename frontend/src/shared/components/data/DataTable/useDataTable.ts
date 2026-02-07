@@ -6,6 +6,9 @@ import {
   type TableOptions,
   type TableState,
   type VisibilityState,
+  type HeaderContext,
+  type CellContext,
+  type ColumnDefTemplate,
   getCoreRowModel,
   getExpandedRowModel,
   useReactTable,
@@ -22,43 +25,47 @@ import { Checkbox } from "@/components/ui";
 export interface UseDataTableProps<T> {
   data: T[];
   columns: Column<T>[];
-  sort?: SortConfig;
-  onSortChange?: (sort: SortConfig) => void;
-  selectable?: boolean;
-  selectedIds?: (string | number)[];
-  onSelectionChange?: (selectedIds: (string | number)[]) => void;
-  getRowId?: (row: T) => string | number;
-  rowActions?: (row: T) => React.ReactNode;
-  expandable?: boolean;
-  expandMode?: "single" | "multi";
-  expandedRowIds?: (string | number)[];
-  onExpandedRowsChange?: (ids: (string | number)[]) => void;
-  renderExpandedRow?: (row: T) => React.ReactNode;
-  isRowSelectable?: (row: T) => boolean;
-  enableVirtualization?: boolean;
-  dense?: boolean;
+  sort?: SortConfig | undefined;
+  onSortChange?: ((sort: SortConfig) => void) | undefined;
+  selectable?: boolean | undefined;
+  selectedIds?: (string | number)[] | undefined;
+  onSelectionChange?: ((selectedIds: (string | number)[]) => void) | undefined;
+  getRowId?: ((row: T) => string | number) | undefined;
+  rowActions?: ((row: T) => React.ReactNode) | undefined;
+  expandable?: boolean | undefined;
+  expandMode?: "single" | "multi" | undefined;
+  expandedRowIds?: (string | number)[] | undefined;
+  onExpandedRowsChange?: ((ids: (string | number)[]) => void) | undefined;
+  renderExpandedRow?: ((row: T) => React.ReactNode) | undefined;
+  isRowSelectable?: ((row: T) => boolean) | undefined;
+  enableVirtualization?: boolean | undefined;
+  dense?: boolean | undefined;
   parentRef: React.RefObject<HTMLDivElement | null>;
 }
 
-const parseWidth = (w: any): number => (typeof w === "number" ? w : parseInt(String(w)) || 150);
+const parseWidth = (w: string | number | undefined): number => {
+  if (typeof w === "number") return w;
+  if (typeof w === "string") return parseInt(w) || 150;
+  return 150;
+};
 
 const createSelectColumn = <T>(): ColumnDef<T> => ({
   id: "__select",
-  header: (({ table }: any) =>
+  header: ({ table }: HeaderContext<T, unknown>) =>
     React.createElement(Checkbox, {
       checked: table.getIsAllRowsSelected(),
       indeterminate: table.getIsSomeRowsSelected(),
-      onCheckedChange: (v: any) => table.toggleAllRowsSelected(!!v),
+      onCheckedChange: (v) => table.toggleAllRowsSelected(!!v),
       "aria-label": "すべて選択",
-    })) as any,
-  cell: (({ row }: any) =>
+    }),
+  cell: ({ row }: CellContext<T, unknown>) =>
     React.createElement(Checkbox, {
       checked: row.getIsSelected(),
-      onCheckedChange: (v: any) => row.toggleSelected(!!v),
-      onClick: (e: any) => e.stopPropagation(),
+      onCheckedChange: (v) => row.toggleSelected(!!v),
+      onClick: (e) => e.stopPropagation(),
       disabled: !row.getCanSelect(),
       "aria-label": "行を選択",
-    })) as any,
+    }),
   size: 48,
   enableResizing: false,
   enableHiding: false,
@@ -68,13 +75,13 @@ const createSelectColumn = <T>(): ColumnDef<T> => ({
 const createExpandColumn = <T>(): ColumnDef<T> => ({
   id: "__expander",
   header: () => null,
-  cell: (({ row }: any) =>
+  cell: ({ row }: CellContext<T, unknown>) =>
     React.createElement(
       row.getCanExpand() ? "button" : "div",
       row.getCanExpand()
         ? {
             type: "button",
-            onClick: (e: any) => {
+            onClick: (e: React.MouseEvent) => {
               e.stopPropagation();
               row.toggleExpanded();
             },
@@ -88,7 +95,7 @@ const createExpandColumn = <T>(): ColumnDef<T> => ({
             className: "h-4 w-4 text-slate-600",
           })
         : null,
-    )) as any,
+    ),
   size: 40,
   enableResizing: false,
   enableHiding: false,
@@ -106,31 +113,48 @@ function createTableColumns<T>(
   if (selectable) defs.push(createSelectColumn<T>());
   if (expandable) defs.push(createExpandColumn<T>());
 
-  columns.forEach((col: any) => {
-    defs.push({
+  columns.forEach((col) => {
+    let header: ColumnDefTemplate<HeaderContext<T, unknown>> | undefined;
+    if (typeof col.header === "string" || typeof col.header === "function") {
+      header = col.header as any;
+    } else {
+      header = () => col.header;
+    }
+
+    const common = {
       id: col.id,
-      header: col.header as any,
-      ...(col.accessor ? { accessorFn: (row: T) => col.accessor!(row) } : {}),
-      cell: (info) =>
+      header,
+      cell: (info: CellContext<T, unknown>) =>
         col.cell ? col.cell(info.row.original) : (info.getValue() as React.ReactNode),
       size: parseWidth(col.width),
       minSize: col.minWidth ? parseWidth(col.minWidth) : undefined,
       enableSorting: col.sortable,
       enableHiding: col.enableHiding ?? true,
       meta: { align: col.align, className: col.className, sticky: col.sticky },
-    });
+    };
+
+    if (col.accessor) {
+      defs.push({
+        ...common,
+        accessorFn: (row: T) => col.accessor!(row),
+      } as ColumnDef<T>);
+    } else {
+      defs.push({
+        ...common,
+      } as ColumnDef<T>);
+    }
   });
 
   if (rowActions) {
     defs.push({
       id: "__actions",
       header: "アクション",
-      cell: (({ row }: any) =>
+      cell: ({ row }: CellContext<T, unknown>) =>
         React.createElement(
           "div",
-          { onClickCapture: (e: any) => e.stopPropagation() },
+          { onClickCapture: (e) => e.stopPropagation() },
           rowActions(row.original),
-        )) as any,
+        ),
       size: 180,
       enableResizing: false,
       enableHiding: false,
@@ -224,7 +248,7 @@ export function useDataTable<T>(props: UseDataTableProps<T>) {
     if (!onSortChange) return;
     const next = typeof updater === "function" ? updater(sorting) : updater;
     if (next.length > 0)
-      onSortChange({ column: next[0].id, direction: next[0].desc ? "desc" : "asc" });
+      onSortChange({ column: next[0]!.id, direction: next[0]!.desc ? "desc" : "asc" });
   };
 
   const onRowSelectionChange: OnChangeFn<Record<string, boolean>> = (up) => {
@@ -241,7 +265,7 @@ export function useDataTable<T>(props: UseDataTableProps<T>) {
       const ids = Object.keys(next).filter((id) => next[id]);
       if (expandMode === "single" && ids.length > 1) {
         const added = ids.find((id) => !new Set(expandedRowIds.map(String)).has(id));
-        onExpandedRowsChange(added ? [added] : [ids[0]]);
+        onExpandedRowsChange(added ? [added] : [ids[0]!]);
       } else onExpandedRowsChange(ids);
     }
   };

@@ -185,7 +185,7 @@ class SmartReadCompletionService:
             # We use comp_item.original_id if we want to try to preserve ID,
             # but usually auto-inc PKs shouldn't be forced unless we are sure.
             # However, if we don't preserve ID, 'wide_data' relation might be fine (it's just an ID),
-            # but usually restoring as a "new" ID is safer to avoid conflicts if ID was reused.
+            # but usually restoring as a "new"ID is safer to avoid conflicts if ID was reused.
             # BUT, we saved `original_id`. Let's try to ignore it for PK and let DB assign new ID,
             # or use it if we are sure it's free.
             # Given `ForecastHistory` doesn't seem to restore, we are blazing new trails here.

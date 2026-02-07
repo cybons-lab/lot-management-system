@@ -154,14 +154,14 @@ export function InventoryLotList({
         rowActions={(lot) => (
           <InventoryLotActions
             lot={lot}
-            warehouseNameFallback={warehouseNameFallback}
+            warehouseNameFallback={warehouseNameFallback ?? null}
             onEdit={onEdit}
             onUnlock={onUnlock}
             onLock={onLock}
             onWithdraw={onWithdraw}
             onHistory={onHistory}
-            onArchive={onArchive}
-            onUnarchive={onUnarchive}
+            {...(onArchive ? { onArchive } : {})}
+            {...(onUnarchive ? { onUnarchive } : {})}
           />
         )}
         headerSlot={

@@ -131,7 +131,7 @@ export function CustomerItemTable({
     <CustomerItemRowActions
       item={item}
       onDelete={onDelete}
-      onEdit={onEdit}
+      {...(onEdit ? { onEdit } : {})}
       isDeleting={isDeleting}
     />
   );
@@ -141,7 +141,7 @@ export function CustomerItemTable({
       data={items}
       columns={CUSTOMER_ITEM_COLUMNS}
       getRowId={(row) => row.id.toString()}
-      rowActions={renderRowActions}
+      {...(renderRowActions ? { rowActions: renderRowActions } : {})}
       emptyMessage="得意先品目マッピングがありません"
     />
   );

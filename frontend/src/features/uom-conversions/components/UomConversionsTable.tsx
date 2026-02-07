@@ -13,7 +13,7 @@ import { DataTable } from "@/shared/components/data/DataTable";
 
 const isInactive = (validTo?: string) => {
   if (!validTo) return false;
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0] ?? "";
   return validTo <= today;
 };
 
@@ -30,6 +30,7 @@ interface TableProps {
   handleSoftDelete: (c: UomConversionResponse) => void;
   handlePermanentDelete: (c: UomConversionResponse) => void;
   handleRestore: (c: UomConversionResponse) => void;
+  isLoading?: boolean;
 }
 
 /** UOM conversions table component */
@@ -46,6 +47,7 @@ export function UomConversionsTable({
   handleSoftDelete,
   handlePermanentDelete,
   handleRestore,
+  isLoading = false,
 }: TableProps) {
   // 列定義
   const columns = useMemo<Column<UomConversionResponse>[]>(
@@ -233,6 +235,7 @@ export function UomConversionsTable({
 
   return (
     <DataTable
+      isLoading={isLoading}
       data={conversions}
       columns={columns}
       getRowId={(row) => row.conversion_id}

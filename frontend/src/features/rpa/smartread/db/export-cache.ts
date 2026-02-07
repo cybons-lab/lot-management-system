@@ -182,8 +182,8 @@ class ExportCacheService {
         long_data,
         errors,
         filename,
-        task_date,
-        data_version,
+        ...(task_date ? { task_date } : {}),
+        ...(data_version ? { data_version } : {}),
         cached_at: Date.now(),
         saved_to_db,
       };

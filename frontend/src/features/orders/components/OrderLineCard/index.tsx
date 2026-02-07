@@ -97,16 +97,16 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
     <div className="rounded-xl border bg-white shadow-sm">
       <OrderLineHeader.OrderLineHeader
         productName={computed.productName}
-        productCode={computed.productCode ?? undefined}
-        status={computed.status}
-        orderDate={formatYmd(computed.orderDate) || undefined}
+        productCode={computed.productCode ?? ""}
+        status={computed.status ?? ""}
+        orderDate={formatYmd(computed.orderDate) || ""}
       />
 
       <div className="p-6">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="space-y-4">
             <AllocationProgress
-              lineId={lineId}
+              lineId={lineId ?? 0}
               progressPct={computed.progressPct ?? 0}
               allocatedTotal={computed.allocatedTotal}
               totalQty={computed.totalQty}
@@ -175,8 +175,8 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
 
         <div className="mt-6">
           <ForecastSection
-            productGroupId={computed.productId ?? undefined}
-            customerId={computed.customerId ?? undefined}
+            {...(computed.productId ? { productGroupId: computed.productId } : {})}
+            {...(computed.customerId ? { customerId: computed.customerId } : {})}
             fullWidth
           />
         </div>

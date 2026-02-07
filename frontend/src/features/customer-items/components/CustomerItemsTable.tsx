@@ -15,10 +15,10 @@ import { DataTable } from "@/shared/components/data/DataTable";
 interface CustomerItemsTableProps {
   items: CustomerItem[];
   isLoading: boolean;
-  onEdit: (item: CustomerItem) => void;
-  onSoftDelete: (item: CustomerItem) => void;
-  onPermanentDelete: (item: CustomerItem) => void;
-  onRestore: (item: CustomerItem) => void;
+  onEdit?: (item: CustomerItem) => void;
+  onSoftDelete?: (item: CustomerItem) => void;
+  onPermanentDelete?: (item: CustomerItem) => void;
+  onRestore?: (item: CustomerItem) => void;
   onRowClick?: (item: CustomerItem) => void;
   // 選択機能（オプション）
   selectedIds?: Set<string | number>;
@@ -30,7 +30,7 @@ interface CustomerItemsTableProps {
 
 const isInactive = (validTo?: string) => {
   if (!validTo) return false;
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0]!;
   return validTo <= today;
 };
 
@@ -179,7 +179,7 @@ export function CustomerItemsTable({
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              onRestore(item);
+              onRestore?.(item);
             }}
             title="復元"
             className="h-8 w-8 p-0"
@@ -191,7 +191,7 @@ export function CustomerItemsTable({
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              onPermanentDelete(item);
+              onPermanentDelete?.(item);
             }}
             title="完全に削除"
             className="h-8 w-8 p-0"
@@ -209,7 +209,7 @@ export function CustomerItemsTable({
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            onEdit(item);
+            onEdit?.(item);
           }}
           title="編集"
           className="h-8 w-8 p-0 text-blue-500 hover:text-blue-700"
@@ -221,7 +221,7 @@ export function CustomerItemsTable({
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            onSoftDelete(item);
+            onSoftDelete?.(item);
           }}
           title="削除"
           className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
@@ -291,10 +291,10 @@ export function CustomerItemsTable({
         data={items}
         columns={columns}
         selectable={!!selectedIds && !!onToggleSelect}
-        selectedIds={selectedIdsArray}
+        {...(selectedIdsArray !== undefined ? { selectedIds: selectedIdsArray } : {})}
         onSelectionChange={handleSelectionChange}
         getRowId={getItemKey}
-        onRowClick={onRowClick}
+        {...(onRowClick !== undefined ? { onRowClick } : {})}
         rowActions={renderRowActions}
         getRowClassName={getRowClassName}
         isLoading={isLoading}

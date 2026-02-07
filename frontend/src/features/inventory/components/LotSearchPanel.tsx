@@ -28,8 +28,8 @@ export function LotSearchPanel() {
     size: searchState.size,
     sort_by: searchState.sort_by,
     sort_order: searchState.sort_order,
-    status: searchState.status === "all" ? undefined : searchState.status,
-    with_stock: searchState.status === "archived" ? false : undefined,
+    ...(searchState.status !== "all" ? { status: searchState.status } : {}),
+    ...(searchState.status === "archived" ? { with_stock: false } : {}),
   });
 
   const { tableAdapter, handleSortChange } = useTableController(searchState, setSearchState, data);

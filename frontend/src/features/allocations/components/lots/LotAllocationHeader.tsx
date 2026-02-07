@@ -5,15 +5,15 @@ import { formatDate, formatDateTime } from "@/shared/utils/date";
 import { formatOrderCode } from "@/shared/utils/order";
 
 interface LotAllocationHeaderProps {
-  order?: OrderWithLinesResponse;
+  order?: OrderWithLinesResponse | undefined;
   orderLine: OrderLine;
   customerName: string;
   productName: string;
   deliveryPlaceName: string;
   requiredQty: number;
   totalAllocated: number;
-  hardAllocated?: number;
-  softAllocated?: number;
+  hardAllocated?: number | undefined;
+  softAllocated?: number | undefined;
   remainingQty: number;
   progressPercent: number;
   isOverAllocated: boolean;
@@ -22,7 +22,7 @@ interface LotAllocationHeaderProps {
   allocationCount: number;
   hasExpiryWarning: boolean;
   hasExpiredError: boolean;
-  lineStatus?: string | null;
+  lineStatus?: string | null | undefined;
 }
 
 interface HeaderMetadata {

@@ -21,7 +21,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-import requests
+import httpx
 from sqlalchemy.orm import Session
 
 
@@ -101,9 +101,9 @@ class SmartReadPadRunnerService:
             return
 
         try:
-            # requests.Session を使用（同期HTTP）
-            api_session = self._create_api_session(config.api_key)
+            # httpx.Client を使用（同期HTTP）
             endpoint = config.endpoint.rstrip("/")
+            api_client = self._create_api_client(config.api_key, endpoint)
             template_ids = self._parse_template_ids(config.template_ids)
             export_type = config.export_type or "csv"
             aggregation = config.aggregation_type or "oneFilePerTemplate"
@@ -112,7 +112,7 @@ class SmartReadPadRunnerService:
             self._update_step(run, "TASK_CREATED")
             task_name = f"PAD_{datetime.now().strftime('%Y%m%d%H%M%S')}"
             task_id = self._create_task(
-                api_session,
+                api_client,
                 endpoint,
                 task_name,
                 "templateMatching",
@@ -127,7 +127,7 @@ class SmartReadPadRunnerService:
             self._update_step(run, "UPLOADED")
             watch_dir = Path(config.watch_dir) if config.watch_dir else None
             filenames = run.filenames or []
-            request_ids = self._upload_files(api_session, endpoint, task_id, filenames, watch_dir)
+            request_ids = self._upload_files(api_client, endpoint, task_id, filenames, watch_dir)
             self._update_heartbeat(run)
 
             # 3. リクエスト完了待ち（ポーリング中もheartbeat更新）
@@ -135,7 +135,7 @@ class SmartReadPadRunnerService:
             for request_id in request_ids:
 
                 def check_rid(rid: str = request_id) -> bool | None:
-                    return self._check_request_done(api_session, endpoint, rid)
+                    return self._check_request_done(api_client, endpoint, rid)
 
                 self._poll_with_heartbeat(
                     run,
@@ -148,7 +148,7 @@ class SmartReadPadRunnerService:
             self._update_step(run, "TASK_DONE")
 
             def check_task() -> bool | None:
-                return self._check_task_done(api_session, endpoint, task_id)
+                return self._check_task_done(api_client, endpoint, task_id)
 
             self._poll_with_heartbeat(
                 run,
@@ -159,7 +159,7 @@ class SmartReadPadRunnerService:
 
             # 5. Export開始 ★PADスクリプトと同じ・必須ゲート
             self._update_step(run, "EXPORT_STARTED")
-            export_id = self._start_export(api_session, endpoint, task_id, export_type, aggregation)
+            export_id = self._start_export(api_client, endpoint, task_id, export_type, aggregation)
             run.export_id = export_id
             self.session.commit()
             logger.info(f"[PAD Run {run_id}] Export started: {export_id}")
@@ -169,7 +169,7 @@ class SmartReadPadRunnerService:
             self._update_step(run, "EXPORT_DONE")
 
             def check_export() -> bool | None:
-                return self._check_export_done(api_session, endpoint, task_id, export_id)
+                return self._check_export_done(api_client, endpoint, task_id, export_id)
 
             self._poll_with_heartbeat(
                 run,
@@ -180,7 +180,7 @@ class SmartReadPadRunnerService:
 
             # 7. ZIPダウンロード
             self._update_step(run, "DOWNLOADED")
-            zip_content = self._download_export_zip(api_session, endpoint, task_id, export_id)
+            zip_content = self._download_export_zip(api_client, endpoint, task_id, export_id)
             self._update_heartbeat(run)
 
             # 8. CSV後処理（縦持ち変換）
@@ -221,7 +221,7 @@ class SmartReadPadRunnerService:
             logger.exception(f"[PAD Run {run_id}] Failed: {e}")
             self._fail_run(run, str(e))
         finally:
-            api_session.close()
+            api_client.close()
 
     def get_run_status(self, run_id: str) -> dict[str, Any] | None:
         """実行状態を取得（stale検出含む）."""
@@ -374,16 +374,18 @@ class SmartReadPadRunnerService:
             return None
         return [t.strip() for t in template_ids_str.split(",") if t.strip()]
 
-    def _create_api_session(self, api_key: str) -> requests.Session:
-        """requests.Session を作成（SmartRead API用）."""
-        session = requests.Session()
-        session.headers.update(
-            {
+    def _create_api_client(self, api_key: str, endpoint: str) -> httpx.Client:
+        """httpx.Client を作成（SmartRead API用）."""
+        client = httpx.Client(
+            base_url=endpoint.rstrip("/") + "/",
+            headers={
                 "Authorization": f"apikey {api_key}",
                 "User-Agent": "LotManagementSystem-PADRunner/1.0",
-            }
+            },
+            timeout=httpx.Timeout(30.0, read=120.0),
+            follow_redirects=True,
         )
-        return session
+        return client
 
     def _poll_with_heartbeat(
         self,
@@ -424,7 +426,7 @@ class SmartReadPadRunnerService:
 
     def _create_task(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         name: str,
         request_type: str,
@@ -444,9 +446,9 @@ class SmartReadPadRunnerService:
         if template_ids:
             payload["templateIds"] = template_ids
 
-        url = f"{endpoint}/task"
+        url = "task"
         logger.info(f"[PAD Runner] Creating task: {url}")
-        r = session.post(url, json=payload, timeout=30)
+        r = client.post(url, json=payload)
 
         if r.status_code != 202:
             raise RuntimeError(f"タスク作成に失敗: HTTP {r.status_code} {r.text}")
@@ -461,7 +463,7 @@ class SmartReadPadRunnerService:
 
     def _upload_files(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         task_id: str,
         filenames: list[str],
@@ -479,21 +481,21 @@ class SmartReadPadRunnerService:
             else:
                 raise RuntimeError("watch_dir が設定されていません")
 
-            request_id = self._upload_file(session, endpoint, task_id, file_content, filename)
+            request_id = self._upload_file(client, endpoint, task_id, file_content, filename)
             request_ids.append(request_id)
 
         return request_ids
 
     def _upload_file(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         task_id: str,
         file_content: bytes,
         filename: str,
     ) -> str:
         """ファイルをアップロードしてrequestIdを返す."""
-        url = f"{endpoint}/task/{task_id}/request"
+        url = f"task/{task_id}/request"
         mime, _ = mimetypes.guess_type(filename)
         if mime is None:
             mime = "application/octet-stream"
@@ -501,7 +503,7 @@ class SmartReadPadRunnerService:
         files = {"image": (filename, file_content, mime)}
 
         logger.info(f"[PAD Runner] Uploading file: {filename}")
-        r = session.post(url, files=files, timeout=60)
+        r = client.post(url, files=files)
 
         if r.status_code not in (200, 202):
             raise RuntimeError(f"アップロード失敗: {filename} HTTP {r.status_code} {r.text}")
@@ -516,13 +518,13 @@ class SmartReadPadRunnerService:
 
     def _check_request_done(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         request_id: str,
     ) -> bool | None:
         """リクエストが完了したかチェック."""
-        url = f"{endpoint}/request/{request_id}"
-        r = session.get(url, timeout=30)
+        url = f"request/{request_id}"
+        r = client.get(url)
         r.raise_for_status()
         data = r.json()
         state = data.get("state")
@@ -535,13 +537,13 @@ class SmartReadPadRunnerService:
 
     def _check_task_done(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         task_id: str,
     ) -> bool | None:
         """タスクが完了したかチェック."""
-        url = f"{endpoint}/task/{task_id}"
-        r = session.get(url, timeout=30)
+        url = f"task/{task_id}"
+        r = client.get(url)
         r.raise_for_status()
         data = r.json()
         state = data.get("state")
@@ -561,7 +563,7 @@ class SmartReadPadRunnerService:
 
     def _start_export(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         task_id: str,
         export_type: str,
@@ -572,7 +574,7 @@ class SmartReadPadRunnerService:
         payload = {"type": export_type, "aggregation": aggregation}
 
         logger.info(f"[PAD Runner] Starting export for task {task_id}")
-        r = session.post(url, json=payload, timeout=30)
+        r = client.post(url, json=payload)
 
         if r.status_code not in (200, 202):
             raise RuntimeError(f"Export開始失敗: HTTP {r.status_code} {r.text}")
@@ -587,14 +589,14 @@ class SmartReadPadRunnerService:
 
     def _check_export_done(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         task_id: str,
         export_id: str,
     ) -> bool | None:
         """エクスポートが完了したかチェック."""
         url = f"{endpoint}/task/{task_id}/export/{export_id}"
-        r = session.get(url, timeout=30)
+        r = client.get(url)
         r.raise_for_status()
         data = r.json()
         state = data.get("state")
@@ -609,7 +611,7 @@ class SmartReadPadRunnerService:
 
     def _download_export_zip(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         task_id: str,
         export_id: str,
@@ -618,7 +620,7 @@ class SmartReadPadRunnerService:
         url = f"{endpoint}/task/{task_id}/export/{export_id}/download"
 
         logger.info("[PAD Runner] Downloading export ZIP")
-        r = session.get(url, timeout=120)
+        r = client.get(url)
 
         if r.status_code != 200:
             raise RuntimeError(

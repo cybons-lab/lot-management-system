@@ -1,3 +1,4 @@
+import type { AllocatedLot } from "./allocation-types";
 import type { OrderLineLegacy } from "./legacy/order-line-legacy";
 
 import type { components } from "@/types/api";
@@ -296,6 +297,7 @@ export interface OrderLineComputed {
   customerId?: number | null;
   deliveryPlaces: string[]; // warehouse → deliveryPlace に変更
   shippingLeadTime?: string; // 任意表示
+  allocatedLots: AllocatedLot[];
 }
 
 export interface OrderLineCreate {

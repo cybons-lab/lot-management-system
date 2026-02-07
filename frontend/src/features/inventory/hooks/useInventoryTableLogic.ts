@@ -13,7 +13,7 @@ function parseRowKey(key: string): [number, number] | null {
   if (Number.isNaN(productId) || Number.isNaN(warehouseId)) {
     return null;
   }
-  return [productId, warehouseId];
+  return [productId!, warehouseId!];
 }
 
 function useExpandedRowsState() {

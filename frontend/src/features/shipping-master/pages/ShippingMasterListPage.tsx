@@ -39,9 +39,9 @@ export function ShippingMasterListPage() {
     queryKey: ["shipping-masters", { customerCode, materialCode, jikuCode }],
     queryFn: () =>
       shippingMasterApi.list({
-        customer_code: customerCode || undefined,
-        material_code: materialCode || undefined,
-        jiku_code: jikuCode || undefined,
+        ...(customerCode ? { customer_code: customerCode } : {}),
+        ...(materialCode ? { material_code: materialCode } : {}),
+        ...(jikuCode ? { jiku_code: jikuCode } : {}),
       }),
   });
 

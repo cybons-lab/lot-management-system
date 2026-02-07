@@ -93,7 +93,7 @@ export function useSupplierProductsPageState() {
         if (col === "supplier_id") {
           return item.supplier_code || supplierMap.get(item.supplier_id)?.code || "";
         }
-        return item[col as keyof SupplierProduct];
+        return item[col as keyof SupplierProduct] as string | number | null | undefined;
       };
 
       const aVal = getVal(a, sort.column);
@@ -174,7 +174,24 @@ export function useSupplierProductsPageState() {
       update(
         {
           id: dialogState.editingItem.id,
-          data: { ...(data as SupplierProductUpdate), version: dialogState.editingItem.version },
+          data: {
+            ...((data as SupplierProductUpdate).maker_part_no !== undefined
+              ? { maker_part_no: (data as SupplierProductUpdate).maker_part_no }
+              : {}),
+            ...((data as SupplierProductUpdate).display_name !== undefined
+              ? { display_name: (data as SupplierProductUpdate).display_name }
+              : {}),
+            ...((data as SupplierProductUpdate).base_unit !== undefined
+              ? { base_unit: (data as SupplierProductUpdate).base_unit }
+              : {}),
+            version: dialogState.editingItem.version,
+            ...((data as SupplierProductUpdate).lead_time_days !== undefined
+              ? { lead_time_days: (data as SupplierProductUpdate).lead_time_days }
+              : {}),
+            ...((data as SupplierProductUpdate).notes !== undefined
+              ? { notes: (data as SupplierProductUpdate).notes || null }
+              : {}),
+          },
         },
         { onSuccess: closeEditDialog },
       );
@@ -189,7 +206,7 @@ export function useSupplierProductsPageState() {
         {
           id: dialogState.deletingItem.id,
           version: dialogState.deletingItem.version,
-          endDate: endDate || undefined,
+          ...(endDate ? { endDate } : {}),
         },
         { onSuccess: closeDeleteDialog },
       );

@@ -52,16 +52,28 @@ export function InboundPlanEditDialog({
   // Reset form when plan changes or dialog opens
   useEffect(() => {
     if (open && plan) {
-      form.reset({
-        planned_arrival_date: plan.planned_arrival_date.split("T")[0], // YYYY-MM-DD
-        notes: plan.notes || "",
-      });
+      const resetValues: FormValues = {
+        planned_arrival_date: (plan.planned_arrival_date || "").split("T")[0] || "",
+        ...(plan.notes ? { notes: plan.notes } : {}),
+      };
+      form.reset(resetValues);
     }
   }, [open, plan, form]);
 
   const handleSubmit = async (values: FormValues) => {
     try {
-      await onSubmit(values);
+      // The instruction seems to be for a different context (e.g., AdhocLotCreateData)
+      // but applying the principle of conditional spreads for optional fields and
+      // ensuring required fields are strings to the current form values if needed.
+      // For this specific form, `values` already matches `FormValues` type.
+      // If `onSubmit` expects a transformed object, it would be done here.
+      // For example, if `notes` was optional in the form but `onSubmit` expected it to be omitted if empty:
+      const submitData: FormValues = {
+        planned_arrival_date: values.planned_arrival_date,
+        ...(values.notes ? { notes: values.notes } : {}),
+      };
+
+      await onSubmit(submitData);
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to update inbound plan:", error);

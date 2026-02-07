@@ -41,15 +41,15 @@ export function ForecastCardHeader({
           productName={productName}
           productCode={productCode}
           deliveryPlaceDisplay={deliveryPlaceDisplay}
-          onToggle={onToggle}
+          {...(onToggle !== undefined ? { onToggle } : {})}
         />
 
         <ForecastCardHeaderActions
-          onAutoAllocate={onAutoAllocate}
-          onRegenerateSuggestions={onRegenerateSuggestions}
-          onClearSuggestions={onClearSuggestions}
-          onDelete={onDelete}
-          firstForecastId={firstForecastId}
+          {...(onAutoAllocate !== undefined ? { onAutoAllocate } : {})}
+          {...(onRegenerateSuggestions !== undefined ? { onRegenerateSuggestions } : {})}
+          {...(onClearSuggestions !== undefined ? { onClearSuggestions } : {})}
+          {...(onDelete !== undefined ? { onDelete } : {})}
+          {...(firstForecastId !== undefined ? { firstForecastId } : {})}
           isOpen={isOpen}
         />
       </div>

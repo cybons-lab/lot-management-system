@@ -279,7 +279,7 @@ export function DbObjectDetail({
             <DataTable
               data={tableRows}
               columns={rowColumns}
-              sort={sort}
+              {...(sort !== undefined ? { sort } : {})}
               onSortChange={onSortChange}
               isLoading={isRowsLoading}
               emptyMessage="データがありません"

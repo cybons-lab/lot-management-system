@@ -119,7 +119,7 @@ function CalendarDay({
       </div>
       {stat && <DayStats stat={stat} />}
       {stat && isHovered && stat.withdrawals.length > 0 && (
-        <DayTooltip day={day} stat={stat} warehouseName={warehouseName} />
+        <DayTooltip day={day} stat={stat} {...(warehouseName ? { warehouseName } : {})} />
       )}
     </div>
   );
@@ -319,14 +319,17 @@ function useWithdrawalCalendarData(lotId: number, currentMonth: Date) {
     data.withdrawals.forEach((w) => {
       const dateKey = w.ship_date.substring(0, 10);
       if (!stats[dateKey]) stats[dateKey] = { count: 0, quantity: 0, withdrawals: [] };
-      stats[dateKey].count++;
-      stats[dateKey].quantity += Number(w.quantity);
-      stats[dateKey].withdrawals.push({
-        withdrawal_id: w.withdrawal_id,
-        quantity: w.quantity,
-        customer_name: w.customer_name,
-        delivery_place_name: w.delivery_place_name,
-      });
+      const stat = stats[dateKey];
+      if (stat) {
+        stat.count++;
+        stat.quantity += Number(w.quantity);
+        stat.withdrawals.push({
+          withdrawal_id: w.withdrawal_id,
+          quantity: w.quantity,
+          customer_name: w.customer_name,
+          delivery_place_name: w.delivery_place_name,
+        });
+      }
     });
     return stats;
   }, [data]);
@@ -393,7 +396,7 @@ export function WithdrawalCalendar({
                 isToday={isSameDay(day, new Date())}
                 isHovered={hoveredDate === dateKey}
                 showWithdrawButton={showWithdrawButton}
-                warehouseName={warehouseName}
+                {...(warehouseName ? { warehouseName } : {})}
                 onHover={setHoveredDate}
                 onDateClick={handleDateClick}
               />

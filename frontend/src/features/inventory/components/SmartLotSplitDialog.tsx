@@ -73,8 +73,8 @@ export function SmartLotSplitDialog({
 
     allocations.forEach((alloc) => {
       const targetIndex = assignments[alloc.key] ?? 0;
-      targets[targetIndex].allocations.push(alloc);
-      targets[targetIndex].totalQuantity += alloc.quantity;
+      targets[targetIndex]!.allocations.push(alloc);
+      targets[targetIndex]!.totalQuantity += alloc.quantity;
     });
 
     return targets;

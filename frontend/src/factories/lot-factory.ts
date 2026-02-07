@@ -27,8 +27,8 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
     supplier_item_id: faker.number.int({ min: 1, max: 100 }), // DDL v2.2
     warehouse_id: faker.number.int({ min: 1, max: 10 }), // DDL v2.2
     supplier_id: faker.number.int({ min: 1, max: 50 }), // DDL v2.2
-    received_date: receivedDate.toISOString().split("T")[0], // DDL v2.2
-    expiry_date: expiryDate.toISOString().split("T")[0],
+    received_date: receivedDate.toISOString().split("T")[0] ?? "", // DDL v2.2
+    expiry_date: expiryDate.toISOString().split("T")[0] ?? "",
     current_quantity: String(currentQty), // DDL v2.2: DECIMAL as string
     received_quantity: String(currentQty), // DDL v2.2
     remaining_quantity: String(currentQty), // DDL v2.2
@@ -106,7 +106,7 @@ export function createLotWithoutStock(overrides?: Partial<LotResponse>): LotResp
 export function createExpiredLot(overrides?: Partial<LotResponse>): LotResponse {
   const expiryDate = faker.date.past();
   return createLot({
-    expiry_date: expiryDate.toISOString().split("T")[0],
+    expiry_date: expiryDate.toISOString().split("T")[0] ?? "",
     status: "expired",
     ...overrides,
   });
@@ -119,7 +119,7 @@ export function createExpiringLot(overrides?: Partial<LotResponse>): LotResponse
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + faker.number.int({ min: 1, max: 30 }));
   return createLot({
-    expiry_date: expiryDate.toISOString().split("T")[0],
+    expiry_date: expiryDate.toISOString().split("T")[0] ?? "",
     ...overrides,
   });
 }

@@ -345,11 +345,11 @@ export function DateGrid({
                   dest={dest}
                   currentValue={dest.shipmentQtyByDate[date] || 0}
                   isConfirmed={false} // Placeholder
-                  onQtyChange={onQtyChange}
-                  comment={dest.commentByDate?.[date]}
-                  onCommentChange={onCommentChange}
-                  manualShipmentDate={dest.manualShipmentDateByDate?.[date]}
-                  onManualShipmentDateChange={onManualShipmentDateChange}
+                  {...(onQtyChange ? { onQtyChange } : {})}
+                  comment={dest.commentByDate?.[date] ?? null}
+                  {...(onCommentChange ? { onCommentChange } : {})}
+                  manualShipmentDate={dest.manualShipmentDateByDate?.[date] ?? null}
+                  {...(onManualShipmentDateChange ? { onManualShipmentDateChange } : {})}
                 />
               ))}
               {/* Spacer for add column button (prevent row misalignment) */}

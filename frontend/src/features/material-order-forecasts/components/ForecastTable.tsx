@@ -221,7 +221,7 @@ export function ForecastTable({ data, isLoading, targetMonth }: ForecastTablePro
     <DataTable
       data={data}
       columns={columns}
-      isLoading={isLoading}
+      {...(isLoading !== undefined ? { isLoading } : {})}
       getRowId={(row) => row.id.toString()}
       dense
       emptyMessage={`${targetMonth} のデータは見つかりませんでした`}

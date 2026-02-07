@@ -59,13 +59,13 @@ export function useForecastListPageState() {
   // queryParams変換（API用）
   const queryParams = useMemo(
     () => ({
-      customer_id: state.filters.customer_id ? Number(state.filters.customer_id) : undefined,
-      delivery_place_id: state.filters.delivery_place_id
-        ? Number(state.filters.delivery_place_id)
-        : undefined,
-      supplier_item_id: state.filters.supplier_item_id
-        ? Number(state.filters.supplier_item_id)
-        : undefined,
+      ...(state.filters.customer_id ? { customer_id: Number(state.filters.customer_id) } : {}),
+      ...(state.filters.delivery_place_id
+        ? { delivery_place_id: Number(state.filters.delivery_place_id) }
+        : {}),
+      ...(state.filters.supplier_item_id
+        ? { supplier_item_id: Number(state.filters.supplier_item_id) }
+        : {}),
     }),
     [state.filters],
   );

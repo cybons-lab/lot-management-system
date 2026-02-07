@@ -1,16 +1,13 @@
 import { Plus } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo } from "react";
 
-import { type Maker, type MakerCreateRequest, type MakerUpdateInput } from "../api";
 import { createMakerColumns } from "../components/MakerColumns";
 import { MakerDialogs } from "../components/MakerDialogs";
 import { MakerStats } from "../components/MakerStats";
-import { useCreateMaker, useDeleteMaker, useMakers, useUpdateMaker } from "../hooks/useMakers";
+import { useMakersPageModel } from "../hooks/useMakersPageModel";
 
-import { Button, Input } from "@/components/ui";
-import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
-import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
-import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { Button } from "@/components/ui";
+import { MasterPageTemplate } from "@/shared/components/layout/MasterPageTemplate";
 
 const makersPageHeader = {
   title: "メーカーマスタ",
@@ -18,198 +15,61 @@ const makersPageHeader = {
   backLink: { to: "/masters", label: "マスタ管理" },
 } as const;
 
-function useFilteredAndSortedMakers(makers: Maker[], searchQuery: string, sort: SortConfig) {
-  const filteredMakers = useMemo(() => {
-    if (!searchQuery.trim()) return makers;
-    const q = searchQuery.toLowerCase();
-    return makers.filter(
-      (maker) =>
-        maker.maker_code.toLowerCase().includes(q) ||
-        maker.maker_name.toLowerCase().includes(q) ||
-        maker.display_name?.toLowerCase().includes(q) ||
-        maker.short_name?.toLowerCase().includes(q),
-    );
-  }, [makers, searchQuery]);
-
-  return useMemo(() => {
-    const sorted = [...filteredMakers];
-    sorted.sort((a, b) => {
-      const aVal = a[sort.column as keyof Maker] ?? "";
-      const bVal = b[sort.column as keyof Maker] ?? "";
-      const cmp = String(aVal).localeCompare(String(bVal), "ja");
-      return sort.direction === "asc" ? cmp : -cmp;
-    });
-    return sorted;
-  }, [filteredMakers, sort]);
-}
-
-function useMakersPageModel() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sort, setSort] = useState<SortConfig>({ column: "maker_code", direction: "asc" });
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingMaker, setEditingMaker] = useState<Maker | null>(null);
-  const [deletingMaker, setDeletingMaker] = useState<Maker | null>(null);
-
-  const { data: makers = [], isLoading, isError, error, refetch } = useMakers();
-  const createMutation = useCreateMaker();
-  const updateMutation = useUpdateMaker();
-  const deleteMutation = useDeleteMaker();
-
-  const sortedMakers = useFilteredAndSortedMakers(makers, searchQuery, sort);
-  const columns = useMemo(
-    () => createMakerColumns({ onEdit: setEditingMaker, onDelete: setDeletingMaker }),
-    [],
-  );
-
-  const handleCreate = useCallback(
-    (data: MakerCreateRequest) =>
-      createMutation.mutate(data, { onSuccess: () => setIsCreateOpen(false) }),
-    [createMutation],
-  );
-
-  const handleUpdate = useCallback(
-    (data: MakerUpdateInput) => {
-      if (!editingMaker) return;
-      updateMutation.mutate(
-        { id: editingMaker.id, data: { ...data, version: editingMaker.version } },
-        { onSuccess: () => setEditingMaker(null) },
-      );
-    },
-    [editingMaker, updateMutation],
-  );
-
-  const handleDelete = useCallback(() => {
-    if (!deletingMaker) return;
-    deleteMutation.mutate(
-      { id: deletingMaker.id, version: deletingMaker.version },
-      { onSuccess: () => setDeletingMaker(null) },
-    );
-  }, [deleteMutation, deletingMaker]);
-
-  return {
-    makers,
-    isLoading,
-    isError,
-    error,
-    refetch,
-    searchQuery,
-    setSearchQuery,
-    sort,
-    setSort,
-    isCreateOpen,
-    setIsCreateOpen,
-    editingMaker,
-    setEditingMaker,
-    deletingMaker,
-    setDeletingMaker,
-    sortedMakers,
-    columns,
-    handleCreate,
-    handleUpdate,
-    handleDelete,
-    isCreatePending: createMutation.isPending,
-    isUpdatePending: updateMutation.isPending,
-  };
-}
-
-function MakersErrorView({ error, refetch }: { error: unknown; refetch: () => unknown }) {
-  const errorObj = error instanceof Error ? error : null;
-  return (
-    <div className="space-y-6 px-6 py-6 md:px-8">
-      <PageHeader {...makersPageHeader} />
-      <QueryErrorFallback error={errorObj} resetError={refetch} />
-    </div>
-  );
-}
-
-interface MakersTableCardProps {
-  searchQuery: string;
-  onSearchQueryChange: (value: string) => void;
-  sortedMakers: Maker[];
-  columns: ReturnType<typeof createMakerColumns>;
-  sort: SortConfig;
-  onSortChange: (sort: SortConfig) => void;
-  isLoading: boolean;
-}
-
-function MakersTableCard({
-  searchQuery,
-  onSearchQueryChange,
-  sortedMakers,
-  columns,
-  sort,
-  onSortChange,
-  isLoading,
-}: MakersTableCardProps) {
-  return (
-    <div className="rounded-lg border bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <h3 className="text-lg font-semibold text-gray-900">メーカー一覧</h3>
-        <Input
-          type="search"
-          placeholder="検索..."
-          value={searchQuery}
-          onChange={(e) => onSearchQueryChange(e.target.value)}
-          className="w-64"
-        />
-      </div>
-      <DataTable
-        data={sortedMakers}
-        columns={columns}
-        sort={sort}
-        onSortChange={onSortChange}
-        getRowId={(row) => row.id.toString()}
-        isLoading={isLoading}
-        emptyMessage="メーカーが登録されていません"
-      />
-    </div>
-  );
-}
-
+/**
+ * メーカーマスタ一覧ページ
+ * useMakersPageModel を使用してロジックを共通化
+ */
 export default function MakersPage() {
   const model = useMakersPageModel();
+  const { paginated } = model.processData(model.makers);
 
-  if (model.isError) {
-    return <MakersErrorView error={model.error} refetch={model.refetch} />;
-  }
+  const columns = useMemo(
+    () =>
+      createMakerColumns({
+        onEdit: model.dlgs.openEdit,
+        onDelete: model.dlgs.openPermanentDelete, // メーカーは直接削除
+      }),
+    [model.dlgs],
+  );
 
   return (
-    <div className="space-y-6 px-6 py-6 md:px-8">
-      <PageHeader
-        {...makersPageHeader}
-        actions={
-          <Button onClick={() => model.setIsCreateOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            新規登録
-          </Button>
-        }
-      />
-
-      <MakerStats count={model.makers.length} />
-
-      <MakersTableCard
-        searchQuery={model.searchQuery}
-        onSearchQueryChange={model.setSearchQuery}
-        sortedMakers={model.sortedMakers}
-        columns={model.columns}
-        sort={model.sort}
-        onSortChange={model.setSort}
-        isLoading={model.isLoading}
-      />
-
-      <MakerDialogs
-        isCreateOpen={model.isCreateOpen}
-        setIsCreateOpen={model.setIsCreateOpen}
-        editingMaker={model.editingMaker}
-        setEditingMaker={model.setEditingMaker}
-        deletingMaker={model.deletingMaker}
-        setDeletingMaker={model.setDeletingMaker}
-        onCreate={model.handleCreate}
-        onUpdate={model.handleUpdate}
-        onDelete={model.handleDelete}
-        isCreatePending={model.isCreatePending}
-        isUpdatePending={model.isUpdatePending}
-      />
-    </div>
+    <MasterPageTemplate
+      header={makersPageHeader}
+      headerActions={
+        <Button onClick={model.dlgs.openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
+          新規登録
+        </Button>
+      }
+      stats={<MakerStats count={model.makers.length} />}
+      tableTitle="メーカー一覧"
+      searchQuery={model.searchQuery}
+      onSearchQueryChange={model.setSearchQuery}
+      data={paginated}
+      columns={columns}
+      sort={model.sort}
+      onSortChange={model.setSort}
+      getRowId={(row) => row.id.toString()}
+      isLoading={model.isLoading}
+      isError={model.isError}
+      error={model.error}
+      onRetry={model.refetch}
+      emptyMessage="メーカーが登録されていません"
+      dialogContext={
+        <MakerDialogs
+          isCreateOpen={model.dlgs.isCreateOpen}
+          setIsCreateOpen={(o) => !o && model.dlgs.close()}
+          editingMaker={model.dlgs.selectedItem}
+          setEditingMaker={(m) => (m ? model.dlgs.openEdit(m) : model.dlgs.close())}
+          deletingMaker={model.dlgs.deletingItem}
+          setDeletingMaker={(m) => (m ? model.dlgs.openPermanentDelete(m) : model.dlgs.close())}
+          onCreate={model.handleCreate}
+          onUpdate={model.handleUpdate}
+          onDelete={model.handleDelete}
+          isCreatePending={model.isCreatePending}
+          isUpdatePending={model.isUpdatePending}
+        />
+      }
+    />
   );
 }

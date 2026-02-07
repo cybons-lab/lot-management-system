@@ -135,9 +135,7 @@ export const selectedItemIdsAtom = atom<number[]>([]);
 export const step2FiltersAtom = atomWithStorage<Step2Filters>(
   "rpa:step2Filters",
   {
-    issueOnly: false,
     search: "",
-    layerCode: undefined,
   },
   createSessionStorageAdapter<Step2Filters>(),
   { getOnInit: true },

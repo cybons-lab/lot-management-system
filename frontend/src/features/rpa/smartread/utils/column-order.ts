@@ -37,8 +37,8 @@ function parseFieldName(field: string): { base: string; numbers: number[] } {
   const multiMatch = field.match(/^(.+?)(\d+)-(\d+)$/);
   if (multiMatch) {
     return {
-      base: multiMatch[1],
-      numbers: [parseInt(multiMatch[2], 10), parseInt(multiMatch[3], 10)],
+      base: multiMatch![1]!,
+      numbers: [parseInt(multiMatch![2]!, 10), parseInt(multiMatch![3]!, 10)],
     };
   }
 
@@ -46,8 +46,8 @@ function parseFieldName(field: string): { base: string; numbers: number[] } {
   const singleMatch = field.match(/^(.+?)(\d+)$/);
   if (singleMatch) {
     return {
-      base: singleMatch[1],
-      numbers: [parseInt(singleMatch[2], 10)],
+      base: singleMatch![1]!,
+      numbers: [parseInt(singleMatch![2]!, 10)],
     };
   }
 

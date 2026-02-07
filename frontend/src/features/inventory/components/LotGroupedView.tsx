@@ -46,14 +46,14 @@ export function LotGroupedView({
               <DataTable
                 data={group.lots}
                 columns={columns}
-                sort={
-                  tableSettings.sortColumn && tableSettings.sortDirection
-                    ? {
+                {...(tableSettings.sortColumn && tableSettings.sortDirection
+                  ? {
+                      sort: {
                         column: tableSettings.sortColumn,
                         direction: tableSettings.sortDirection,
-                      }
-                    : undefined
-                }
+                      },
+                    }
+                  : {})}
                 isLoading={isLoading}
                 emptyMessage="ロットがありません。"
                 getRowClassName={getRowClassName}

@@ -104,14 +104,14 @@ export function InventoryTable({
     <InventoryLotList
       lots={getLotsForItem(item.supplier_item_id, item.warehouse_id)}
       isLoading={isLotsLoading(item.supplier_item_id, item.warehouse_id)}
-      warehouseNameFallback={item.warehouse_name || item.warehouse_code}
+      warehouseNameFallback={item.warehouse_name || item.warehouse_code || null}
       onEdit={handleEditLot}
       onUnlock={handleUnlockLot}
       onLock={handleLockLot}
       onWithdraw={openWithdrawal}
       onHistory={openHistory}
-      onArchive={handleArchiveLot}
-      onUnarchive={handleUnarchiveLot}
+      {...(handleArchiveLot ? { onArchive: handleArchiveLot } : {})}
+      {...(handleUnarchiveLot ? { onUnarchive: handleUnarchiveLot } : {})}
     />
   );
 
@@ -124,8 +124,8 @@ export function InventoryTable({
         data={data}
         columns={inventoryColumns}
         getRowId={getItemKey}
-        onRowClick={onRowClick}
-        rowActions={(item) => (
+        {...(onRowClick ? { onRowClick } : {})}
+        rowActions={(item: InventoryItem) => (
           <RowActions
             item={item}
             onOpenQuickIntake={openQuickIntake}

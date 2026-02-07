@@ -79,15 +79,14 @@ export function useCustomerListPage() {
 
   const handlers = {
     handleCreate: (d: any) => r.create.mutate(d, { onSuccess: r.dlgs.close }),
-    handleSoftDelete: (e: string | null) =>
-      r.softDel.mutate(
-        {
-          id: r.dlgs.deletingItem?.customer_code || "",
-          version: r.dlgs.deletingItem?.version || 0,
-          endDate: e || undefined,
-        },
-        { onSuccess: r.dlgs.close },
-      ),
+    handleSoftDelete: (e: string | null) => {
+      const payload: any = {
+        id: r.dlgs.deletingItem?.customer_code || "",
+        version: r.dlgs.deletingItem?.version || 0,
+      };
+      if (e) payload.endDate = e;
+      r.softDel.mutate(payload, { onSuccess: r.dlgs.close });
+    },
     handlePermanentDelete: () =>
       r.permDel.mutate(
         {

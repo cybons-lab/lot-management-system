@@ -192,7 +192,7 @@ function useDeliveryPlaceCrudHandlers({
         {
           id: dialogState.deletingItem.id,
           version: dialogState.deletingItem.version,
-          endDate: endDate || undefined,
+          ...(endDate ? { endDate } : {}),
         },
         { onSuccess: closeDeleteDialog },
       );

@@ -89,8 +89,8 @@ export function LotTable({
       <DataTable
         data={paginatedLots}
         columns={columns}
-        sort={sortConfig}
-        onSortChange={(sort) => onSortChange?.(sort.column)}
+        {...(sortConfig ? { sort: sortConfig } : {})}
+        {...(onSortChange ? { onSortChange: (sort) => onSortChange(sort.column) } : {})}
         getRowId={(row) => row.id}
         isLoading={isLoading}
         selectable={selectable}

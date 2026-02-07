@@ -53,6 +53,21 @@ export default defineConfig(({ mode }) => {
     build: {
       target: "esnext", // Modern browsers (Latest Edge/Chrome)
       sourcemap: "hidden",
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            "vendor-react": ["react", "react-dom", "react-router-dom"],
+            "vendor-ui": [
+              "@radix-ui/react-scroll-area",
+              "@radix-ui/react-dialog",
+              "@radix-ui/react-dropdown-menu",
+              "@radix-ui/react-tooltip",
+            ],
+            "vendor-utils": ["query-string", "date-fns", "lodash-es"],
+            "vendor-charts": ["recharts"],
+          },
+        },
+      },
     },
   };
 });

@@ -93,7 +93,7 @@ export function SupplierDetailDialog({
 
       if (deleteType === "soft") {
         softDelete(
-          { id: supplierCode, version: supplier.version, endDate: endDate || undefined },
+          { id: supplierCode, version: supplier.version, ...(endDate ? { endDate } : {}) },
           { onSuccess },
         );
       } else {

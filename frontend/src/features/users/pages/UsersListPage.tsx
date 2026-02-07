@@ -38,7 +38,11 @@ export function UsersListPage() {
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
 
   // Fetch users
-  const { data: users, isLoading, isError } = useUsers({ is_active: isActiveFilter });
+  const {
+    data: users,
+    isLoading,
+    isError,
+  } = useUsers({ ...(isActiveFilter !== undefined ? { is_active: isActiveFilter } : {}) });
 
   // Create mutation
   const createMutation = useCreateUser();

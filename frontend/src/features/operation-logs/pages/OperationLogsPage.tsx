@@ -91,9 +91,9 @@ export function OperationLogsPage() {
   // Build query params
   const queryParams = useMemo(() => {
     const params: OperationLogsListParams = {
-      user_id: filters.user_id ? Number(filters.user_id) : undefined,
-      operation_type: filters.operation_type || undefined,
-      target_table: filters.target_table || undefined,
+      ...(filters.user_id ? { user_id: Number(filters.user_id) } : {}),
+      ...(filters.operation_type ? { operation_type: filters.operation_type } : {}),
+      ...(filters.target_table ? { target_table: filters.target_table } : {}),
     };
 
     if (filters.startDate) {
@@ -284,7 +284,7 @@ export function OperationLogsPage() {
             <div className="flex flex-col gap-2">
               <Label className="text-sm font-medium">開始日時</Label>
               <DateTimePicker
-                date={filters.startDate}
+                {...(filters.startDate ? { date: filters.startDate } : {})}
                 setDate={(date) => setFilters({ ...filters, startDate: date })}
                 className="w-[240px]"
               />
@@ -292,7 +292,7 @@ export function OperationLogsPage() {
             <div className="flex flex-col gap-2">
               <Label className="text-sm font-medium">終了日時</Label>
               <DateTimePicker
-                date={filters.endDate}
+                {...(filters.endDate ? { date: filters.endDate } : {})}
                 setDate={(date) => setFilters({ ...filters, endDate: date })}
                 className="w-[240px]"
               />

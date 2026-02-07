@@ -73,7 +73,7 @@ describe("RBAC Permissions Logic", () => {
       },
     ) => {
       if (feature.includes(":")) {
-        const parent = feature.split(":")[0];
+        const parent = feature.split(":")[0]!;
         if (isVisibleMock(parent, settings)) return true;
       }
       return settings?.page_visibility?.[feature]?.user ?? true;

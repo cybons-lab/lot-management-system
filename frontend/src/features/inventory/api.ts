@@ -29,6 +29,7 @@ export * from "./types";
 /**
  * URLSearchParams を構築するヘルパー関数
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const buildSearchParams = (params: Record<string, any> = {}) => {
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {

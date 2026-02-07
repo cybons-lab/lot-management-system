@@ -4,7 +4,7 @@
 
 ## アーカイブ日
 
-2026-01-25
+2026-02-08（最終更新）
 
 ## アーカイブ理由
 
@@ -53,6 +53,13 @@
 | ファイル | 推定作成年 | アーカイブ理由 |
 |---------|----------|--------------|
 | `ocr-results-column-customization.md` | 不明 | 列順カスタマイズのメモ。実装済み (#459)、現状仕様に反映済み |
+
+### backlog/ (2件追加) - 堅牢性強化関連
+
+| ファイル | 作成年 | アーカイブ理由 |
+|---------|--------|--------------|
+| `strictness-robustness-plan.md` | 2026-02 | 設定ファイル厳密化計画。全項目完了（asyncpg移行のみBACKLOG 3-0に残存） |
+| `SUPPRESSION_RESOLUTION_ROUND3.md` | 2026-02 | 警告抑制解消計画。TSC 0 errors / ESLint 0 errors/warnings 達成。残存 eslint-disable は構造的理由で許容 |
 
 ### operations/ (3件) - 運用ドキュメント
 

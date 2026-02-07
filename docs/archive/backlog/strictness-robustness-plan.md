@@ -240,6 +240,37 @@ CLAUDE.mdの「Python 3.13」記述を「Python 3.12」に修正。
 
 ---
 
+## 完了状況
+
+### Phase 1（PR #557 でマージ済み）
+- [x] 1. Backend `pyproject.toml` 依存関係整理
+- [x] 2. Backend Ruff設定強化
+- [x] 3. Backend Mypy厳密化
+- [x] 4. Backend pytest設定統合
+- [x] 5. CLAUDE.md Python版修正
+- [x] 6. Frontend `package.json` 依存整理
+- [x] 7. Frontend `tsconfig.json` 厳密化（forceConsistentCasingInFileNames）
+- [x] 8. Frontend `vitest.config.ts` 改善
+- [x] 9. Frontend `vite.config.ts` 改善（optimizeDeps, sourcemap）
+- [x] 10. knip設定
+- [x] 11. BACKLOG追加
+
+### Phase 1-A/C（PR #558 でマージ済み）
+- [x] ESLint設定強化・DataTableリファクタリング
+- [x] ESLint Temporary overrides 削減（116 → 44ファイル）
+
+### Phase 後続（BACKLOG 3-0, feature/backlog-1a-strictness-robustness ブランチ）
+- [x] eslint-plugin-import → eslint-plugin-import-x 移行
+- [x] ESLint `no-explicit-any` 段階的有効化（off → warn）
+- [x] Vite manual chunks 最適化
+- [x] `exactOptionalPropertyTypes: true` 追加
+- [x] `noUncheckedIndexedAccess: true` 追加
+- [x] requests → httpx 統一（SmartReadサービス全体）
+- [ ] asyncpg移行（別PR予定、高難易度）
+- [x] mypy `no-any-return` エラー4件（simple_sync_service.py）- 型アノテーション追加で解消
+
+---
+
 ## 検証手順
 
 1. `npm run up` でDockerコンテナ起動

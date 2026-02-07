@@ -4,6 +4,7 @@
  */
 
 import { http } from "@/shared/api/http-client";
+import { buildQueryParams } from "@/shared/libs/url-utils";
 
 // ===== Types =====
 
@@ -59,25 +60,11 @@ export interface OperationLogsListParams {
 // ===== API Functions =====
 
 /**
- * クエリパラメータを構築するヘルパー
- */
-function buildQueryParams(params: Record<string, any>): string {
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      searchParams.append(key, value.toString());
-    }
-  });
-  const queryString = searchParams.toString();
-  return queryString ? "?" + queryString : "";
-}
-
-/**
  * Get operation logs list
  * @endpoint GET /operation-logs
  */
 export const getOperationLogs = (params?: OperationLogsListParams) => {
-  const queryString = buildQueryParams(params ?? {});
+  const queryString = buildQueryParams((params ?? {}) as Record<string, unknown>);
   return http.get<OperationLogListResponse>(`operation-logs${queryString}`);
 };
 

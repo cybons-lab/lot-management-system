@@ -26,7 +26,7 @@ export const ForecastListCard = forwardRef<HTMLDivElement, ForecastListCardProps
           isDeleting={isDeleting}
           isOpen={isOpen}
           isActive={isActive}
-          isFocused={isFocused}
+          {...(isFocused !== undefined ? { isFocused } : {})}
           onToggle={onToggle}
         />
       </div>

@@ -43,9 +43,9 @@ type LotsQueryParams = LotsGetParams & { delivery_place_code?: string | null };
 export const inventoryLotsQueryParamsAtom = atom<LotsQueryParams>((get) => {
   const filters = get(lotFiltersAtom);
   return {
-    with_stock: filters.inStockOnly || undefined,
-    product_code: filters.productCode ?? undefined,
-    delivery_place_code: filters.warehouseCode ?? undefined,
+    ...(filters.inStockOnly ? { with_stock: true } : {}),
+    ...(filters.productCode ? { product_code: filters.productCode } : {}),
+    ...(filters.warehouseCode ? { delivery_place_code: filters.warehouseCode } : {}),
   };
 });
 

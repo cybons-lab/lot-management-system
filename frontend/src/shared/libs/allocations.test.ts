@@ -20,11 +20,11 @@ describe("coerceAllocatedLots", () => {
       const result = coerceAllocatedLots(input);
 
       expect(result).toHaveLength(1);
-      expect(result[0].lot_id).toBe(1);
-      expect(result[0].allocated_quantity).toBe("100.000");
-      expect(result[0].allocated_qty).toBe(100);
-      expect(result[0].delivery_place_code).toBe("DP-001");
-      expect(result[0].delivery_place_name).toBe("配送先1");
+      expect(result[0]!.lot_id).toBe(1);
+      expect(result[0]!.allocated_quantity).toBe("100.000");
+      expect(result[0]!.allocated_qty).toBe(100);
+      expect(result[0]!.delivery_place_code).toBe("DP-001");
+      expect(result[0]!.delivery_place_name).toBe("配送先1");
     });
 
     it("handles multiple allocations", () => {
@@ -38,8 +38,8 @@ describe("coerceAllocatedLots", () => {
       );
 
       expect(result).toHaveLength(2);
-      expect(result[0].lot_id).toBe(1);
-      expect(result[1].lot_id).toBe(2);
+      expect(result[0]!.lot_id).toBe(1);
+      expect(result[1]!.lot_id).toBe(2);
     });
   });
 
@@ -57,8 +57,8 @@ describe("coerceAllocatedLots", () => {
         input as unknown as Parameters<typeof coerceAllocatedLots>[0],
       );
 
-      expect(result[0].allocated_quantity).toBe("100.500");
-      expect(result[0].allocated_qty).toBe(100.5);
+      expect(result[0]!.allocated_quantity).toBe("100.500");
+      expect(result[0]!.allocated_qty).toBe(100.5);
     });
 
     it("falls back to allocated_qty when allocated_quantity is missing", () => {
@@ -73,8 +73,8 @@ describe("coerceAllocatedLots", () => {
         input as unknown as Parameters<typeof coerceAllocatedLots>[0],
       );
 
-      expect(result[0].allocated_quantity).toBe(75.5);
-      expect(result[0].allocated_qty).toBe(75.5);
+      expect(result[0]!.allocated_quantity).toBe(75.5);
+      expect(result[0]!.allocated_qty).toBe(75.5);
     });
 
     it("defaults to 0 when both are missing", () => {
@@ -88,8 +88,8 @@ describe("coerceAllocatedLots", () => {
         input as unknown as Parameters<typeof coerceAllocatedLots>[0],
       );
 
-      expect(result[0].allocated_quantity).toBe("0");
-      expect(result[0].allocated_qty).toBe(0);
+      expect(result[0]!.allocated_quantity).toBe("0");
+      expect(result[0]!.allocated_qty).toBe(0);
     });
   });
 
@@ -122,8 +122,8 @@ describe("coerceAllocatedLots", () => {
       );
 
       expect(result).toHaveLength(2);
-      expect(result[0].lot_id).toBe(1);
-      expect(result[1].lot_id).toBe(2);
+      expect(result[0]!.lot_id).toBe(1);
+      expect(result[1]!.lot_id).toBe(2);
     });
 
     it("skips null entries", () => {
@@ -168,8 +168,8 @@ describe("coerceAllocatedLots", () => {
 
       const result = coerceAllocatedLots(input);
 
-      expect(result[0].delivery_place_code).toBe("WH-001");
-      expect(result[0].delivery_place_name).toBe("倉庫1");
+      expect(result[0]!.delivery_place_code).toBe("WH-001");
+      expect(result[0]!.delivery_place_name).toBe("倉庫1");
     });
 
     it("defaults to null when delivery place is missing", () => {
@@ -184,8 +184,8 @@ describe("coerceAllocatedLots", () => {
         input as unknown as Parameters<typeof coerceAllocatedLots>[0],
       );
 
-      expect(result[0].delivery_place_code).toBeNull();
-      expect(result[0].delivery_place_name).toBeNull();
+      expect(result[0]!.delivery_place_code).toBeNull();
+      expect(result[0]!.delivery_place_name).toBeNull();
     });
   });
 
@@ -203,7 +203,7 @@ describe("coerceAllocatedLots", () => {
         input as unknown as Parameters<typeof coerceAllocatedLots>[0],
       );
 
-      expect(result[0].allocation_id).toBe(999);
+      expect(result[0]!.allocation_id).toBe(999);
     });
 
     it("allocation_id is undefined when not present", () => {
@@ -218,7 +218,7 @@ describe("coerceAllocatedLots", () => {
         input as unknown as Parameters<typeof coerceAllocatedLots>[0],
       );
 
-      expect(result[0].allocation_id).toBeUndefined();
+      expect(result[0]!.allocation_id).toBeUndefined();
     });
   });
 });

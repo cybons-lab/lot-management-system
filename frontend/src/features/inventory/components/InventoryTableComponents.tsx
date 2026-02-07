@@ -219,8 +219,8 @@ export function ExpandedLotDetails({
                     onEdit={onEditLot}
                     onLock={onLockLot}
                     onUnlock={onUnlockLot}
-                    onWithdraw={onWithdrawLot}
-                    onHistory={onHistoryLot}
+                    {...(onWithdrawLot && { onWithdraw: onWithdrawLot })}
+                    {...(onHistoryLot && { onHistory: onHistoryLot })}
                   />
                 ))}
               </tbody>
@@ -346,41 +346,40 @@ export function InventoryRow({
           onEditLot={(lot) =>
             onEditLot({
               ...lot,
-              warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+              warehouse_name:
+                lot.warehouse_name || item.warehouse_name || item.warehouse_code || null,
             })
           }
           onLockLot={(lot) =>
             onLockLot({
               ...lot,
-              warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+              warehouse_name:
+                lot.warehouse_name || item.warehouse_name || item.warehouse_code || null,
             })
           }
           onUnlockLot={(lot) =>
             onUnlockLot({
               ...lot,
-              warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+              warehouse_name:
+                lot.warehouse_name || item.warehouse_name || item.warehouse_code || null,
             })
           }
-          onWithdrawLot={
-            onWithdrawLot
-              ? (lot) =>
-                  onWithdrawLot({
-                    ...lot,
-                    warehouse_name:
-                      lot.warehouse_name || item.warehouse_name || item.warehouse_code,
-                  })
-              : undefined
-          }
-          onHistoryLot={
-            onHistoryLot
-              ? (lot) =>
-                  onHistoryLot({
-                    ...lot,
-                    warehouse_name:
-                      lot.warehouse_name || item.warehouse_name || item.warehouse_code,
-                  })
-              : undefined
-          }
+          {...(onWithdrawLot && {
+            onWithdrawLot: (lot) =>
+              onWithdrawLot({
+                ...lot,
+                warehouse_name:
+                  lot.warehouse_name || item.warehouse_name || item.warehouse_code || null,
+              }),
+          })}
+          {...(onHistoryLot && {
+            onHistoryLot: (lot) =>
+              onHistoryLot({
+                ...lot,
+                warehouse_name:
+                  lot.warehouse_name || item.warehouse_name || item.warehouse_code || null,
+              }),
+          })}
         />
       )}
     </Fragment>

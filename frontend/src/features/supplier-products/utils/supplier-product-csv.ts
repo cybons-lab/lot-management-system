@@ -30,7 +30,7 @@ export function parseSupplierProductCsv(csvText: string): {
 
   // Skip header line
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const line = lines[i]!.trim();
     if (!line) continue;
 
     const parsed = parseSupplierProductRow(parseCSVLine(line), i + 1);
@@ -60,7 +60,16 @@ function parseSupplierProductRow(cols: string[], rowNumber: number): ParseSuppli
     base_unit,
     lead_time_days_str,
     notes,
-  ] = cols;
+  ] = cols as [
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string | undefined,
+    string | undefined,
+  ];
 
   if (!isSupplierProductOperation(operation)) {
     return { error: `行${rowNumber}: 無効なOPERATION値 (${operation})` };
@@ -79,8 +88,8 @@ function parseSupplierProductRow(cols: string[], rowNumber: number): ParseSuppli
       maker_part_no: maker_part_no.trim(),
       display_name: display_name.trim(),
       base_unit: base_unit.trim(),
-      lead_time_days: leadTimeDays.value,
-      notes: notes?.trim() || undefined,
+      ...(leadTimeDays.value !== undefined ? { lead_time_days: leadTimeDays.value } : {}),
+      ...(notes?.trim() ? { notes: notes.trim() } : {}),
       _rowNumber: rowNumber,
     },
   };

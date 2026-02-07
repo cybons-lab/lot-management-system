@@ -45,7 +45,9 @@ export function useBatchJobsPage() {
     data: response,
     isLoading,
     isError,
-  } = useBatchJobs({ status: statusFilter || undefined });
+  } = useBatchJobs({
+    ...(statusFilter ? { status: statusFilter } : {}),
+  });
 
   const executeMutation = useExecuteBatchJob();
   const deleteMutation = useDeleteBatchJob();

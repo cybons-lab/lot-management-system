@@ -28,7 +28,15 @@ repos:
         types: [file]
         pass_filenames: false
 
-      # 3. Prettier（フォーマット・見た目）
+      # 3. 循環依存チェック
+      - id: frontend-circular
+        name: Circular Dependency Check (Frontend)
+        entry: bash -c 'cd frontend && npm run check:circular'
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false
+
+      # 4. Prettier（フォーマット・見た目）
       - id: frontend-prettier
         name: Prettier (Frontend)
         entry: bash -c 'cd frontend && npm run format'
@@ -50,7 +58,7 @@ repos:
 
   - repo: local
     hooks:
-      # 4. Mypy（型チェック）
+      # 5. Mypy（型チェック）
       - id: backend-mypy
         name: Mypy (Backend)
         entry: bash -c 'cd backend && uv run mypy app/'
@@ -64,7 +72,7 @@ repos:
   # --------------------------------------------------------------------------
   - repo: local
     hooks:
-      # 5. OpenAPI Schema Sync
+      # 6. OpenAPI Schema Sync
       # npm run fe:typegen 相当（frontend/package.json の typegen:full を使用）
       - id: openapi-sync
         name: OpenAPI Schema Sync

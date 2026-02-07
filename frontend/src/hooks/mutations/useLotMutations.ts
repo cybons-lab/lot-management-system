@@ -44,7 +44,7 @@ export function useCreateLot(options?: {
 
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -90,7 +90,7 @@ export function useUpdateLot(
 
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -132,7 +132,7 @@ export function useDeleteLot(options?: {
 
       options?.onSuccess?.();
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -154,7 +154,7 @@ export function useBulkCreateLots(options?: {
       const results: LotResponse[] = [];
 
       for (let i = 0; i < lotsData.length; i++) {
-        const lotData = lotsData[i];
+        const lotData = lotsData[i]!;
         const result = await createLot(lotData);
         results.push(result);
 
@@ -172,7 +172,7 @@ export function useBulkCreateLots(options?: {
 
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -205,7 +205,7 @@ export function useUpdateLotStatus(
 
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -226,7 +226,7 @@ export function useLockLot(options?: {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lots.all });
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -246,6 +246,6 @@ export function useUnlockLot(options?: {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lots.all });
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }

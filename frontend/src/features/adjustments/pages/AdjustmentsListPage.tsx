@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import type { AdjustmentType } from "../api";
+import type { AdjustmentsListParams, AdjustmentType } from "../api";
 import { useAdjustments } from "../hooks";
 
 import { Button } from "@/components/ui";
@@ -43,9 +43,9 @@ export function AdjustmentsListPage() {
   const table = useTable({ initialPageSize: 25 });
 
   // Build query params
-  const queryParams = {
-    lot_id: filters.lot_id ? Number(filters.lot_id) : undefined,
-    adjustment_type: filters.adjustment_type || undefined,
+  const queryParams: AdjustmentsListParams = {
+    ...(filters.lot_id ? { lot_id: Number(filters.lot_id) } : {}),
+    ...(filters.adjustment_type ? { adjustment_type: filters.adjustment_type } : {}),
   };
 
   // Fetch adjustments

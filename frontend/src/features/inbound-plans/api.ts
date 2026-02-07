@@ -4,6 +4,7 @@
  */
 
 import { http } from "@/shared/api/http-client";
+import { buildQueryParams } from "@/shared/libs/url-utils";
 
 // ===== Types =====
 
@@ -133,25 +134,11 @@ export interface InboundPlansListParams {
 // ===== API Functions =====
 
 /**
- * クエリパラメータを構築するヘルパー
- */
-function buildQueryParams(params: Record<string, any>): string {
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      searchParams.append(key, value.toString());
-    }
-  });
-  const queryString = searchParams.toString();
-  return queryString ? "?" + queryString : "";
-}
-
-/**
  * Get inbound plans list
  * @endpoint GET /inbound-plans
  */
 export const getInboundPlans = async (params?: InboundPlansListParams) => {
-  const queryString = buildQueryParams(params ?? {});
+  const queryString = buildQueryParams((params ?? {}) as Record<string, unknown>);
   const response = await http.get<InboundPlanListResponse>(`inbound-plans${queryString}`);
   // Return items array for compatibility with existing hooks
   return response.items;

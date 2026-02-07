@@ -42,13 +42,21 @@ export function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFor
       lot_number: formData.get("lot_number") as string,
       product_code: formData.get("product_code") as string,
       supplier_code: formData.get("supplier_code") as string,
-      delivery_place_code: (formData.get("delivery_place_code") as string) || undefined,
-      delivery_place_name: (formData.get("delivery_place_name") as string) || undefined,
       quantity: Number(formData.get("quantity")),
       lot_unit: formData.get("lot_unit") as string,
       receipt_date: formData.get("receipt_date") as string,
-      expiry_date: (formData.get("expiry_date") as string) || undefined,
-      origin_reference: (formData.get("origin_reference") as string) || undefined,
+      ...(formData.get("delivery_place_code")
+        ? { delivery_place_code: formData.get("delivery_place_code") as string }
+        : {}),
+      ...(formData.get("delivery_place_name")
+        ? { delivery_place_name: formData.get("delivery_place_name") as string }
+        : {}),
+      ...(formData.get("expiry_date")
+        ? { expiry_date: formData.get("expiry_date") as string }
+        : {}),
+      ...(formData.get("origin_reference")
+        ? { origin_reference: formData.get("origin_reference") as string }
+        : {}),
     };
     await onSubmit(data);
   };

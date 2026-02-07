@@ -90,7 +90,7 @@ export const lotHandlers = [
       ...lots[index],
       ...body,
       updated_at: new Date().toISOString(),
-    };
+    } as LotResponse;
 
     return HttpResponse.json(lots[index]);
   }),

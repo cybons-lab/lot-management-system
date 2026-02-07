@@ -119,13 +119,13 @@ export function LotSection({
 
   // ステータスを判定
   const statuses = getLotStatuses({
-    status: lot.status,
+    status: lot.status || "",
     current_quantity: lot.totalStock,
-    inspection_status: lot.inspectionStatus,
-    expiry_date: lot.expiryDate,
-    received_date: lot.receivedDate,
+    inspection_status: lot.inspectionStatus || "",
+    expiry_date: lot.expiryDate || null,
+    received_date: lot.receivedDate || null,
   });
-  const primaryStatus = statuses[0];
+  const primaryStatus = statuses[0] || "pending_receipt";
   const bgColor = getStatusBgColor(primaryStatus);
   const showLockIcon = isUnusable(primaryStatus);
   const canDelete = totalShipment === 0;
@@ -205,9 +205,9 @@ export function LotSection({
                 lotInfo={lotInfo}
                 lotId={lotId}
                 isEditing={isEditing}
-                onFieldChange={onLotFieldChange}
-                warehouseName={warehouseName}
-                warehouseCode={warehouseCode}
+                {...(onLotFieldChange && { onFieldChange: onLotFieldChange })}
+                warehouseName={warehouseName || ""}
+                warehouseCode={warehouseCode || ""}
               />
 
               {/* 2. Inbound Qty (Big Vertical) */}
@@ -224,9 +224,9 @@ export function LotSection({
                 dateColumns={dateColumns}
                 totalShipment={totalShipment}
                 lotId={lotId}
-                onCoaDateChange={onCoaDateChange}
-                onAddDestination={() => onAddDestination?.(lotId)}
-                onReorderDestination={onReorderDestination}
+                {...(onCoaDateChange && { onCoaDateChange })}
+                {...(onAddDestination && { onAddDestination: () => onAddDestination(lotId) })}
+                {...(onReorderDestination && { onReorderDestination })}
               />
 
               {/* 4. Current Stock (Big Vertical) */}
@@ -242,10 +242,10 @@ export function LotSection({
                 dateColumns={dateColumns}
                 destinations={destinations}
                 lotId={lotId}
-                onQtyChange={onQtyChange}
-                onAddColumn={onAddColumn}
-                onCommentChange={onCommentChange}
-                onManualShipmentDateChange={onManualShipmentDateChange}
+                {...(onQtyChange && { onQtyChange })}
+                {...(onAddColumn && { onAddColumn })}
+                {...(onCommentChange && { onCommentChange })}
+                {...(onManualShipmentDateChange && { onManualShipmentDateChange })}
               />
             </div>
 

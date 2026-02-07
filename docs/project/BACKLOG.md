@@ -17,11 +17,11 @@
 **優先度:** 高
 **作成:** 2026-02-06
 **カテゴリ:** コード品質・堅牢性
-**状態:** 進行中（設定ファイル厳密化PRで大部分対応済み）
+**状態:** ✅ 完了（後続: asyncpg移行 + 型定義見直しは BACKLOG 3-0/3-4 へ）
 
 **完了済み:**
 - [x] `backend/pyproject.toml` - 依存整理、Ruffルール強化（SIM/RET/C4/PERF/TRY/RUF/S/LOG/T20/ERA/ARG/C90/PL追加）、Mypy strict化、pytest統合
-- [x] `frontend/tsconfig.json` - `noUncheckedIndexedAccess`, `forceConsistentCasingInFileNames` 追加
+- [x] `frontend/tsconfig.json` - `noUncheckedIndexedAccess`, `forceConsistentCasingInFileNames`, `exactOptionalPropertyTypes` 追加
 - [x] `frontend/vite.config.ts` - optimizeDeps整理、sourcemap: "hidden" 追加
 - [x] `frontend/vitest.config.ts` - clearMocks/restoreMocks/coverage設定追加
 - [x] `frontend/package.json` - 依存整理（重複削除、dev移動、knip/coverage-v8追加）
@@ -30,15 +30,18 @@
 - [x] `frontend/knip.json` - デッドコード検出設定追加
 - [x] CI/CDワークフローの最適化（Python 3.12統一、--all-extras対応、schema-sync修正）
 - [x] `frontend/eslint.config.js` - api.d.tsをESLint対象外に追加（CI/ローカル出力一致）
-- [x] ESLint Temporary overrides削減（116 → 44ファイル、2026-02-07 1-A完了）
+- [x] ESLint Temporary overrides削減（116 → 44ファイル）
+- [x] TSC 0 errors（467件の型エラー解消）
+- [x] ESLint 0 errors / 0 warnings（53件解消）
+- [x] requests → httpx 統一
 
-
-**残タスク:**
-- [ ] 後続タスク: BACKLOG 3-0 参照
+**後続タスク:**
+- BACKLOG 3-0: asyncpg移行
+- BACKLOG 3-4: 型定義見直し・eslint-disable削減
 
 **関連タスク:**
-- `docs/project/SUPPRESSION_RESOLUTION_ROUND3.md` - 警告抑制の解消
-- `docs/project/plans/strictness-robustness-plan.md` - 詳細計画
+- `docs/archive/backlog/strictness-robustness-plan.md` - 詳細計画（アーカイブ済み）
+- `docs/archive/backlog/SUPPRESSION_RESOLUTION_ROUND3.md` - 警告抑制解消（アーカイブ済み）
 
 ### 1-0. Phase 4-A: SmartReadデータの楽観的ロック導入
 
@@ -797,6 +800,20 @@ ESLint v10へのアップグレード時に、厳格なルール（`no-explicit-
 1. 各ルール違反箇所の修正（コード修正、型定義の改善）
 2. `eslint.config.js` から該当ルールの `off` 設定を削除
 3. CIでリントエラーが出ないことを確認
+
+### 2-17. ExcelView: 現在在庫の計算ロジック不備
+
+**優先度:** 中
+**作成:** 2026-02-07
+**カテゴリ:** 業務ロジック・バグ
+
+**症状:**
+- 引当Excel表示画面において、「現在在庫」の数値が表示上の出荷数（引当数）を反映していない。
+- 本来は `入庫数 - 合計引当数`（またはそれに準ずる計算）が必要だが、正しく更新・計算されていない可能性がある。
+
+**タスク内容:**
+1. `useExcelViewData.ts` 内の計算ロジックを調査
+2. 引当変更時に合計在庫・残在庫が動的に再計算されるよう修正
 
 **備考:**
 `e2e` ディレクトリについてはテストコード特有の事情で一部許容しても良いが、`src` 配下は原則解消すべき。
@@ -1923,14 +1940,55 @@ Phase 4で SmartRead/OCR系と主要マスタ系に楽観的ロック (`version`
 **優先度:** 低
 **作成:** 2026-02-07
 **カテゴリ:** コード品質・堅牢性
+**状態:** ほぼ完了（残: asyncpg移行 + 型定義見直し）
 
-**後続タスク:**
-1. **asyncpg移行** - psycopg2-binary → asyncpg（非同期DB接続）
-2. **eslint-plugin-import → eslint-plugin-import-x 移行** - ESM対応・パフォーマンス改善
-3. **ESLint `no-explicit-any` の段階的有効化** - 現在off → warn → error
-4. **Vite manual chunks 最適化** - バンドルサイズ削減
-5. **`exactOptionalPropertyTypes: true`** - tsconfig.json（エラー量次第で段階的対応）
-6. **requests → httpx 統一** - SmartReadサービスで使用中のrequestsをhttpxに統一
+**完了済み:**
+- [x] **eslint-plugin-import → eslint-plugin-import-x 移行** - ESM対応・パフォーマンス改善
+- [x] **ESLint `no-explicit-any` の段階的有効化** - off → warn に変更、段階的移行用の緩和設定追加
+- [x] **Vite manual chunks 最適化** - vendor-react/ui/utils/charts に分割
+- [x] **`exactOptionalPropertyTypes: true`** - tsconfig.json に追加、関連コード修正済み
+- [x] **`noUncheckedIndexedAccess: true`** - tsconfig.json に追加、関連コード修正済み
+- [x] **requests → httpx 統一** - SmartReadサービスをhttpxに移行、`requests` を本番依存から削除
+- [x] **TSC 0 errors** - 467件のTS型エラーを全て解消
+- [x] **ESLint 0 errors / 0 warnings** - 53件のESLintエラー・警告を全て解消
+
+**残タスク:**
+1. **asyncpg移行** - psycopg2-binary → asyncpg（非同期DB接続）- 高難易度
+2. **型定義側の `| undefined` 対応** → BACKLOG 3-4 参照
+
+### 3-4. exactOptionalPropertyTypes 根本対応（型定義見直し + eslint-disable削減）
+
+**優先度:** 低
+**作成:** 2026-02-08
+**カテゴリ:** コード品質・型安全性
+**状態:** 未着手
+
+**背景:**
+`exactOptionalPropertyTypes: true` 有効化に伴い、call site 側で防御的 Spread パターン（`...(x != null ? { prop: x } : {})`）が302箇所 / 111ファイルに増加。根本原因は型定義側にある。
+
+**現状の問題:**
+
+| 問題 | 深刻度 | 規模 |
+|------|--------|------|
+| Spread条件構文が3パターン混在 | 中 | 394箇所（`? : {}` 77%, `&& {}` 15%, `!= null` 8%） |
+| factory関数の過度な複雑化 | 高 | `order-factory.ts` に3段nullish coalescing |
+| 型定義側に `\| undefined` なし | 中 | `api.d.ts` + `aliases.ts` が根本原因 |
+| 冗長なSpreadパターン | 低 | 302箇所 / 111ファイル |
+
+**eslint-disable コメント現況:** 141行 / 116ファイル
+- `max-lines-per-function`: 111箇所（構造的・共通化で段階的解消）
+- `complexity`: 52箇所（同上）
+- `no-explicit-any`: 8箇所（型改善で解消可能）
+- `max-lines`: 8箇所（ファイル分割で解消可能）
+
+**対応計画（優先度順）:**
+1. **openapi-typescript 生成後の後処理スクリプト** - `prop?: T | null` → `prop?: T | null | undefined` を自動追加
+2. **`aliases.ts` の手動型に `| undefined` 追加** - 根本修正
+3. **Spread条件パターン統一** - 根本修正後に `!= null ? { k: v } : {}` に統一（母数が大幅減少）
+4. **`order-factory.ts` 整理** - ヘルパー関数抽出（テスト用なので優先度低）
+5. **eslint-disable 段階的解消** - 共通化による分割で `max-lines-per-function` / `complexity` を減らす
+
+**注記:** 共通化タスクと並行で進めるのが効率的
 
 ### 3-1. Major Dependency Updates (2026-02-07)
 

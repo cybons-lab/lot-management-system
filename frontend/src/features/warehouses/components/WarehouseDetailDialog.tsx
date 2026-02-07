@@ -81,7 +81,7 @@ export function WarehouseDetailDialog({
 
       if (deleteType === "soft") {
         softDelete(
-          { id: warehouseCode, version: warehouse.version, endDate: endDate || undefined },
+          { id: warehouseCode, version: warehouse.version, ...(endDate ? { endDate } : {}) },
           { onSuccess },
         );
       } else {

@@ -1,11 +1,16 @@
-/* eslint-disable max-lines, max-lines-per-function, complexity, max-params -- 関連する画面ロジックを1箇所で管理するため */
+/* eslint-disable max-lines, max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため */
 import { AlertCircle, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
-import { type KeyboardEvent, createContext, useContext, useEffect, useRef, useState } from "react";
+import { type KeyboardEvent, createContext, useContext, useRef, useState, useEffect } from "react";
 
 import type { OcrResultItem } from "../api";
 import { computeShippingSlipText, type RowInputState } from "../utils/ocr-utils";
 
+import {
+  EditableTextCell as GenericTextCell,
+  EditableDateCell as GenericDateCell,
+} from "@/shared/components/data/EditableCells";
 import { cn } from "@/shared/libs/utils";
+import { resolveEnterTarget, resolveTabTarget } from "@/shared/utils/keyboard-navigation";
 
 // ============================================
 // Types & Defaults
@@ -22,6 +27,7 @@ export const formatDateForInput = (dateStr: string | null | undefined): string =
   const match = converted.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (match) {
     const [, year, month, day] = match;
+    if (year === undefined || month === undefined || day === undefined) return converted;
     return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   }
   return converted;
@@ -115,73 +121,7 @@ export function useOcrCellEditing() {
 // Internal Navigation Logic
 // ============================================
 
-const resolveTabTarget = (
-  currentRowId: number,
-  currentField: EditableFieldKey,
-  direction: 1 | -1,
-  fieldOrder: EditableFieldKey[],
-  rowIds: number[],
-  getRowById: (rowId: number) => OcrResultItem | undefined,
-): ActiveCell => {
-  const currentFieldIndex = fieldOrder.indexOf(currentField);
-  const currentRowIndex = rowIds.indexOf(currentRowId);
-
-  let nextFieldIndex = currentFieldIndex + direction;
-  let nextRowIndex = currentRowIndex;
-
-  if (nextFieldIndex >= fieldOrder.length) {
-    nextFieldIndex = 0;
-    nextRowIndex++;
-  } else if (nextFieldIndex < 0) {
-    nextFieldIndex = fieldOrder.length - 1;
-    nextRowIndex--;
-  }
-
-  if (nextRowIndex < 0 || nextRowIndex >= rowIds.length) {
-    return null;
-  }
-
-  const nextRowId = rowIds[nextRowIndex];
-  const nextRow = getRowById(nextRowId);
-
-  // ステータスが処理中の場合はその行を飛ばす
-  if (nextRow?.status === "processing") {
-    return resolveTabTarget(
-      nextRowId,
-      fieldOrder[nextFieldIndex],
-      direction,
-      fieldOrder,
-      rowIds,
-      getRowById,
-    );
-  }
-
-  return { rowId: nextRowId, field: fieldOrder[nextFieldIndex] };
-};
-
-const resolveEnterTarget = (
-  currentRowId: number,
-  currentField: EditableFieldKey,
-  direction: 1 | -1,
-  rowIds: number[],
-  getRowById: (rowId: number) => OcrResultItem | undefined,
-): ActiveCell => {
-  const currentRowIndex = rowIds.indexOf(currentRowId);
-  const nextRowIndex = currentRowIndex + direction;
-
-  if (nextRowIndex < 0 || nextRowIndex >= rowIds.length) {
-    return null;
-  }
-
-  const nextRowId = rowIds[nextRowIndex];
-  const nextRow = getRowById(nextRowId);
-
-  if (nextRow?.status === "processing") {
-    return resolveEnterTarget(nextRowId, currentField, direction, rowIds, getRowById);
-  }
-
-  return { rowId: nextRowId, field: currentField };
-};
+const isSkipableRow = (row: OcrResultItem | undefined) => row?.status === "processing";
 
 // ============================================
 // Individual Cell Components
@@ -295,24 +235,9 @@ export function EditableTextCell({
     useOcrCellEditing();
   const value = getInputs(row)[field] as string;
   const isActive = activeCell?.rowId === row.id && activeCell?.field === field;
-  const inputRef = useRef<HTMLInputElement>(null);
   const initialValueRef = useRef(value);
-  const wasActiveRef = useRef(false);
-  const [isComposing, setIsComposing] = useState(false);
   const [hasError, setHasError] = useState(false);
   const isSecondary = resolveIsSecondary(field);
-
-  useEffect(() => {
-    const becameActive = isActive && !wasActiveRef.current;
-    wasActiveRef.current = isActive;
-    if (!becameActive) return;
-    initialValueRef.current = value;
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-      inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
-    });
-  }, [isActive, value]);
 
   const isDisabled = row.status === "processing" || isReadOnly;
 
@@ -323,28 +248,12 @@ export function EditableTextCell({
     return true;
   };
 
-  const exitEditing = () => {
-    setActiveCell(null);
-  };
-
-  const handleFinalize = () => {
-    const isValid = validateValue(value);
-    setHasError(!isValid);
-    if (!isValid) {
-      requestAnimationFrame(() => inputRef.current?.focus());
-      return false;
-    }
-    exitEditing();
-    return true;
-  };
-
-  const handleNavigate = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (isComposing) return;
+  const handleNavigate = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape") {
       event.preventDefault();
       updateInputs(row, { [field]: initialValueRef.current });
       setHasError(false);
-      exitEditing();
+      setActiveCell(null);
       return;
     }
     if (event.key === "Tab") {
@@ -354,19 +263,20 @@ export function EditableTextCell({
         return;
       }
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveTabTarget(
-        row.id,
-        field,
+      const target = resolveTabTarget({
+        currentRowId: row.id,
+        currentField: field,
         direction,
-        editableFieldOrder,
+        fieldOrder: editableFieldOrder,
         rowIds,
         getRowById,
-      );
+        isSkipable: isSkipableRow,
+      });
       if (target) {
         setHasError(false);
         setActiveCell(target);
       } else {
-        exitEditing();
+        setActiveCell(null);
       }
       return;
     }
@@ -377,92 +287,46 @@ export function EditableTextCell({
         return;
       }
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveEnterTarget(row.id, field, direction, rowIds, getRowById);
+      const target = resolveEnterTarget({
+        currentRowId: row.id,
+        currentField: field,
+        direction,
+        rowIds,
+        getRowById,
+        isSkipable: isSkipableRow,
+      });
       if (target) {
         setHasError(false);
         setActiveCell(target);
       } else {
-        exitEditing();
+        setActiveCell(null);
       }
     }
   };
 
-  const displayValue = value || placeholder || "-";
-
-  if (isActive) {
-    return (
-      <input
-        ref={inputRef}
-        type="text"
-        value={value}
-        onChange={(e) => {
-          const nextValue = e.target.value;
-          updateInputs(row, { [field]: nextValue });
-          if (hasError && isValidDateInput(nextValue)) {
-            setHasError(false);
-          }
-        }}
-        onBlur={() => {
-          if (!isActive) return;
-          handleFinalize();
-        }}
-        onKeyDown={handleNavigate}
-        onCompositionStart={() => setIsComposing(true)}
-        onCompositionEnd={() => setIsComposing(false)}
-        placeholder={placeholder}
-        className={cn(
-          "w-full rounded-md border bg-white px-2 py-0.5 text-sm shadow-sm outline-none transition focus:ring-2",
-          hasWarning || hasError
-            ? "border-red-300 focus:border-red-400 focus:ring-red-200"
-            : "border-slate-300 focus:border-blue-400 focus:ring-blue-200", // Stronger border
-          inputClassName,
-        )}
-        disabled={isDisabled}
-      />
-    );
-  }
-
   return (
-    <button
-      type="button"
-      onClick={() => {
-        if (isDisabled) return;
-        setActiveCell({ rowId: row.id, field });
+    <GenericTextCell
+      value={value}
+      isActive={isActive}
+      isDisabled={isDisabled ?? undefined}
+      hasWarning={hasWarning}
+      hasError={hasError}
+      placeholder={placeholder}
+      inputClassName={inputClassName}
+      isSecondary={isSecondary}
+      onUpdate={(nextValue) => {
+        updateInputs(row, { [field]: nextValue });
+        if (hasError && isValidDateInput(nextValue)) setHasError(false);
       }}
-      onKeyDown={(event) => {
-        if (isDisabled) return;
-        if (event.key === "Enter" || event.key === "F2") {
-          event.preventDefault();
-          setActiveCell({ rowId: row.id, field });
-        }
+      onBlur={() => {
+        if (!isActive) return;
+        const isValid = validateValue(value);
+        setHasError(!isValid);
+        if (isValid) setActiveCell(null);
       }}
-      className={cn(
-        "group flex w-full rounded-md px-2 py-0.5 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border cursor-text items-center",
-        // 空欄時の枠表示（(1)は目立つ、(2)は弱い）
-        !value &&
-          !hasWarning &&
-          (isSecondary
-            ? "border-dashed border-slate-200 bg-slate-50/20" // (2)弱い
-            : "border-dashed border-slate-300 bg-slate-50/30"), // (1)強め
-        // 値あり or Warning時
-        value && !hasWarning && "bg-transparent border-transparent",
-        // Hover: 白背景+実線に変化
-        "hover:bg-white hover:border-slate-300 hover:border-solid",
-        // Warning状態
-        hasWarning ? "text-red-700 bg-red-50/60 border-red-200 border-solid" : "text-slate-700",
-        isDisabled && "cursor-not-allowed opacity-60",
-        inputClassName,
-      )}
-      disabled={isDisabled}
-    >
-      {value ? (
-        <span>{displayValue}</span>
-      ) : (
-        <span className="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-          {placeholder || "\u00A0"}
-        </span>
-      )}
-    </button>
+      onKeyDown={handleNavigate}
+      onActivate={() => setActiveCell({ rowId: row.id, field })}
+    />
   );
 }
 
@@ -475,43 +339,15 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
   const hasDateError = field === "deliveryDate" && row.date_format_error;
   const isShippingDate = field === "shippingDate";
   const isCalculated = isShippingDate && !value && row.calculated_shipping_date;
-  const displayValue = isCalculated ? row.calculated_shipping_date : value;
   const inputValue =
     value || (isCalculated ? formatDateForInput(row.calculated_shipping_date) : "");
   const isActive = activeCell?.rowId === row.id && activeCell?.field === field;
-  const inputRef = useRef<HTMLInputElement>(null);
   const initialValueRef = useRef(value);
-  const wasActiveRef = useRef(false);
-  const [isComposing, setIsComposing] = useState(false);
   const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    const becameActive = isActive && !wasActiveRef.current;
-    wasActiveRef.current = isActive;
-    if (!becameActive) return;
-    initialValueRef.current = value;
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-      inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
-    });
-  }, [isActive, value]);
 
   const isDisabled = row.status === "processing" || isReadOnly;
 
-  const handleFinalize = () => {
-    const isValid = isValidDateInput(value);
-    setHasError(!isValid);
-    if (!isValid) {
-      requestAnimationFrame(() => inputRef.current?.focus());
-      return false;
-    }
-    setActiveCell(null);
-    return true;
-  };
-
-  const handleNavigate = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (isComposing) return;
+  const handleNavigate = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape") {
       event.preventDefault();
       updateInputs(row, { [field]: initialValueRef.current });
@@ -526,14 +362,15 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         return;
       }
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveTabTarget(
-        row.id,
-        field,
+      const target = resolveTabTarget({
+        currentRowId: row.id,
+        currentField: field,
         direction,
-        editableFieldOrder,
+        fieldOrder: editableFieldOrder,
         rowIds,
         getRowById,
-      );
+        isSkipable: isSkipableRow,
+      });
       if (target) {
         setHasError(false);
         setActiveCell(target);
@@ -549,7 +386,14 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         return;
       }
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveEnterTarget(row.id, field, direction, rowIds, getRowById);
+      const target = resolveEnterTarget({
+        currentRowId: row.id,
+        currentField: field,
+        direction,
+        rowIds,
+        getRowById,
+        isSkipable: isSkipableRow,
+      });
       if (target) {
         setHasError(false);
         setActiveCell(target);
@@ -559,70 +403,37 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
     }
   };
 
-  if (isActive) {
-    return (
-      <input
-        ref={inputRef}
-        type="date"
-        value={inputValue || ""}
-        onChange={(e) => {
-          const nextValue = e.target.value;
-          updateInputs(row, { [field]: nextValue });
-          if (hasError && isValidDateInput(nextValue)) {
-            setHasError(false);
-          }
-        }}
-        onBlur={() => {
-          if (!isActive) return;
-          handleFinalize();
-        }}
-        onKeyDown={handleNavigate}
-        onCompositionStart={() => setIsComposing(true)}
-        onCompositionEnd={() => setIsComposing(false)}
-        title={isCalculated ? `自動計算（LT = ${row.transport_lt_days} 日）` : ""}
-        className={cn(
-          "w-full rounded-md border bg-white px-2 py-0.5 text-sm shadow-sm outline-none transition focus:ring-2",
-          hasDateError || hasError
-            ? "border-red-300 focus:border-red-400 focus:ring-red-200"
-            : isCalculated
-              ? "border-blue-300 focus:border-blue-400 focus:ring-blue-200"
-              : "border-slate-300 focus:border-blue-400 focus:ring-blue-200",
-        )}
-        disabled={isDisabled}
-      />
-    );
-  }
-
   return (
-    <button
-      type="button"
-      onClick={() => {
-        if (isDisabled) return;
-        setActiveCell({ rowId: row.id, field });
+    <GenericDateCell
+      value={inputValue || ""}
+      isActive={isActive}
+      isDisabled={isDisabled ?? undefined}
+      hasWarning={hasDateError}
+      hasError={hasError}
+      onUpdate={(nextValue) => {
+        updateInputs(row, { [field]: nextValue });
+        if (hasError && isValidDateInput(nextValue)) setHasError(false);
       }}
-      onKeyDown={(event) => {
-        if (isDisabled) return;
-        if (event.key === "Enter" || event.key === "F2") {
-          event.preventDefault();
-          setActiveCell({ rowId: row.id, field });
-        }
+      onBlur={() => {
+        if (!isActive) return;
+        const isValid = isValidDateInput(value);
+        setHasError(!isValid);
+        if (isValid) setActiveCell(null);
       }}
+      onKeyDown={handleNavigate}
+      onActivate={() => setActiveCell({ rowId: row.id, field })}
+      title={isCalculated ? `自動計算（LT = ${row.transport_lt_days} 日）` : ""}
       className={cn(
-        "group flex w-full rounded-md px-2 py-0.5 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border cursor-text items-center",
-        // 空欄時の枠表示（日付フィールドは常に(1)扱い）
-        !displayValue && !hasDateError && "border-dashed border-slate-300 bg-slate-50/30",
-        // 値あり or Error時
-        displayValue && !hasDateError && "bg-transparent border-transparent",
-        // Hover
-        "hover:bg-white hover:border-slate-300 hover:border-solid",
-        hasDateError ? "text-red-700 bg-red-50/60 border-red-200 border-solid" : "text-slate-700",
-        isCalculated && "text-blue-700",
-        isDisabled && "cursor-not-allowed opacity-60",
+        isCalculated && !hasDateError && !hasError && "text-blue-700",
+        isCalculated && !isActive && !hasDateError && "border-blue-300",
       )}
-      disabled={isDisabled}
-    >
-      {displayValue || "\u00A0"}
-    </button>
+      inputClassName={cn(
+        isCalculated &&
+          !hasDateError &&
+          !hasError &&
+          "border-blue-300 focus:border-blue-400 focus:ring-blue-200",
+      )}
+    />
   );
 }
 
@@ -687,14 +498,14 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
       event.preventDefault();
       commit();
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveTabTarget(
-        row.id,
-        "shippingSlipText",
+      const target = resolveTabTarget<number, EditableFieldKey, OcrResultItem>({
+        currentRowId: row.id,
+        currentField: "shippingSlipText",
         direction,
-        editableFieldOrder,
+        fieldOrder: editableFieldOrder,
         rowIds,
         getRowById,
-      );
+      });
       if (target) {
         setActiveCell(target);
       }
@@ -704,7 +515,13 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
       event.preventDefault();
       commit();
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveEnterTarget(row.id, "shippingSlipText", direction, rowIds, getRowById);
+      const target = resolveEnterTarget<number, EditableFieldKey, OcrResultItem>({
+        currentRowId: row.id,
+        currentField: "shippingSlipText",
+        direction,
+        rowIds,
+        getRowById,
+      });
       if (target) {
         setActiveCell(target);
       }

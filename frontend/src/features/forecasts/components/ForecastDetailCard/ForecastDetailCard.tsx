@@ -140,13 +140,13 @@ export function ForecastDetailCard({
         groupKey={groupKey}
         isActive={isActive}
         isOpen={isOpen}
-        onToggle={onToggle}
+        {...(onToggle !== undefined ? { onToggle } : {})}
         onAutoAllocate={handleAutoAllocate}
         onRegenerateSuggestions={handleRegenerateSuggestions}
         onClearSuggestions={handleClearSuggestions}
-        onDelete={onDelete}
-        isDeleting={isDeleting}
-        firstForecastId={forecasts[0]?.id}
+        {...(onDelete !== undefined ? { onDelete } : {})}
+        {...(isDeleting !== undefined ? { isDeleting } : {})}
+        {...(forecasts[0]?.id !== undefined ? { firstForecastId: forecasts[0].id } : {})}
       />
 
       {isOpen ? (

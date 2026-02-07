@@ -63,7 +63,7 @@ export function CustomerItemFormBasicSection({
             render={({ field }) => (
               <SearchableSelect
                 options={customerOptions}
-                value={field.value ? String(field.value) : undefined}
+                {...(field.value ? { value: String(field.value) } : {})}
                 onChange={(value) => field.onChange(value && value !== "" ? Number(value) : 0)}
                 placeholder={isLoadingCustomers ? "読込中..." : "得意先を検索..."}
                 disabled={isSubmitting || isLoading}
@@ -113,7 +113,7 @@ export function CustomerItemFormBasicSection({
             render={({ field }) => (
               <SearchableSelect
                 options={supplierItemOptions}
-                value={field.value ? String(field.value) : undefined}
+                {...(field.value ? { value: String(field.value) } : {})}
                 onChange={(value) => {
                   field.onChange(value ? Number(value) : 0);
                   if (onSupplierItemSelect) {

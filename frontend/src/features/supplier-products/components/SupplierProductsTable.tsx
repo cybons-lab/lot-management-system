@@ -23,7 +23,7 @@ interface SupplierProductsTableProps {
 
 const isInactive = (validTo?: string | null) => {
   if (!validTo) return false;
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0] ?? "";
   return validTo <= today;
 };
 
@@ -159,7 +159,7 @@ export function SupplierProductsTable({
 
   return (
     <DataTable
-      data={supplierProducts as SupplierProductWithValidTo[]}
+      data={supplierProducts as (SupplierProduct & { valid_to?: string | null })[]}
       columns={columns}
       sort={sort}
       onSortChange={onSortChange}

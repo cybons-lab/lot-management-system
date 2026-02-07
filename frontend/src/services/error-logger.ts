@@ -55,10 +55,10 @@ class ErrorLogger {
       level,
       source,
       message: typeof error === "string" ? error : error.message,
-      stack: error instanceof Error ? error.stack : undefined,
-      context,
-      userAgent: navigator.userAgent,
-      url: window.location.href,
+      ...(error instanceof Error && error.stack ? { stack: error.stack } : {}),
+      ...(context ? { context } : {}),
+      ...(navigator.userAgent ? { userAgent: navigator.userAgent } : {}),
+      ...(window.location.href ? { url: window.location.href } : {}),
     };
 
     this.logs.push(entry);

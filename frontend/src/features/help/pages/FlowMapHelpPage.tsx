@@ -275,7 +275,9 @@ function FlowTab({
                   isHighlight={highlightNodeIds.has(node.id)}
                   onClick={() => onNodeClick(node)}
                 />
-                {index < flowNodes.length - 1 && <FlowEdgeComponent label={edge?.label} />}
+                {index < flowNodes.length - 1 && (
+                  <FlowEdgeComponent {...(edge?.label ? { label: edge.label } : {})} />
+                )}
               </div>
             );
           })}

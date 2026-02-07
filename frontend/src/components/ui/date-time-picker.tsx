@@ -27,7 +27,9 @@ export function DateTimePicker({ className, date, setDate, label }: DateTimePick
 
     if (!date) return;
 
-    const [hours, minutes] = timeValue.split(":").map(Number);
+    const parts = timeValue.split(":").map(Number);
+    if (parts.length !== 2) return;
+    const [hours, minutes] = parts as [number, number];
     if (isNaN(hours) || isNaN(minutes)) return;
 
     const newDate = new Date(date);
@@ -42,8 +44,11 @@ export function DateTimePicker({ className, date, setDate, label }: DateTimePick
     }
 
     // Preserve time from current selection or input
-    const [hours, minutes] = time.split(":").map(Number);
-    newDate.setHours(hours, minutes);
+    const parts = time.split(":").map(Number);
+    if (parts.length === 2 && !parts.some(isNaN)) {
+      const [hours, minutes] = parts as [number, number];
+      newDate.setHours(hours, minutes);
+    }
     setDate(newDate);
   };
 

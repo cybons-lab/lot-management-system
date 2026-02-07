@@ -195,8 +195,8 @@ export function SmartReadManagedTaskList({
               tasks={tasks}
               onToggleSkipToday={handleToggleSkipToday}
               updatingTaskId={updatingTaskId}
-              selectedTaskId={selectedTaskId}
-              onSelectTask={onSelectTask}
+              {...(selectedTaskId ? { selectedTaskId } : {})}
+              {...(onSelectTask ? { onSelectTask } : {})}
             />
           </div>
         )}

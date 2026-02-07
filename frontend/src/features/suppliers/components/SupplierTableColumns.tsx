@@ -10,7 +10,7 @@ export type SupplierWithValidTo = Supplier & { valid_to?: string };
 
 export const isInactive = (validTo?: string | null) => {
   if (!validTo) return false;
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0] ?? "";
   return validTo <= today;
 };
 

@@ -252,7 +252,7 @@ export function RunDetailPage() {
           </div>
           <Progress
             value={loopSummary?.percent ?? 0}
-            indicatorClassName={isStalled ? "bg-yellow-500" : undefined}
+            {...(isStalled ? { indicatorClassName: "bg-yellow-500" } : {})}
           />
           {isStalled && (
             <div className="text-xs text-yellow-700">

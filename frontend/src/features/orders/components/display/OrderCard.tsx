@@ -122,9 +122,13 @@ export function OrderCard({ order, onSelectLine, onReMatch }: Props) {
 
   return (
     <div className="rounded-2xl border p-4 shadow-sm">
-      <OrderCardHeader displayCode={displayCode} order={order} onReMatch={onReMatch} />
+      <OrderCardHeader
+        displayCode={displayCode}
+        order={order}
+        {...(onReMatch ? { onReMatch } : {})}
+      />
 
-      <OrderLinesTable lines={order.lines} onSelectLine={onSelectLine} />
+      <OrderLinesTable lines={order.lines} {...(onSelectLine ? { onSelectLine } : {})} />
     </div>
   );
 }

@@ -23,7 +23,7 @@ interface QueryErrorFallbackProps {
   /** The error object from the query */
   error: Error | null;
   /** Optional callback to reset/retry the query */
-  resetError?: () => void;
+  resetError?: (() => void) | undefined;
   /** Custom title for the error display */
   title?: string;
   /** Additional CSS classes */

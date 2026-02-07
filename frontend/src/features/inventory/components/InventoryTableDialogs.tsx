@@ -48,7 +48,11 @@ export function InventoryTableDialogs({
         open={lockDialog.isOpen}
         onClose={onCloseLock}
         onConfirm={async (reason, quantity) => {
-          await lockLotMutation.mutateAsync({ id: selectedLot.id, reason, quantity });
+          await lockLotMutation.mutateAsync({
+            id: selectedLot.id,
+            reason,
+            ...(quantity !== undefined ? { quantity } : {}),
+          });
         }}
         isSubmitting={lockLotMutation.isPending}
         lotNumber={selectedLot.lot_number || "-"}

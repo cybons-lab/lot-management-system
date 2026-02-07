@@ -33,7 +33,7 @@ export function LotAllocationList({
     // まず、他のロットを全てクリア
     Object.keys(lotAllocations).forEach((lotId) => {
       const id = Number(lotId);
-      if (id !== targetLotId && lotAllocations[id] > 0) {
+      if (id !== targetLotId && (lotAllocations[id] ?? 0) > 0) {
         onLotAllocationChange(id, 0);
       }
     });

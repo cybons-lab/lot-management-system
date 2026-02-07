@@ -37,10 +37,10 @@ export function useOcrExportOperations({
       if (viewMode === "current") await flushPendingEdits();
 
       await ocrResultsApi.exportExcel({
-        task_date: taskDate || undefined,
-        status: statusFilter || undefined,
-        has_error: showErrorsOnly || undefined,
-        ids: selectedIds.length > 0 ? selectedIds.map(Number) : undefined,
+        ...(taskDate ? { task_date: taskDate } : {}),
+        ...(statusFilter ? { status: statusFilter } : {}),
+        ...(showErrorsOnly ? { has_error: showErrorsOnly } : {}),
+        ...(selectedIds.length > 0 ? { ids: selectedIds.map(Number) } : {}),
       });
 
       if (markAsComplete && viewMode === "current") {

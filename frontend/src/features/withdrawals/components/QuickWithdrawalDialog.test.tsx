@@ -94,7 +94,7 @@ vi.mock("@/components/ui", () => {
             {React.Children.map(children, (child) => {
               if (isNamedElement(child, "SelectTrigger")) {
                 return React.cloneElement(child as React.ReactElement<SelectTriggerProps>, {
-                  value,
+                  ...(value !== undefined ? { value } : {}),
                 });
               }
               return null;
@@ -126,7 +126,7 @@ vi.mock("@/components/ui", () => {
       <div>
         {React.Children.map(children, (child) => {
           if (React.isValidElement<SelectItemProps>(child)) {
-            return React.cloneElement(child, { onSelect });
+            return React.cloneElement(child, { ...(onSelect ? { onSelect } : {}) });
           }
           return child;
         })}

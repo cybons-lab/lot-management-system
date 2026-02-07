@@ -39,11 +39,11 @@ export function useFilterOptions({
     ],
     queryFn: () =>
       getFilterOptions({
-        supplier_item_id: supplier_item_id ? Number(supplier_item_id) : undefined,
-        supplier_id: supplier_id ? Number(supplier_id) : undefined,
-        warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
-        tab,
-        assigned_staff_only,
+        ...(supplier_item_id ? { supplier_item_id: Number(supplier_item_id) } : {}),
+        ...(supplier_id ? { supplier_id: Number(supplier_id) } : {}),
+        ...(warehouse_id ? { warehouse_id: Number(warehouse_id) } : {}),
+        ...(tab ? { tab } : {}),
+        ...(typeof assigned_staff_only !== "undefined" ? { assigned_staff_only } : {}),
         mode,
       }),
     staleTime: 30000, // 30秒間キャッシュ
@@ -51,15 +51,15 @@ export function useFilterOptions({
 
   // 製品選択時、仕入先が1件なら自動選択
   useEffect(() => {
-    if (supplier_item_id && data?.suppliers.length === 1 && !supplier_id) {
-      onAutoSelectSupplier?.(String(data.suppliers[0].id));
+    if (supplier_item_id && data?.suppliers && data.suppliers.length === 1 && !supplier_id) {
+      onAutoSelectSupplier?.(String(data.suppliers[0]!.id));
     }
   }, [supplier_item_id, data?.suppliers, supplier_id, onAutoSelectSupplier]);
 
   // 仕入先選択時、製品が1件なら自動選択
   useEffect(() => {
-    if (supplier_id && data?.products.length === 1 && !supplier_item_id) {
-      onAutoSelectProduct?.(String(data.products[0].id));
+    if (supplier_id && data?.products && data.products.length === 1 && !supplier_item_id) {
+      onAutoSelectProduct?.(String(data.products[0]!.id));
     }
   }, [supplier_id, data?.products, supplier_item_id, onAutoSelectProduct]);
 

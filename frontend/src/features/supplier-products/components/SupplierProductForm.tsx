@@ -82,9 +82,33 @@ export function SupplierProductForm({
     },
   });
 
+  const handleFormSubmit = (values: FormValues) => {
+    if (isEdit) {
+      const updateData: SupplierProductEditInput = {
+        maker_part_no: values.maker_part_no,
+        display_name: values.display_name,
+        base_unit: values.base_unit,
+        lead_time_days: values.lead_time_days,
+        notes: values.notes,
+      };
+      onSubmit(updateData);
+    } else {
+      const createData: SupplierProductCreate = {
+        supplier_id: values.supplier_id,
+        maker_part_no: values.maker_part_no,
+        display_name: values.display_name,
+        base_unit: values.base_unit,
+        lead_time_days: values.lead_time_days,
+        notes: values.notes,
+      };
+      onSubmit(createData);
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- react-hook-form の handleSubmit 型互換のため */}
+      <form onSubmit={form.handleSubmit(handleFormSubmit as any)} className="space-y-4">
         {/* 仕入先 (編集時は変更不可) - Phase1で最初に移動 */}
         <FormField
           control={form.control}
@@ -95,7 +119,7 @@ export function SupplierProductForm({
                 仕入先 <span className="text-red-500">*</span>
               </FormLabel>
               <Select
-                value={field.value ? String(field.value) : undefined}
+                {...(field.value ? { value: String(field.value) } : {})}
                 onValueChange={(v) => field.onChange(v ? Number(v) : 0)}
                 disabled={isEdit}
               >

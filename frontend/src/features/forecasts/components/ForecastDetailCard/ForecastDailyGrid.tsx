@@ -45,11 +45,11 @@ export function ForecastDailyGrid({
               forecastId={forecastId}
               isToday={todayKey === dateKey}
               isPast={isPast}
-              hoveredDate={hoveredDate}
-              onDateHover={onDateHover}
-              onUpdateQuantity={onUpdateQuantity}
-              onCreateForecast={onCreateForecast}
-              isUpdating={isUpdating}
+              {...(hoveredDate !== undefined ? { hoveredDate } : {})}
+              {...(onDateHover !== undefined ? { onDateHover } : {})}
+              {...(onUpdateQuantity !== undefined ? { onUpdateQuantity } : {})}
+              {...(onCreateForecast !== undefined ? { onCreateForecast } : {})}
+              {...(isUpdating !== undefined ? { isUpdating } : {})}
             />
           );
         })}

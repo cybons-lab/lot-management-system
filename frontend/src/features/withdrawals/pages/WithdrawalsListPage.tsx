@@ -56,8 +56,8 @@ export function WithdrawalsListPage() {
   const { data, isLoading, isError, error } = useList({
     skip: (page - 1) * PAGE_SIZE,
     limit: PAGE_SIZE,
-    withdrawal_type: filterType === "all" ? undefined : filterType,
-    search: searchQuery || undefined, // 空文字列はundefinedにして送信しない
+    ...(filterType !== "all" ? { withdrawal_type: filterType } : {}),
+    ...(searchQuery ? { search: searchQuery } : {}),
   });
 
   const withdrawals = useMemo(() => data?.withdrawals ?? [], [data]);

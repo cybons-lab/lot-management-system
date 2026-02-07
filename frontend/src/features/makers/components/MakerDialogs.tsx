@@ -40,7 +40,15 @@ export function MakerDialogs({
             <DialogTitle>メーカー新規登録</DialogTitle>
           </DialogHeader>
           <MakerForm
-            onSubmit={onCreate}
+            onSubmit={(data) => {
+              onCreate({
+                maker_code: data.maker_code,
+                maker_name: data.maker_name,
+                ...(data.display_name ? { display_name: data.display_name } : {}),
+                ...(data.short_name ? { short_name: data.short_name } : {}),
+                ...(data.notes ? { notes: data.notes } : {}),
+              });
+            }}
             onCancel={() => setIsCreateOpen(false)}
             isSubmitting={isCreatePending}
           />
@@ -58,7 +66,14 @@ export function MakerDialogs({
           {editingMaker && (
             <MakerForm
               initialData={editingMaker}
-              onSubmit={onUpdate}
+              onSubmit={(data) => {
+                onUpdate({
+                  maker_name: data.maker_name,
+                  ...(data.display_name ? { display_name: data.display_name } : {}),
+                  ...(data.short_name ? { short_name: data.short_name } : {}),
+                  ...(data.notes ? { notes: data.notes } : {}),
+                });
+              }}
               onCancel={() => setEditingMaker(null)}
               isSubmitting={isUpdatePending}
             />

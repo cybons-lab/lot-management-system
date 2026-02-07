@@ -65,7 +65,7 @@ export function WithdrawalHistoryDialog({
               lotId={lot.id}
               onDateSelect={handleDateSelect}
               showWithdrawButton={true}
-              warehouseName={lot.warehouse_name || undefined}
+              {...(lot.warehouse_name ? { warehouseName: lot.warehouse_name } : {})}
             />
           </div>
         </DialogContent>
@@ -77,7 +77,7 @@ export function WithdrawalHistoryDialog({
         open={withdrawalDialogOpen}
         onOpenChange={setWithdrawalDialogOpen}
         onSuccess={handleWithdrawalSuccess}
-        initialShipDate={selectedDate || undefined}
+        {...(selectedDate ? { initialShipDate: selectedDate } : {})}
       />
     </>
   );

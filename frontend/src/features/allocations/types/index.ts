@@ -34,9 +34,9 @@ export interface CandidateLotsResponse {
     lot_id: number;
     lot_number: string;
     available_quantity: number;
-    expiry_date?: string;
-    product_code?: string;
-    warehouse_code?: string;
+    expiry_date?: string | null;
+    product_code?: string | null;
+    warehouse_code?: string | null;
   }[];
 }
 
@@ -52,8 +52,8 @@ export interface CandidateLotItem {
   delivery_place_id?: number | null;
   delivery_place_code?: string | null;
   delivery_place_name?: string | null;
-  expiry_date?: string | null;
-  last_updated?: string | null;
+  expiry_date?: string | null | undefined;
+  last_updated?: string | null | undefined;
 
   // Added for compatibility
   available_quantity: number;

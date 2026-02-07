@@ -42,8 +42,8 @@ export function SoftDeleteDialog({
       title={title}
       description={description}
       onConfirm={handleConfirm}
-      isPending={isPending}
-      onSwitchToPermanent={onSwitchToPermanent}
+      {...(isPending !== undefined ? { isPending } : {})}
+      {...(onSwitchToPermanent ? { onSwitchToPermanent } : {})}
     />
   );
 }

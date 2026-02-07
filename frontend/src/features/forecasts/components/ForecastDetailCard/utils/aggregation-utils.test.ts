@@ -33,8 +33,8 @@ describe("aggregation-utils", () => {
 
       // SAP format: only 2 dekads (中旬 and 下旬), no 上旬
       expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({ label: "6月 中旬", total: 90 }); // 40+50
-      expect(result[1]).toEqual({ label: "6月 下旬", total: 130 }); // 60+70
+      expect(result[0]!).toEqual({ label: "6月 中旬", total: 90 }); // 40+50
+      expect(result[1]!).toEqual({ label: "6月 下旬", total: 130 }); // 60+70
     });
 
     it("returns empty array for null dekadMonth", () => {
@@ -55,8 +55,8 @@ describe("aggregation-utils", () => {
 
       const result = calculateDekadAggregations(dailyData, dekadMonth);
 
-      expect(result[0].total).toBe(100); // 中旬
-      expect(result[1].total).toBe(0); // 下旬
+      expect(result[0]!.total).toBe(100); // 中旬
+      expect(result[1]!.total).toBe(0); // 下旬
     });
 
     it("rounds totals to integers", () => {
@@ -70,7 +70,7 @@ describe("aggregation-utils", () => {
 
       const result = calculateDekadAggregations(dailyData, dekadMonth);
 
-      expect(result[0].total).toBe(31); // 中旬 - Rounded
+      expect(result[0]!.total).toBe(31); // 中旬 - Rounded
     });
 
     it("handles empty dailyData", () => {
@@ -79,8 +79,8 @@ describe("aggregation-utils", () => {
 
       const result = calculateDekadAggregations(dailyData, dekadMonth);
 
-      expect(result[0].total).toBe(0); // 中旬
-      expect(result[1].total).toBe(0); // 下旬
+      expect(result[0]!.total).toBe(0); // 中旬
+      expect(result[1]!.total).toBe(0); // 下旬
     });
   });
 

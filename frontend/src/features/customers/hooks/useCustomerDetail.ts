@@ -79,7 +79,7 @@ export function useCustomerDetail({ customerCode, open, onOpenChange }: UseCusto
 
       if (deleteType === "soft") {
         softDelete(
-          { id: customerCode, version: customer.version, endDate: endDate || undefined },
+          { id: customerCode, version: customer.version, ...(endDate ? { endDate } : {}) },
           { onSuccess },
         );
       } else {

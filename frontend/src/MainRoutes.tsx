@@ -1,5 +1,10 @@
-/* eslint-disable max-lines -- 画面全体の構成を分割せず把握できるようにするため */
 import { Navigate, Route, Routes, Outlet } from "react-router-dom";
+
+import { AdminRoutes } from "./routes/admin-routes";
+import { InventoryRoutes } from "./routes/inventory-routes";
+import { MasterRoutes } from "./routes/master-routes";
+import { ReportRoutes } from "./routes/report-routes";
+import { RpaRoutes } from "./routes/rpa-routes";
 
 import { AccessGuard } from "@/components/auth/AccessGuard";
 import { AdminGuard } from "@/components/auth/AdminGuard";
@@ -7,27 +12,8 @@ import { FeatureGuard } from "@/components/auth/FeatureGuard";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
 // Pages
-import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCreatePage";
-import { AdjustmentsListPage } from "@/features/adjustments/pages/AdjustmentsListPage";
-import { AdminPage } from "@/features/admin/pages/AdminPage";
-import { BulkExportPage } from "@/features/admin/pages/BulkExportPage";
-import { DataMaintenancePage } from "@/features/admin/pages/DataMaintenancePage";
-import { DeployPage } from "@/features/admin/pages/DeployPage";
-import { MasterChangeLogsPage } from "@/features/admin/pages/MasterChangeLogsPage";
-import { NotificationSettingsPage } from "@/features/admin/pages/NotificationSettingsPage";
-import { SeedSnapshotsPage } from "@/features/admin/pages/SeedSnapshotsPage";
-import { SystemSettingsPage } from "@/features/admin/pages/SystemSettingsPage";
-import { UsersManagementPage } from "@/features/admin/pages/UsersManagementPage";
-import { SupplierAssignmentsPage } from "@/features/assignments/pages/SupplierAssignmentsPage";
-import { BatchJobsPage } from "@/features/batch-jobs/pages/BatchJobsPage";
-import { BusinessRulesPage } from "@/features/business-rules/pages/BusinessRulesPage";
 import { CalendarSettingsPage } from "@/features/calendar";
-import { ClientLogsPage } from "@/features/client-logs";
-import { CustomerItemsListPage } from "@/features/customer-items/pages/CustomerItemsListPage";
-import { CustomersListPage } from "@/features/customers";
 import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
-import { DbBrowserPage } from "@/features/debug-db/pages/DbBrowserPage";
-import { DeliveryPlacesListPage } from "@/features/delivery-places";
 import { ForecastCreatePage } from "@/features/forecasts/pages/ForecastCreatePage";
 import { ForecastDetailPage } from "@/features/forecasts/pages/ForecastDetailPage";
 import { ForecastEditPage } from "@/features/forecasts/pages/ForecastEditPage";
@@ -39,57 +25,14 @@ import { InboundPlanCreatePage } from "@/features/inbound-plans/pages/InboundPla
 import { InboundPlanDetailPage } from "@/features/inbound-plans/pages/InboundPlanDetailPage";
 import { InboundPlanEditPage } from "@/features/inbound-plans/pages/InboundPlanEditPage";
 import { InboundPlansListPage } from "@/features/inbound-plans/pages/InboundPlansListPage";
-import { ExcelViewPage } from "@/features/inventory/components/excel-view/ExcelViewPage";
-import { AdhocLotCreatePage } from "@/features/inventory/pages/AdhocLotCreatePage";
-import { ExcelPortalPage } from "@/features/inventory/pages/ExcelPortalPage";
-import { InventoryItemDetailPage } from "@/features/inventory/pages/InventoryItemDetailPage";
-import { InventoryLayout } from "@/features/inventory/pages/InventoryLayout";
-import { InventoryPage } from "@/features/inventory/pages/InventoryPage";
-import { LotDetailPage } from "@/features/inventory/pages/LotDetailPage";
-import { MovesPage } from "@/features/inventory/pages/MovesPage";
-import { StockHistoryPage } from "@/features/inventory/pages/StockHistoryPage";
-import MakersPage from "@/features/makers/pages/MakersPage";
-import { MastersBulkLoadPage } from "@/features/masters/pages/MastersBulkLoadPage";
-import { MastersPage } from "@/features/masters/pages/MastersPage";
 import MaterialOrderForecastsPage from "@/features/material-order-forecasts/pages/MaterialOrderForecastsPage";
 import { OcrResultsListPage } from "@/features/ocr-results/pages/OcrResultsListPage";
-import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
-import { MonthlyReportPage } from "@/features/reports/components/MonthlyReportPage";
-import { RolesListPage } from "@/features/roles/pages/RolesListPage";
-import { RPAPage } from "@/features/rpa";
-import {
-  CsvImportPage,
-  LayerCodeMappingsPage,
-  MaterialDeliveryNotePage,
-  RunDetailPage,
-  RunMonitorPage,
-  RunsListPage,
-  Step1Page,
-  Step2CheckListPage,
-  Step3PlanPage,
-  Step3ExecuteListPage,
-  Step3DetailPage,
-  Step4DetailPage,
-  Step4ListPage,
-} from "@/features/rpa/material-delivery-note";
-import { GenericCloudFlowExecutePage } from "@/features/rpa/pages/GenericCloudFlowExecutePage";
-import { MaterialDeliverySimplePage } from "@/features/rpa/pages/MaterialDeliverySimplePage";
-import { SmartReadPage } from "@/features/rpa/smartread";
 import { SapIntegrationPage } from "@/features/sap-integration";
-import { ShippingMasterListPage } from "@/features/shipping-master/pages/ShippingMasterListPage";
-import { SupplierProductsPage } from "@/features/supplier-products/pages/SupplierProductsPage";
-import { SuppliersListPage } from "@/features/suppliers";
-import { UomConversionsPage } from "@/features/uom-conversions/pages/UomConversionsPage";
-import { UsersListPage } from "@/features/users/pages/UsersListPage";
-import { WarehouseDeliveryRoutesListPage } from "@/features/warehouse-delivery-routes";
-import { WarehousesListPage } from "@/features/warehouses";
-import { WithdrawalCreatePage, WithdrawalsListPage } from "@/features/withdrawals/pages";
-import { LogViewer } from "@/pages/LogViewer";
 
-// --- Route Groups ---
+// Route Groups
 
 const FeatureGuardLayout = ({ feature }: { feature: string }) => (
   <FeatureGuard feature={feature}>
@@ -97,310 +40,7 @@ const FeatureGuardLayout = ({ feature }: { feature: string }) => (
   </FeatureGuard>
 );
 
-function InventoryRoutes() {
-  return (
-    <Route element={<FeatureGuardLayout feature="inventory" />}>
-      {/* Inventory routes */}
-      <Route path={ROUTES.INVENTORY.ROOT} element={<InventoryLayout />}>
-        <Route index element={<InventoryPage />} />
-        <Route path="summary" element={<Navigate to={ROUTES.INVENTORY.ROOT} replace />} />
-        <Route path="lots" element={<Navigate to={ROUTES.INVENTORY.ROOT} replace />} />
-        <Route path="moves" element={<MovesPage />} />
-        <Route path="adjustments" element={<AdjustmentsListPage />} />
-        <Route path="adjustments/new" element={<AdjustmentCreatePage />} />
-        <Route path="adhoc/new" element={<AdhocLotCreatePage />} />
-
-        <Route path="excel-view/:productId" element={<ExcelViewPage />} />
-        <Route path="excel-view/:productId/:customerItemId" element={<ExcelViewPage />} />
-        <Route path="excel-portal" element={<ExcelPortalPage />} />
-        <Route path="history" element={<StockHistoryPage />} />
-        <Route path="withdrawals" element={<WithdrawalsListPage />} />
-        <Route path="withdrawals/new" element={<WithdrawalCreatePage />} />
-      </Route>
-
-      {/* Inventory Item Detail & Lot Detail */}
-      <Route path="/inventory/items/:productId/:warehouseId">
-        <Route index element={<Navigate to="summary" replace />} />
-        <Route path=":tab" element={<InventoryItemDetailPage />} />
-      </Route>
-      <Route path="/inventory/lots/:lotId" element={<LotDetailPage />} />
-    </Route>
-  );
-}
-
-/* eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
-function MasterRoutes() {
-  return (
-    <Route element={<FeatureGuardLayout feature="masters" />}>
-      {/* Masters - Phase G-1 */}
-      <Route path="/masters" element={<MastersPage />} />
-      <Route
-        path={ROUTES.MASTERS.SUPPLIER_PRODUCTS}
-        element={
-          <FeatureGuard feature="masters:supplier-products">
-            <SupplierProductsPage />
-          </FeatureGuard>
-        }
-      />
-      <Route
-        path="/masters/uom-conversions"
-        element={
-          <FeatureGuard feature="masters:uom-conversions">
-            <UomConversionsPage />
-          </FeatureGuard>
-        }
-      />
-      <Route
-        path={ROUTES.MASTERS.WAREHOUSES}
-        element={
-          <FeatureGuard feature="masters:warehouses">
-            <WarehousesListPage />
-          </FeatureGuard>
-        }
-      />
-      <Route
-        path={ROUTES.MASTERS.SUPPLIERS}
-        element={
-          <FeatureGuard feature="masters:suppliers">
-            <SuppliersListPage />
-          </FeatureGuard>
-        }
-      />
-      <Route
-        path={ROUTES.MASTERS.CUSTOMERS}
-        element={
-          <FeatureGuard feature="masters:customers">
-            <CustomersListPage />
-          </FeatureGuard>
-        }
-      />
-      <Route
-        path={ROUTES.MASTERS.CUSTOMER_ITEMS}
-        element={
-          <FeatureGuard feature="masters:customer-items">
-            <CustomerItemsListPage />
-          </FeatureGuard>
-        }
-      />
-      <Route
-        path={ROUTES.MASTERS.BULK_LOAD}
-        element={
-          <FeatureGuard feature="masters:bulk-load">
-            <MastersBulkLoadPage />
-          </FeatureGuard>
-        }
-      />
-      <Route
-        path={ROUTES.MASTERS.SUPPLIER_ASSIGNMENTS}
-        element={
-          <FeatureGuard feature="masters:supplier-assignments">
-            <SupplierAssignmentsPage />
-          </FeatureGuard>
-        }
-      />
-      <Route
-        path={ROUTES.MASTERS.SHIPPING_MASTERS}
-        element={
-          <FeatureGuard feature="masters:shipping-masters">
-            <ShippingMasterListPage />
-          </FeatureGuard>
-        }
-      />
-      <Route
-        path={ROUTES.MASTERS.DELIVERY_PLACES}
-        element={
-          <FeatureGuard feature="masters:delivery-places">
-            <DeliveryPlacesListPage />
-          </FeatureGuard>
-        }
-      />
-      <Route
-        path={ROUTES.MASTERS.MAKERS}
-        element={
-          <FeatureGuard feature="masters:makers">
-            <MakersPage />
-          </FeatureGuard>
-        }
-      />
-      <Route
-        path="/warehouse-delivery-routes"
-        element={
-          <FeatureGuard feature="masters:warehouse-delivery-routes">
-            <WarehouseDeliveryRoutesListPage />
-          </FeatureGuard>
-        }
-      />
-
-      {/* Settings - Phase G-2 (Admin Only) */}
-      <Route
-        path={ROUTES.SETTINGS.USERS}
-        element={
-          <AdminGuard>
-            <UsersListPage />
-          </AdminGuard>
-        }
-      />
-
-      <Route
-        path={ROUTES.SETTINGS.ROLES}
-        element={
-          <AdminGuard>
-            <RolesListPage />
-          </AdminGuard>
-        }
-      />
-    </Route>
-  );
-}
-
-function ReportRoutes() {
-  return (
-    <Route element={<FeatureGuardLayout feature="reports" />}>
-      <Route path={ROUTES.REPORTS.MONTHLY} element={<MonthlyReportPage />} />
-    </Route>
-  );
-}
-
-/* eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
-function AdminRoutes() {
-  return (
-    <>
-      {/* Admin - Phase H (Admin Only) */}
-      <Route
-        path={ROUTES.ADMIN.INDEX}
-        element={
-          <AdminGuard>
-            <AdminPage />
-          </AdminGuard>
-        }
-      />
-      <Route
-        path={ROUTES.ADMIN.OPERATION_LOGS}
-        element={
-          <AdminGuard>
-            <OperationLogsPage />
-          </AdminGuard>
-        }
-      />
-      <Route
-        path={ROUTES.ADMIN.BUSINESS_RULES}
-        element={
-          <AdminGuard>
-            <BusinessRulesPage />
-          </AdminGuard>
-        }
-      />
-      <Route
-        path={ROUTES.ADMIN.BATCH_JOBS}
-        element={
-          <AdminGuard>
-            <BatchJobsPage />
-          </AdminGuard>
-        }
-      />
-      <Route
-        path={ROUTES.ADMIN.MASTER_CHANGE_LOGS}
-        element={
-          <AdminGuard>
-            <MasterChangeLogsPage />
-          </AdminGuard>
-        }
-      />
-      <Route
-        path={ROUTES.ADMIN.SEED_SNAPSHOTS}
-        element={
-          <AdminGuard>
-            <SeedSnapshotsPage />
-          </AdminGuard>
-        }
-      />
-      <Route
-        path={ROUTES.ADMIN.SYSTEM_SETTINGS}
-        element={
-          <AdminGuard>
-            <SystemSettingsPage />
-          </AdminGuard>
-        }
-      />
-      <Route
-        path={ROUTES.ADMIN.USERS_MANAGEMENT}
-        element={
-          <AdminGuard>
-            <UsersManagementPage />
-          </AdminGuard>
-        }
-      />
-      <Route
-        path={ROUTES.ADMIN.NOTIFICATION_SETTINGS}
-        element={
-          <AdminGuard>
-            <NotificationSettingsPage />
-          </AdminGuard>
-        }
-      />
-      <Route
-        path={ROUTES.ADMIN.DEPLOY}
-        element={
-          <AdminGuard>
-            <DeployPage />
-          </AdminGuard>
-        }
-      />
-      <Route
-        path="/admin/client-logs"
-        element={
-          <AdminGuard>
-            <ClientLogsPage />
-          </AdminGuard>
-        }
-      />
-      <Route
-        path="/admin/export"
-        element={
-          <AdminGuard>
-            <BulkExportPage />
-          </AdminGuard>
-        }
-      />
-      <Route path={ROUTES.DEBUG.DB_BROWSER}>
-        <Route
-          index
-          element={
-            <AdminGuard>
-              <Navigate to="schema" replace />
-            </AdminGuard>
-          }
-        />
-        <Route
-          path=":tab"
-          element={
-            <AdminGuard>
-              <DbBrowserPage />
-            </AdminGuard>
-          }
-        />
-      </Route>
-      <Route
-        path={ROUTES.ADMIN.SYSTEM_LOGS}
-        element={
-          <AdminGuard>
-            <LogViewer />
-          </AdminGuard>
-        }
-      />
-      <Route
-        path={ROUTES.ADMIN.DATA_MAINTENANCE}
-        element={
-          <AdminGuard>
-            <DataMaintenancePage />
-          </AdminGuard>
-        }
-      />
-    </>
-  );
-}
-
-/* eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
+/* eslint-disable-next-line max-lines-per-function -- 各機能別ルートを統合するため */
 export function MainRoutes() {
   return (
     <Routes>
@@ -458,10 +98,12 @@ export function MainRoutes() {
         <Route path="/inbound-plans/:id" element={<InboundPlanDetailPage />} />
         <Route path="/inbound-plans/:planId/edit" element={<InboundPlanEditPage />} />
 
+        {/* Feature Groups */}
         {InventoryRoutes()}
         {MasterRoutes()}
         {ReportRoutes()}
         {AdminRoutes()}
+        {RpaRoutes()}
 
         {/* Calendar */}
         <Route
@@ -472,45 +114,6 @@ export function MainRoutes() {
             </RoleGuard>
           }
         />
-
-        {/* RPA */}
-        <Route element={<FeatureGuardLayout feature="rpa" />}>
-          <Route path={ROUTES.RPA.ROOT} element={<RPAPage />} />
-          <Route
-            path={ROUTES.RPA.MATERIAL_DELIVERY_SIMPLE}
-            element={<MaterialDeliverySimplePage />}
-          />
-          <Route path={ROUTES.RPA.GENERIC_CLOUD_FLOW} element={<GenericCloudFlowExecutePage />} />
-          <Route path={ROUTES.RPA.SMARTREAD}>
-            <Route index element={<Navigate to="import" replace />} />
-            <Route path=":tab" element={<SmartReadPage />} />
-          </Route>
-          <Route
-            path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.LAYER_CODES}
-            element={<LayerCodeMappingsPage />}
-          />
-          <Route
-            path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.ROOT}
-            element={<MaterialDeliveryNotePage />}
-          />
-          <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP1} element={<Step1Page />} />
-          <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP2} element={<Step2CheckListPage />} />
-          <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3_PLAN} element={<Step3PlanPage />} />
-          <Route
-            path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3}
-            element={<Step3ExecuteListPage />}
-          />
-          <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUNS} element={<RunsListPage />} />
-          <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CSV_IMPORT} element={<CsvImportPage />} />
-          <Route path="/rpa/material-delivery-note/runs/:runId" element={<RunDetailPage />} />
-          <Route
-            path="/rpa/material-delivery-note/runs/:runId/monitor"
-            element={<RunMonitorPage />}
-          />
-          <Route path="/rpa/material-delivery-note/step3/:runId" element={<Step3DetailPage />} />
-          <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4} element={<Step4ListPage />} />
-          <Route path="/rpa/material-delivery-note/step4/:runId" element={<Step4DetailPage />} />
-        </Route>
 
         {/* OCR Results */}
         <Route element={<FeatureGuardLayout feature="ocr" />}>

@@ -77,9 +77,11 @@ export function InventoryPage() {
     isLoading: isItemsLoading,
     refetch: refetchItems,
   } = useInventoryItems({
-    ...queryParams,
     skip: (page - 1) * pageSize,
     limit: pageSize,
+    ...(filters.supplier_item_id ? { supplier_item_id: Number(filters.supplier_item_id) } : {}),
+    ...(filters.supplier_id ? { supplier_id: Number(filters.supplier_id) } : {}),
+    ...(filters.warehouse_id ? { warehouse_id: Number(filters.warehouse_id) } : {}),
   });
 
   const inventoryItems = data?.items ?? [];
@@ -91,9 +93,9 @@ export function InventoryPage() {
 
   // Mutual filtering with auto-selection
   const { productOptions, supplierOptions, warehouseOptions } = useFilterOptions({
-    supplier_item_id: filters.supplier_item_id || undefined,
-    supplier_id: filters.supplier_id || undefined,
-    warehouse_id: filters.warehouse_id || undefined,
+    ...(filters.supplier_item_id ? { supplier_item_id: filters.supplier_item_id } : {}),
+    ...(filters.supplier_id ? { supplier_id: filters.supplier_id } : {}),
+    ...(filters.warehouse_id ? { warehouse_id: filters.warehouse_id } : {}),
     tab: filters.tab,
     assigned_staff_only: filters.assigned_staff_only,
     mode: filters.candidate_mode,
@@ -401,7 +403,7 @@ export function InventoryPage() {
                 data={inventoryItems}
                 isLoading={isItemsLoading}
                 onRefresh={refetchItems}
-                filterSupplierId={filters.supplier_id ? Number(filters.supplier_id) : undefined}
+                {...(filters.supplier_id ? { filterSupplierId: Number(filters.supplier_id) } : {})}
                 headerContent={`ページ ${page} (全${totalCount}件中 ${
                   (page - 1) * pageSize + 1
                 }-${Math.min(page * pageSize, totalCount)}件を表示)`}

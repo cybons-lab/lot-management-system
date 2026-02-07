@@ -15,7 +15,7 @@ import zipfile
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Any, cast
 
-import requests
+import httpx
 
 from app.application.services.smartread.base import SmartReadBaseService
 
@@ -54,18 +54,21 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
             self, task_id: str, expected_version: int | None = None
         ) -> int | None: ...
 
-    def _create_session(self, api_key: str) -> requests.Session:
-        """認証済みセッションを作成."""
-        s = requests.Session()
-        s.headers.update({"Authorization": f"apikey {api_key}"})
-        s.headers.update(
-            {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Python-Requests"}
+    def _create_client(self, api_key: str) -> httpx.Client:
+        """認証済みクライアントを作成."""
+        c = httpx.Client(
+            headers={
+                "Authorization": f"apikey {api_key}",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) LotManagementSystem/1.0",
+            },
+            timeout=httpx.Timeout(30.0, read=120.0),
+            follow_redirects=True,
         )
-        return s
+        return c
 
     def _create_task(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         name: str,
         request_type: str,
@@ -85,12 +88,12 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
         if template_ids:
             payload["templateIds"] = template_ids
 
-        url = f"{endpoint}/task"
+        url = "task"
         logger.info(f"[SimpleSync] Creating task: {url}")
-        r = session.post(url, json=payload, timeout=30)
+        r = client.post(url, json=payload)
 
         if r.status_code != 202:
-            raise RuntimeError(f"タスク作成に失敗: HTTP {r.status_code} {r.text}")
+            raise RuntimeError(f"タスク作成に失敗: HTTP {r.status_code} {r.text} ")
 
         data = r.json()
         task_id = cast(str | None, data.get("taskId"))
@@ -102,14 +105,14 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
     def _upload_file(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         task_id: str,
         file_content: bytes,
         filename: str,
     ) -> str:
         """ファイルをアップロードしてrequestIdを返す."""
-        url = f"{endpoint}/task/{task_id}/request"
+        url = f"task/{task_id}/request"
         mime, _ = mimetypes.guess_type(filename)
         if mime is None:
             mime = "application/octet-stream"
@@ -117,7 +120,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
         files = {"image": (filename, file_content, mime)}
 
         logger.info(f"[SimpleSync] Uploading file: {filename}")
-        r = session.post(url, files=files, timeout=60)
+        r = client.post(url, files=files)
 
         if r.status_code not in (200, 202):
             raise RuntimeError(f"アップロード失敗: {filename} HTTP {r.status_code} {r.text}")
@@ -132,85 +135,85 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
     def _poll_request_until_done(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         request_id: str,
         timeout_sec: int = 600,
     ) -> dict[str, Any]:
         """リクエストが完了するまでポーリング."""
-        url = f"{endpoint}/request/{request_id}"
+        url = f"request/{request_id} "
         start = time.time()
 
-        logger.info(f"[SimpleSync] Polling request {request_id} until completed...")
+        logger.info(f"[SimpleSync] Polling request {request_id} until completed... ")
 
         while True:
-            r = session.get(url, timeout=30)
+            r = client.get(url)
             r.raise_for_status()
-            data = r.json()
+            data: dict[str, Any] = r.json()
             state = data.get("state")
 
-            logger.info(f"[SimpleSync] Request state: {state}")
+            logger.info(f"[SimpleSync] Request state: {state} ")
 
-            if state not in ("SORTING_RUNNING", "OCR_RUNNING"):
-                return cast(dict[str, Any], data)
+            if state not in ("SORTING_RUNNING ", "OCR_RUNNING "):
+                return data
 
             if time.time() - start > timeout_sec:
-                raise TimeoutError(f"request {request_id} の処理がタイムアウトしました")
+                raise TimeoutError(f"request {request_id} の処理がタイムアウトしました ")
 
             time.sleep(1)
 
     def _poll_task_until_completed(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         task_id: str,
         timeout_sec: int = 600,
     ) -> dict[str, Any]:
         """タスクが完了するまでポーリング."""
-        url = f"{endpoint}/task/{task_id}"
+        url = f"task/{task_id}"
         start = time.time()
 
-        logger.info(f"[SimpleSync] Polling task {task_id} until completed...")
+        logger.info(f"[SimpleSync] Polling task {task_id} until completed... ")
 
         while True:
-            r = session.get(url, timeout=30)
+            r = client.get(url)
             r.raise_for_status()
-            data = r.json()
+            data: dict[str, Any] = r.json()
             state = data.get("state")
 
-            logger.info(f"[SimpleSync] Task state: {state}")
+            logger.info(f"[SimpleSync] Task state: {state} ")
 
             # 完了条件
-            if state == "OCR_COMPLETED":
-                return cast(dict[str, Any], data)
+            if state == "OCR_COMPLETED ":
+                return data
 
             # 失敗チェック
-            if state in ("SORTING_FAILED", "OCR_FAILED"):
-                summary = data.get("formStateSummary") or {}
-                if summary.get("OCR_RUNNING", 0) == 0 and summary.get("OCR_COMPLETED", 0) > 0:
-                    return cast(dict[str, Any], data)
-                raise RuntimeError(f"タスク処理失敗: {state}")
+            if state in ("SORTING_FAILED ", "OCR_FAILED "):
+                summary = data.get("formStateSummary ") or {}
+                if summary.get("OCR_RUNNING ", 0) == 0 and summary.get("OCR_COMPLETED ", 0) > 0:
+                    return data
+                raise RuntimeError(f"タスク処理失敗: {state} ")
 
             # タイムアウトチェック
             if time.time() - start > timeout_sec:
-                raise TimeoutError(f"タスク {task_id} の処理がタイムアウトしました")
+                raise TimeoutError(f"タスク {task_id} の処理がタイムアウトしました ")
 
             time.sleep(2)
 
     def _start_export(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         task_id: str,
         export_type: str,
         aggregation: str,
     ) -> str:
         """エクスポートを開始してexportIdを返す."""
-        url = f"{endpoint}/task/{task_id}/export"
+        url = f"task/{task_id}/export"
         payload = {"type": export_type, "aggregation": aggregation}
 
-        logger.info(f"[SimpleSync] Starting export for task {task_id}")
-        r = session.post(url, json=payload, timeout=30)
+        logger.info(f"[SimpleSync] Starting export for task {task_id} ")
+        r = client.post(url, json=payload)
 
         if r.status_code not in (200, 202):
             raise RuntimeError(f"Export開始失敗: HTTP {r.status_code} {r.text}")
@@ -225,53 +228,53 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
     def _poll_export_until_completed(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         task_id: str,
         export_id: str,
         timeout_sec: int = 600,
     ) -> dict[str, Any]:
         """エクスポートが完了するまでポーリング."""
-        url = f"{endpoint}/task/{task_id}/export/{export_id}"
+        url = f"task/{task_id}/export/{export_id}"
         start = time.time()
 
-        logger.info(f"[SimpleSync] Polling export {export_id} until completed...")
+        logger.info(f"[SimpleSync] Polling export {export_id} until completed... ")
 
         while True:
-            r = session.get(url, timeout=30)
+            r = client.get(url)
             r.raise_for_status()
-            data = r.json()
+            data: dict[str, Any] = r.json()
             state = data.get("state")
 
-            logger.info(f"[SimpleSync] Export state: {state}")
+            logger.info(f"[SimpleSync] Export state: {state} ")
 
-            if state != "RUNNING":
-                return cast(dict[str, Any], data)
+            if state != "RUNNING ":
+                return data
 
             if time.time() - start > timeout_sec:
-                raise TimeoutError(f"Export {export_id} の処理がタイムアウトしました")
+                raise TimeoutError(f"Export {export_id} の処理がタイムアウトしました ")
 
             time.sleep(2)
 
     def _download_export_zip(
         self,
-        session: requests.Session,
+        client: httpx.Client,
         endpoint: str,
         task_id: str,
         export_id: str,
     ) -> bytes:
         """エクスポートZIPをダウンロード."""
-        url = f"{endpoint}/task/{task_id}/export/{export_id}/download"
+        url = f"task/{task_id}/export/{export_id}/download"
 
-        logger.info(f"[SimpleSync] Downloading export ZIP: {url}")
-        r = session.get(url, timeout=120)
+        logger.info(f"[SimpleSync] Downloading export ZIP: {url} ")
+        r = client.get(url)
 
         if r.status_code != 200:
             raise RuntimeError(
-                f"ダウンロード失敗: TaskId={task_id} ExportId={export_id} HTTP {r.status_code}"
+                f"ダウンロード失敗: TaskId={task_id} ExportId={export_id} HTTP {r.status_code} "
             )
 
-        logger.info(f"[SimpleSync] Downloaded {len(r.content)} bytes")
+        logger.info(f"[SimpleSync] Downloaded {len(r.content)} bytes ")
         return r.content
 
     def _extract_csv_from_zip(self, zip_content: bytes) -> list[dict[str, Any]]:
@@ -280,21 +283,21 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
         with zipfile.ZipFile(io.BytesIO(zip_content)) as zf:
             for name in zf.namelist():
-                if name.endswith(".csv"):
-                    logger.info(f"[SimpleSync] Extracting CSV: {name}")
+                if name.endswith(".csv "):
+                    logger.info(f"[SimpleSync] Extracting CSV: {name} ")
                     with zf.open(name) as f:
                         # UTF-8 with BOMを考慮
                         content = f.read()
                         try:
-                            text = content.decode("utf-8-sig")
+                            text = content.decode("utf-8-sig ")
                         except UnicodeDecodeError:
-                            text = content.decode("cp932", errors="replace")
+                            text = content.decode("cp932 ", errors="replace ")
 
                         reader = csv.DictReader(io.StringIO(text))
                         for row in reader:
                             wide_data.append(dict(row))
 
-                    logger.info(f"[SimpleSync] Parsed {len(wide_data)} rows from {name}")
+                    logger.info(f"[SimpleSync] Parsed {len(wide_data)} rows from {name} ")
 
         return wide_data
 
@@ -343,14 +346,14 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
         export_type = export_type_override or config.export_type or "csv"
         aggregation = aggregation_override or config.aggregation_type or "perPage"
 
-        # セッション作成
-        session = self._create_session(api_key)
+        # クライアント作成
+        client = self._create_client(api_key)
 
         try:
             # 1. タスク作成
             task_name = f"OCR_{date.today().strftime('%Y%m%d')}_{filename}"
             task_id = self._create_task(
-                session=session,
+                client=client,
                 endpoint=endpoint,
                 name=task_name,
                 request_type="templateMatching",
@@ -361,7 +364,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
             # 2. ファイルアップロード
             _request_id = self._upload_file(
-                session=session,
+                client=client,
                 endpoint=endpoint,
                 task_id=task_id,
                 file_content=file_content,
@@ -370,7 +373,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
             # 3. タスク完了待ち (10分タイムアウト)
             self._poll_task_until_completed(
-                session=session,
+                client=client,
                 endpoint=endpoint,
                 task_id=task_id,
                 timeout_sec=600,
@@ -378,7 +381,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
             # 4. エクスポート開始
             export_id = self._start_export(
-                session=session,
+                client=client,
                 endpoint=endpoint,
                 task_id=task_id,
                 export_type=export_type,
@@ -387,7 +390,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
             # 5. エクスポート完了待ち
             self._poll_export_until_completed(
-                session=session,
+                client=client,
                 endpoint=endpoint,
                 task_id=task_id,
                 export_id=export_id,
@@ -396,7 +399,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
             # 6. ZIPダウンロード
             zip_content = self._download_export_zip(
-                session=session,
+                client=client,
                 endpoint=endpoint,
                 task_id=task_id,
                 export_id=export_id,
@@ -433,8 +436,8 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
             self.session.commit()
 
             logger.info(
-                f"[SimpleSync] Complete: {len(wide_data)} wide rows, "
-                f"{len(transform_result.long_data)} long rows"
+                f"[SimpleSync] Complete: {len(wide_data)} wide rows,  "
+                f"{len(transform_result.long_data)} long rows "
             )
 
             # 通知作成 (成功)
@@ -458,26 +461,26 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
                     logger.error(f"通知作成に失敗しました: {e}")
 
             return {
-                "success": True,
-                "task_id": task_id,
-                "export_id": export_id,
-                "wide_data": wide_data,
-                "long_data": transform_result.long_data,
-                "errors": [
+                "success ": True,
+                "task_id ": task_id,
+                "export_id ": export_id,
+                "wide_data ": wide_data,
+                "long_data ": transform_result.long_data,
+                "errors ": [
                     {
-                        "row": e.row,
-                        "field": e.field,
-                        "message": e.message,
-                        "value": e.value,
+                        "row ": e.row,
+                        "field ": e.field,
+                        "message ": e.message,
+                        "value ": e.value,
                     }
                     for e in transform_result.errors
                 ],
-                "filename": filename,
-                "data_version": data_version,
+                "filename ": filename,
+                "data_version ": data_version,
             }
 
         except Exception:
-            logger.exception("[SimpleSync] Failed")
+            logger.exception("[SimpleSync] Failed ")
 
             # 通知作成 (失敗)
             if user_id:
@@ -498,11 +501,11 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
                     # 例外発生時、UoWはrollbackする。通知だけ別のUoWで行う必要がある。
                     pass
                 except Exception as notify_error:
-                    logger.error(f"通知作成(エラー時)に失敗しました: {notify_error}")
+                    logger.error(f"通知作成(エラー時)に失敗しました: {notify_error} ")
 
             raise
         finally:
-            session.close()
+            client.close()
 
     async def sync_watch_dir_files(
         self,
@@ -512,28 +515,28 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
         """監視フォルダの複数ファイルを1タスクで処理する."""
         config = self.get_config(config_id)
         if not config:
-            raise RuntimeError(f"設定が見つかりません: config_id={config_id}")
+            raise RuntimeError(f"設定が見つかりません: config_id={config_id} ")
 
-        endpoint = config.endpoint.rstrip("/")
+        endpoint = config.endpoint.rstrip("/ ")
         api_key = config.api_key
         template_ids = None
         if config.template_ids:
-            template_ids = [t.strip() for t in config.template_ids.split(",") if t.strip()]
-        export_type = config.export_type or "csv"
-        aggregation = config.aggregation_type or "oneFilePerTemplate"
+            template_ids = [t.strip() for t in config.template_ids.split(", ") if t.strip()]
+        export_type = config.export_type or "csv "
+        aggregation = config.aggregation_type or "oneFilePerTemplate "
 
-        session = self._create_session(api_key)
+        client = self._create_client(api_key)
         request_states: list[dict[str, Any]] = []
         task_id = None
         export_id = None
 
         try:
-            task_name = f"OCR_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            task_name = f"OCR_{datetime.now().strftime('%Y%m%d%H%M%S')} "
             task_id = self._create_task(
-                session=session,
+                client=client,
                 endpoint=endpoint,
                 name=task_name,
-                request_type="templateMatching",
+                request_type="templateMatching ",
                 template_ids=template_ids,
                 export_type=export_type,
                 aggregation=aggregation,
@@ -541,31 +544,31 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
             for file_content, filename in files_to_process:
                 request_id = self._upload_file(
-                    session=session,
+                    client=client,
                     endpoint=endpoint,
                     task_id=task_id,
                     file_content=file_content,
                     filename=filename,
                 )
                 state = self._poll_request_until_done(
-                    session=session,
+                    client=client,
                     endpoint=endpoint,
                     request_id=request_id,
                     timeout_sec=600,
                 )
                 request_states.append(
-                    {"request_id": request_id, "filename": filename, "state": state}
+                    {"request_id ": request_id, "filename ": filename, "state ": state}
                 )
 
             self._poll_task_until_completed(
-                session=session,
+                client=client,
                 endpoint=endpoint,
                 task_id=task_id,
                 timeout_sec=600,
             )
 
             export_id = self._start_export(
-                session=session,
+                client=client,
                 endpoint=endpoint,
                 task_id=task_id,
                 export_type=export_type,
@@ -573,17 +576,17 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
             )
 
             export_status = self._poll_export_until_completed(
-                session=session,
+                client=client,
                 endpoint=endpoint,
                 task_id=task_id,
                 export_id=export_id,
                 timeout_sec=600,
             )
-            if export_status.get("state") != "COMPLETED":
-                raise RuntimeError(f"Export処理でエラーが発生しました: {export_status}")
+            if export_status.get("state ") != "COMPLETED ":
+                raise RuntimeError(f"Export処理でエラーが発生しました: {export_status} ")
 
             zip_content = self._download_export_zip(
-                session=session,
+                client=client,
                 endpoint=endpoint,
                 task_id=task_id,
                 export_id=export_id,
@@ -611,14 +614,14 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
                 task_date=date.today(),
                 wide_data=wide_data,
                 long_data=transform_result.long_data,
-                filename="watch_dir_batch",
+                filename="watch_dir_batch ",
             )
             data_version = self.bump_data_version(task_id)
             self.session.commit()
 
             logger.info(
-                f"[SimpleSync] Watch dir complete: {len(wide_data)} wide rows, "
-                f"{len(transform_result.long_data)} long rows"
+                f"[SimpleSync] Watch dir complete: {len(wide_data)} wide rows,  "
+                f"{len(transform_result.long_data)} long rows "
             )
 
             return {
@@ -640,7 +643,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
                 "data_version": data_version,
             }
         except Exception:
-            logger.exception("[SimpleSync] Watch dir failed")
+            logger.exception("[SimpleSync] Watch dir failed ")
             raise
         finally:
-            session.close()
+            client.close()

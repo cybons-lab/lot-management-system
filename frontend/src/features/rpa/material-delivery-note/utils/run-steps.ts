@@ -36,9 +36,12 @@ export function getCurrentStepFromEvents(events: { event_type: string }[] | unde
 
   // 最新のイベントから順に検索し、定義済みステップに該当するものを見つける
   for (let i = events.length - 1; i >= 0; i--) {
-    const stepIndex = getMaterialDeliveryRunStepIndex(events[i].event_type);
-    if (stepIndex >= 0) {
-      return stepIndex;
+    const event = events[i];
+    if (event) {
+      const stepIndex = getMaterialDeliveryRunStepIndex(event.event_type);
+      if (stepIndex >= 0) {
+        return stepIndex;
+      }
     }
   }
 

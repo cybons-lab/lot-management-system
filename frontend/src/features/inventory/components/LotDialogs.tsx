@@ -66,7 +66,7 @@ export function LotDialogs({ logic }: LotDialogsProps) {
               await logic.lockLotMutation.mutateAsync({
                 id: logic.selectedLot!.id,
                 reason,
-                quantity,
+                ...(quantity !== undefined ? { quantity } : {}),
               });
             }}
             isSubmitting={logic.lockLotMutation.isPending}

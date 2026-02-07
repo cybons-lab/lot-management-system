@@ -17,7 +17,7 @@ interface DataTableRowProps<T> {
 interface DataTableCellProps<T> {
   cell: Cell<T, unknown>;
   row: Row<T>;
-  dense?: boolean;
+  dense?: boolean | undefined;
 }
 
 function getCellClassName(
@@ -72,6 +72,7 @@ export function DataTableRow<T>({
     <React.Fragment>
       <tr
         ref={measureElement}
+        data-index={row.index}
         className={cn(
           "relative transition-all duration-150 border-b border-slate-300 group",
           row.index % 2 === 0

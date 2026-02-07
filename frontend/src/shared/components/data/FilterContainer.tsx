@@ -194,11 +194,11 @@ export function SimpleFilterContainer({
   return (
     <FilterContainer
       searchValue={searchValue}
-      onSearchChange={onSearchChange}
+      {...(onSearchChange ? { onSearchChange } : {})}
       searchPlaceholder={searchPlaceholder}
-      onReset={onReset}
+      {...(onReset ? { onReset } : {})}
       collapsible={false}
-      className={className}
+      {...(className ? { className } : {})}
       hideSearch={hideSearch}
     >
       {children}
