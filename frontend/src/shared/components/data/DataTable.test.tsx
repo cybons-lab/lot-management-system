@@ -13,13 +13,13 @@ const columns: Column<TestData>[] = [
   {
     id: "id",
     header: "ID",
-    accessor: (row) => row.id as never,
+    accessor: (row: TestData) => row.id,
     width: "50px",
   },
   {
     id: "name",
     header: "Name",
-    accessor: (row) => row.name as never,
+    accessor: (row: TestData) => row.name,
     sortable: true,
     width: "200px",
   },
