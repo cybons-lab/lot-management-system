@@ -1,9 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Settings } from "lucide-react";
+import { Settings, Upload } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { diagnoseWatchDirFile } from "../api";
+import { SmartReadAdminUploadModal } from "../components/SmartReadAdminUploadModal";
 import { SmartReadConfigSelector } from "../components/SmartReadConfigSelector";
 import { SmartReadImportTab } from "../components/SmartReadImportTab";
 import { SmartReadSavedTab } from "../components/SmartReadSavedTab";
@@ -34,6 +35,7 @@ export function SmartReadPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedWatchFiles, setSelectedWatchFiles] = useState<string[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [isAdminUploadOpen, setIsAdminUploadOpen] = useState(false);
   const [testRuns, setTestRuns] = useState<PadRun[] | null>(null);
   const { tab = "import" } = useParams<{ tab: string }>();
   const navigate = useNavigate();
@@ -228,7 +230,15 @@ export function SmartReadPage() {
         subtitle="AI-OCRを使用してPDFや画像を解析し、データを抽出します"
         actions={
           <div className="flex gap-2">
-            {isAdmin && <Button onClick={startWatchFolderTest}>OCRテスト</Button>}
+            {isAdmin && (
+              <>
+                <Button variant="outline" onClick={() => setIsAdminUploadOpen(true)}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Admin用詳細アップロード
+                </Button>
+                <Button onClick={startWatchFolderTest}>OCRテスト</Button>
+              </>
+            )}
             <Button variant="outline" onClick={() => setIsSettingsOpen(true)}>
               <Settings className="mr-2 h-4 w-4" />
               設定
@@ -288,6 +298,11 @@ export function SmartReadPage() {
       </div>
 
       <SmartReadSettingsModal open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+      <SmartReadAdminUploadModal
+        open={isAdminUploadOpen}
+        onOpenChange={setIsAdminUploadOpen}
+        configId={selectedConfigId}
+      />
     </PageContainer>
   );
 }

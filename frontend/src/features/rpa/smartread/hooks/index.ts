@@ -38,6 +38,7 @@ export {
   useProcessWatchDirFiles,
   useAnalyzeFile,
   useTransformCsv,
+  useSmartReadAdminUpload,
 } from "./file-hooks";
 
 // Custom Hooks (既存)
