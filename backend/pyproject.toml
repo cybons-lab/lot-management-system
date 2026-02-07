@@ -21,7 +21,6 @@ dependencies = [
     "asgi-correlation-id>=4.3.4",
     "PyJWT>=2.8.0",
     "httpx>=0.28.1",
-    "requests>=2.32.0",
     "cryptography>=43.0.0,<47.0.0",
 ]
 

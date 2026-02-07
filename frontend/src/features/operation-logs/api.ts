@@ -61,6 +61,7 @@ export interface OperationLogsListParams {
 /**
  * クエリパラメータを構築するヘルパー
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildQueryParams(params: Record<string, any>): string {
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {

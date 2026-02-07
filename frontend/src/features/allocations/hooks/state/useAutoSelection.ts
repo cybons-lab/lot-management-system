@@ -18,6 +18,7 @@ interface UseAutoSelectionParams {
 /**
  * 適切なフォールバック明細を取得する
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getFallbackLine(lines: any[]): any | undefined {
   if (lines.length === 0) return undefined;
 
@@ -57,7 +58,10 @@ export function useAutoSelection({
 
     if (!selectedOrderId || !existsInList) {
       isInitialMount.current = false;
-      setSearchParams({ selected: String(orderCards[0].id) });
+      const firstOrder = orderCards[0];
+      if (firstOrder) {
+        setSearchParams({ selected: String(firstOrder.id) });
+      }
       return;
     }
 

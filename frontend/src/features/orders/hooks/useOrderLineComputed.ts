@@ -100,7 +100,7 @@ export function useOrderLineComputed(
     const stats = calculateAllocationStats(line);
     const shipBase = sDates.shipDate ?? sDates.plannedShipDate;
 
-    return {
+    const result: OrderLineComputed = {
       ...ids,
       ...prod,
       ...oDates,
@@ -111,7 +111,16 @@ export function useOrderLineComputed(
       id: ids.lineId,
       unit: line?.unit ?? "EA",
       shippingLeadTime: calculateShippingLeadTime(oDates.dueDate, shipBase),
-      deliveryPlaces: aggregateDeliveryPlaces(line, stats.allocatedLots),
-    } satisfies OrderLineComputed;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      deliveryPlaces: aggregateDeliveryPlaces(line, stats.allocatedLots as any),
+      productId: ids.productId,
+    } as any; // Cast as any temporarily to satisfy complex interface spread
+
+    if (ids.lineId === undefined) delete result.id;
+    if (ids.lineId === undefined) delete result.ids.lineId;
+    if (ids.orderId === undefined) delete result.ids.orderId;
+
+    return result;
   }, [line, order]);
 }

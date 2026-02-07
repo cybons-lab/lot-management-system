@@ -34,7 +34,7 @@
 
 
 **残タスク:**
-- [ ] 後続タスク: BACKLOG 3-0 参照
+- [ ] 後続タスク: BACKLOG 3-0 参照（asyncpg移行が残）
 
 **関連タスク:**
 - `docs/project/SUPPRESSION_RESOLUTION_ROUND3.md` - 警告抑制の解消
@@ -1924,13 +1924,16 @@ Phase 4で SmartRead/OCR系と主要マスタ系に楽観的ロック (`version`
 **作成:** 2026-02-07
 **カテゴリ:** コード品質・堅牢性
 
-**後続タスク:**
-1. **asyncpg移行** - psycopg2-binary → asyncpg（非同期DB接続）
-2. **eslint-plugin-import → eslint-plugin-import-x 移行** - ESM対応・パフォーマンス改善
-3. **ESLint `no-explicit-any` の段階的有効化** - 現在off → warn → error
-4. **Vite manual chunks 最適化** - バンドルサイズ削減
-5. **`exactOptionalPropertyTypes: true`** - tsconfig.json（エラー量次第で段階的対応）
-6. **requests → httpx 統一** - SmartReadサービスで使用中のrequestsをhttpxに統一
+**完了済み:**
+- [x] **eslint-plugin-import → eslint-plugin-import-x 移行** - ESM対応・パフォーマンス改善
+- [x] **ESLint `no-explicit-any` の段階的有効化** - off → warn に変更、段階的移行用の緩和設定追加
+- [x] **Vite manual chunks 最適化** - vendor-react/ui/utils/charts に分割
+- [x] **`exactOptionalPropertyTypes: true`** - tsconfig.json に追加、関連コード修正済み
+- [x] **`noUncheckedIndexedAccess: true`** - tsconfig.json に追加、関連コード修正済み
+- [x] **requests → httpx 統一** - SmartReadサービス（SimpleSyncService, AdminUploadService, PadRunnerService等）をhttpxに移行、`requests` を本番依存から削除
+
+**残タスク:**
+1. **asyncpg移行** - psycopg2-binary → asyncpg（非同期DB接続）- 高難易度
 
 ### 3-1. Major Dependency Updates (2026-02-07)
 

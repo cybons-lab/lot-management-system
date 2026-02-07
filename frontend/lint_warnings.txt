@@ -1,0 +1,115 @@
+
+> lot-management-frontend@2.5.0 lint
+> eslint . --max-warnings=0
+
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/allocations/hooks/state/useAutoSelection.ts
+  21:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/customers/components/CustomerActionDialogs.tsx
+  9:4  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/customers/components/CustomerBulkDialogs.tsx
+  11:4  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/customers/components/CustomerCreateImportDialogs.tsx
+  12:4  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/customers/components/CustomerDialogContainer.tsx
+   7:6   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/customers/components/CustomerTableSection.tsx
+  10:6   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:9   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/customers/hooks/useCustomerListPage.ts
+  50:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  81:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/inbound-plans/api.ts
+  138:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/inventory/api.ts
+  32:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/operation-logs/api.ts
+  64:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/orders/api.ts
+  17:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/orders/hooks/useOrderLineComputed.ts
+  79:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/suppliers/components/SupplierDialogContainer.tsx
+  10:6   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/suppliers/components/SupplierTableSection.tsx
+  11:6  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:9  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/suppliers/hooks/useSupplierListPage.ts
+  56:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  91:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  91:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/suppliers/hooks/useSupplierListResources.ts
+  23:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/warehouses/components/WarehouseDialogContainer.tsx
+  15:6   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  81:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/warehouses/components/WarehouseTableSection.tsx
+  11:6  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:9  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/warehouses/hooks/useWarehouseListPage.ts
+  55:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  89:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  89:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/warehouses/hooks/useWarehouseListResources.ts
+  23:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/shared/components/data/DataTable.tsx
+  118:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/shared/components/data/DataTable/DataTableHeader.tsx
+  28:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/shared/components/data/DataTable/types.ts
+  10:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/shared/components/data/DataTable/useDataTable.ts
+   43:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   47:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   51:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   53:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   54:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   57:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   58:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   61:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   71:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   77:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   91:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  112:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  128:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  133:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  178:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 59 problems (0 errors, 59 warnings)
+
+ESLint found too many warnings (maximum: 0).
