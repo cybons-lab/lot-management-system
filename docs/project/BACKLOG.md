@@ -1951,3 +1951,24 @@ Phase 4で SmartRead/OCR系と主要マスタ系に楽観的ロック (`version`
 **元:** Phase 4実装完了後の残課題 (2026-02-05)
 
 ---
+
+## 3. 優先度: 低 (Maintenance/Major Updates)
+
+### 3-1. Major Dependency Updates (2026-02-07)
+
+**優先度:** 低
+**作成:** 2026-02-07
+**カテゴリ:** メンテナンス
+
+**対象パッケージ:**
+1. **Frontend:**
+   - `eslint`: 9.39.2 -> 10.0.0 (Major update, check for config changes)
+   - `jsdom`: 27.4.0 -> 28.0.0 (Major update)
+2. **Backend:**
+   - `ruff`: <0.15.0 -> 0.15.0+ (Major/Breaking checks required)
+
+**タスク内容:**
+- 各パッケージのCHANGELOGを確認
+- アップデート実施と破壊的変更の修正
+- 設定ファイル (`eslint.config.js`, `pyproject.toml`) の更新
+
