@@ -62,7 +62,7 @@ export function QuickWithdrawalDialog({
   initialShipDate,
 }: QuickWithdrawalDialogProps) {
   const { user } = useAuth();
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0]!;
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
 
   const [deliveryPlaces, setDeliveryPlaces] = useState<DeliveryPlace[]>([]);
@@ -292,11 +292,11 @@ export function QuickWithdrawalDialog({
         quantity: formState.quantity,
         withdrawal_type: "order_manual",
         customer_id: formState.customer_id,
-        delivery_place_id: formState.delivery_place_id || undefined,
-        ship_date: formState.ship_date || undefined,
+        ...(formState.delivery_place_id ? { delivery_place_id: formState.delivery_place_id } : {}),
+        ...(formState.ship_date ? { ship_date: formState.ship_date } : {}),
         due_date: formState.due_date,
-        reason: formState.reason || undefined,
-        reference_number: formState.reference_number || undefined,
+        ...(formState.reason ? { reason: formState.reason } : {}),
+        ...(formState.reference_number ? { reference_number: formState.reference_number } : {}),
       };
 
       await createWithdrawal(request);
@@ -430,8 +430,9 @@ export function QuickWithdrawalDialog({
             </Label>
             <DatePicker
               value={formState.due_date}
-              onChange={(v) => updateField("due_date", v || today)}
-              disabled={isSubmitting}
+              onChange={(v) =>
+                updateField("ship_date", (v ? v.split("T")[0] : "")!)
+              } disabled={isSubmitting}
               placeholder="納期を選択"
             />
           </div>

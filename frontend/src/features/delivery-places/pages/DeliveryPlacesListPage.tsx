@@ -169,7 +169,13 @@ export function DeliveryPlacesListPage() {
           </DialogHeader>
           <DeliveryPlaceForm
             customers={customers}
-            onSubmit={handleCreate}
+            onSubmit={(data) =>
+              handleCreate({
+                ...data,
+                short_name: data.short_name ?? null,
+                jiku_match_pattern: data.jiku_match_pattern ?? null,
+              })
+            }
             onCancel={closeCreateDialog}
             isSubmitting={isCreating}
           />
@@ -186,7 +192,13 @@ export function DeliveryPlacesListPage() {
             <DeliveryPlaceForm
               initialData={editingItem}
               customers={customers}
-              onSubmit={handleUpdate}
+              onSubmit={(data) =>
+                handleUpdate({
+                  ...data,
+                  short_name: data.short_name ?? null,
+                  jiku_match_pattern: data.jiku_match_pattern ?? null,
+                })
+              }
               onCancel={closeEditDialog}
               isSubmitting={isUpdating}
               isEdit

@@ -30,7 +30,7 @@ const getLatestCursor = (notifications: Notification[]): NotificationCursor | nu
   return notifications.reduce((latest, notification) => {
     const cursor = getNotificationCursor(notification);
     return isNewerCursor(cursor, latest) ? cursor : latest;
-  }, getNotificationCursor(notifications[0]));
+  }, getNotificationCursor(notifications[0]!));
 };
 
 // eslint-disable-next-line max-lines-per-function -- 通知表示ロジックは論理的なまとまりとして1つのフックにあるべき
@@ -107,9 +107,9 @@ export function useNotifications() {
         description: notification.message,
         action: notification.link
           ? {
-              label: "開く",
-              onClick: () => (window.location.href = notification.link!),
-            }
+            label: "開く",
+            onClick: () => (window.location.href = notification.link!),
+          }
           : undefined,
         duration: notification.display_strategy === "persistent" ? 8000 : 5000,
       });
@@ -139,9 +139,11 @@ export function useNotifications() {
     ) {
       // 最新1件のみブラウザ通知
       const latest = persistentNotifications[persistentNotifications.length - 1];
-      new window.Notification(latest.title, {
-        body: latest.message,
-      });
+      if (latest) {
+        new window.Notification(latest.title, {
+          body: latest.message,
+        });
+      }
     }
   }, [notifications]);
 

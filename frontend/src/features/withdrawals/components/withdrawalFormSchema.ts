@@ -40,7 +40,7 @@ export const WITHDRAWAL_FORM_DEFAULTS: WithdrawalFormData = {
   customer_id: 0,
   delivery_place_id: 0,
   ship_date: "",
-  due_date: new Date().toISOString().split("T")[0],
+  due_date: new Date().toISOString().split("T")[0] ?? "",
   reason: "",
   reference_number: "",
 };

@@ -43,7 +43,7 @@ export function useCreateOrder(options?: {
 
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -89,7 +89,7 @@ export function useUpdateOrder(
 
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -131,7 +131,7 @@ export function useDeleteOrder(options?: {
 
       options?.onSuccess?.();
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -175,7 +175,7 @@ export function useUpdateOrderStatus(
 
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }
 
@@ -197,7 +197,7 @@ export function useBulkCreateOrders(options?: {
       const results: OrderDetail[] = [];
 
       for (let i = 0; i < ordersData.length; i++) {
-        const orderData = ordersData[i];
+        const orderData = ordersData[i]!;
         const result = await createOrder(orderData);
         results.push(result);
 
@@ -215,6 +215,6 @@ export function useBulkCreateOrders(options?: {
 
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    ...(options?.onError && { onError: options.onError }),
   });
 }

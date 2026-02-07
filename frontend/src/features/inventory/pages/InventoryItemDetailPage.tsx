@@ -76,7 +76,7 @@ export function InventoryItemDetailPage() {
   } = useLotsQuery({
     supplier_item_id: productIdNum,
     warehouse_id: warehouseIdNum,
-    status: showArchived ? undefined : "active", // アーカイブ表示時は全取得、それ以外はactiveのみ
+    ...(showArchived ? {} : { status: "active" }), // アーカイブ表示時は全取得、それ以外はactiveのみ
     with_stock: !showArchived, // アーカイブ表示時は在庫0も含む
     skip: (page - 1) * pageSize,
     limit: pageSize,
@@ -102,7 +102,7 @@ export function InventoryItemDetailPage() {
   const handleOpenWithdrawal = (lot: LotUI) => {
     setSelectedLotForWithdrawal({
       ...lot,
-      warehouse_name: lot.warehouse_name || item?.warehouse_name || item?.warehouse_code,
+      warehouse_name: lot.warehouse_name || item?.warehouse_name || item?.warehouse_code || null,
     });
     setWithdrawalDialogOpen(true);
   };
@@ -111,7 +111,7 @@ export function InventoryItemDetailPage() {
   const handleOpenHistory = (lot: LotUI) => {
     setSelectedLotForHistory({
       ...lot,
-      warehouse_name: lot.warehouse_name || item?.warehouse_name || item?.warehouse_code,
+      warehouse_name: lot.warehouse_name || item?.warehouse_name || item?.warehouse_code || null,
     });
     setHistoryDialogOpen(true);
   };
@@ -180,9 +180,8 @@ export function InventoryItemDetailPage() {
         const supplierDisplay: string = (lot.supplier_name || lot.supplier_code || "-") as string;
         return (
           <span
-            className={`text-sm ${
-              lot.status === "archived" ? "line-through text-gray-400" : "text-gray-700"
-            }`}
+            className={`text-sm ${lot.status === "archived" ? "line-through text-gray-400" : "text-gray-700"
+              }`}
           >
             {supplierDisplay}
           </span>
@@ -575,10 +574,10 @@ export function InventoryItemDetailPage() {
           open={lockDialog.isOpen}
           onClose={handleCloseLock}
           onConfirm={async (reason, quantity) => {
-            await lockLotMutation.mutateAsync({ id: selectedLot.id, reason, quantity });
+            await lockLotMutation.mutateAsync({ id: selectedLot.id, reason, ...(quantity !== undefined && { quantity }) });
           }}
           isSubmitting={lockLotMutation.isPending}
-          lotNumber={selectedLot.lot_number ?? undefined}
+          {...(selectedLot.lot_number && { lotNumber: selectedLot.lot_number })}
           availableQuantity={calculateAvailable(
             selectedLot.current_quantity,
             selectedLot.allocated_quantity,
@@ -595,7 +594,7 @@ export function InventoryItemDetailPage() {
           onOpenChange={setArchiveDialogOpen}
           onConfirm={async (lotNumber) => {
             const confirmedLot = selectedLotForArchive;
-            await archiveLot({ id: confirmedLot.id, lotNumber });
+            await archiveLot({ id: confirmedLot.id, ...(lotNumber && { lotNumber }) });
             refetchLots();
             queryClient.invalidateQueries({
               queryKey: inventoryItemKeys.detail(productIdNum, warehouseIdNum),

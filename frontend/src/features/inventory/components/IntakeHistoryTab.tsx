@@ -112,9 +112,9 @@ export function IntakeHistoryTab() {
   }, [assignedSupplierIds, supplierId]);
 
   const { productOptions, supplierOptions, warehouseOptions } = useFilterOptions({
-    supplier_item_id: productId || undefined,
-    supplier_id: supplierId || undefined,
-    warehouse_id: warehouseId || undefined,
+    ...(productId ? { supplier_item_id: productId } : {}),
+    ...(supplierId ? { supplier_id: supplierId } : {}),
+    ...(warehouseId ? { warehouse_id: warehouseId } : {}),
     mode: "master",
   });
 
@@ -183,15 +183,15 @@ export function IntakeHistoryTab() {
       <div className="rounded-md border bg-white shadow-sm">
         {intakeViewMode === "list" ? (
           <IntakeHistoryList
-            supplierId={numSupplierId}
-            warehouseId={numWarehouseId}
-            productId={numProductId}
+            {...(numSupplierId ? { supplierId: numSupplierId } : {})}
+            {...(numWarehouseId ? { warehouseId: numWarehouseId } : {})}
+            {...(numProductId ? { productId: numProductId } : {})}
           />
         ) : (
           <IntakeHistoryCalendar
-            supplierId={numSupplierId}
-            warehouseId={numWarehouseId}
-            productId={numProductId}
+            {...(numSupplierId ? { supplierId: numSupplierId } : {})}
+            {...(numWarehouseId ? { warehouseId: numWarehouseId } : {})}
+            {...(numProductId ? { productId: numProductId } : {})}
           />
         )}
       </div>

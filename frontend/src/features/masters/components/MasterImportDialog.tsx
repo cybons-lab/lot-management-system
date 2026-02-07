@@ -2,6 +2,7 @@ import { Download, Upload } from "lucide-react";
 
 import { useMasterImport } from "../hooks/useMasterImport";
 import type { TemplateGroup } from "../types";
+export type { TemplateGroup };
 
 import { ImportResultCard } from "./ImportResultCard";
 import { UploadCard } from "./UploadCard";

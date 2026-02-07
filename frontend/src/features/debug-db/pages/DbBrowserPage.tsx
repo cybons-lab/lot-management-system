@@ -34,9 +34,9 @@ function useDbBrowserViewState() {
     () => ({
       limit: pageSize,
       offset: (page - 1) * pageSize,
-      order_by: sort?.column,
-      order_dir: sort?.direction,
-      q: searchQuery || undefined,
+      ...(sort?.column ? { order_by: sort.column } : {}),
+      ...(sort?.direction ? { order_dir: sort.direction } : {}),
+      ...(searchQuery ? { q: searchQuery } : {}),
     }),
     [page, pageSize, searchQuery, sort?.column, sort?.direction],
   );
@@ -93,7 +93,7 @@ function useDbBrowserPageModel() {
   const { data: objects = [], isLoading: isObjectsLoading, error } = useDbObjects(columnSearch);
 
   useEffect(() => {
-    if (!selected && objects.length > 0) {
+    if (!selected && objects.length > 0 && objects[0]) {
       handleSelectObject(objects[0]);
     }
   }, [handleSelectObject, objects, selected]);
@@ -170,18 +170,18 @@ export function DbBrowserPage() {
           activeTab={model.activeTab}
           onTabChange={model.handleTabChange}
           isSchemaLoading={model.isSchemaLoading}
-          schemaInfo={model.schemaInfo}
+          {...(model.schemaInfo ? { schemaInfo: model.schemaInfo } : {})}
           isRowsLoading={model.isRowsLoading}
-          rowsInfo={model.rowsInfo}
-          definitionInfo={model.definitionInfo}
-          relationsInfo={model.relationsInfo}
+          {...(model.rowsInfo ? { rowsInfo: model.rowsInfo } : {})}
+          {...(model.definitionInfo ? { definitionInfo: model.definitionInfo } : {})}
+          {...(model.relationsInfo ? { relationsInfo: model.relationsInfo } : {})}
           searchQuery={model.searchQuery}
           onSearchQueryChange={model.handleSearchQueryChange}
           page={model.page}
           onPageChange={model.setPage}
           pageSize={model.pageSize}
           onPageSizeChange={model.handlePageSizeChange}
-          sort={model.sort}
+          {...(model.sort ? { sort: model.sort } : {})}
           onSortChange={model.setSort}
         />
       </div>

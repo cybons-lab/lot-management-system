@@ -15,6 +15,7 @@ import {
   updateDeliveryPlace,
   type DeliveryPlaceCreate,
   type DeliveryPlaceUpdate,
+  type DeliveryPlace,
 } from "../api";
 
 const QUERY_KEY = ["delivery-places"] as const;
@@ -23,10 +24,10 @@ export function useDeliveryPlaces(
   params?: { customerId?: number; includeInactive?: boolean },
   options?: { enabled?: boolean },
 ) {
-  return useQuery({
+  return useQuery<DeliveryPlace[]>({
     queryKey: params ? [...QUERY_KEY, params] : QUERY_KEY,
     queryFn: () => fetchDeliveryPlaces(params),
-    enabled: options?.enabled,
+    ...(options?.enabled !== undefined ? { enabled: options.enabled } : {}),
   });
 }
 

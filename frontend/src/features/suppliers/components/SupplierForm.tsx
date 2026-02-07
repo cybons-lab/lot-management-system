@@ -35,7 +35,7 @@ interface SupplierInputFieldProps {
   placeholder: string;
   required?: boolean;
   register: UseFormRegister<SupplierFormData>;
-  error?: string;
+  error?: string | undefined;
 }
 
 function SupplierInputField({

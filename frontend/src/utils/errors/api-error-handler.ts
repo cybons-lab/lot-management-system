@@ -171,7 +171,7 @@ function getMessageFromProblem(problem: ProblemJSON): string | null {
       const detailMessage = getInsufficientStockMessage(problem.details);
       if (detailMessage) return detailMessage;
     }
-    return ERROR_CODE_MESSAGES[problem.error_code];
+    return ERROR_CODE_MESSAGES[problem.error_code] ?? null;
   }
 
   // detailフィールドがある場合はそれを使用
@@ -396,7 +396,7 @@ export async function handleApiErrorAsync(error: unknown): Promise<{
   // リトライ可能かどうかを判定（在庫不足や競合は再試行で解決する可能性あり）
   const isRetryable = isConflictError(error);
 
-  return { message, variant, isRetryable, errorCode };
+  return { message, variant, isRetryable, ...(errorCode !== undefined && { errorCode }) };
 }
 
 /**

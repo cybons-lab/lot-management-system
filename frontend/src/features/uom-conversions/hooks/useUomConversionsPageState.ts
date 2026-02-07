@@ -161,7 +161,7 @@ export function useUomConversionsPageState() {
         {
           id: dialogState.deletingItem.conversion_id,
           version: dialogState.deletingItem.version,
-          endDate: endDate || undefined,
+          ...(endDate ? { endDate } : {}),
         },
         { onSuccess: closeDeleteDialog },
       );

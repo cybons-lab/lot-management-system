@@ -18,8 +18,11 @@ interface DatePickerWithRangeProps {
 }
 
 function parseTimeValue(timeValue: string) {
-  const [hours, minutes] = timeValue.split(":").map(Number);
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  const parts = timeValue.split(":").map(Number);
+  if (parts.length < 2) return null;
+  const hours = parts[0];
+  const minutes = parts[1];
+  if (hours === undefined || minutes === undefined || Number.isNaN(hours) || Number.isNaN(minutes)) return null;
   return { hours, minutes };
 }
 
@@ -152,14 +155,14 @@ function DateRangePopoverContent({
       <Calendar
         initialFocus
         mode="range"
-        defaultMonth={date?.from}
+        {...(date?.from && { defaultMonth: date.from })}
         selected={normalizeDateRange(date)}
         onSelect={onSelectDate}
         numberOfMonths={2}
       />
       <div className="border-t p-3">
         <div className="mb-4 flex items-center justify-center text-sm font-medium">
-          <DateRangeSummary date={date} />
+          <DateRangeSummary {...(date && { date })} />
         </div>
         <div className="flex items-center gap-4">
           <TimeInputField
@@ -199,11 +202,11 @@ export function DatePickerWithRange({ className, date, setDate }: DatePickerWith
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            <DateRangeButtonLabel date={date} />
+            <DateRangeButtonLabel {...(date && { date })} />
           </Button>
         </PopoverTrigger>
         <DateRangePopoverContent
-          date={date}
+          {...(date && { date })}
           startTime={startTime}
           endTime={endTime}
           onTimeChange={handleTimeChange}

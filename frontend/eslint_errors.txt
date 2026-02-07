@@ -1,0 +1,91 @@
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/MainRoutes.tsx
+  13:1  error  There should be no empty line within import group  import/order
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/admin/components/system-settings/DiagnosticsSection.tsx
+  25:8  error  Function 'DiagnosticsSection' has too many lines (284). Maximum allowed is 80  max-lines-per-function
+  25:8  error  Function 'DiagnosticsSection' has a complexity of 13. Maximum allowed is 12    complexity
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/admin/hooks/useSystemSettings.ts
+  8:8  error  Function 'useSystemSettings' has too many lines (143). Maximum allowed is 80  max-lines-per-function
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/inventory/components/excel-view/ExcelViewPage.tsx
+  39:8  error  Function 'ExcelViewPage' has too many lines (85). Maximum allowed is 80  max-lines-per-function
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/inventory/components/excel-view/components/ExcelViewDialogs.tsx
+  63:8  error  Function 'ExcelViewDialogs' has too many lines (113). Maximum allowed is 80  max-lines-per-function
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/inventory/components/excel-view/hooks/useExcelView.ts
+   34:8   error    Function 'useExcelView' has too many lines (427). Maximum allowed is 80  max-lines-per-function
+  375:21  warning  Unexpected any. Specify a different type                                 @typescript-eslint/no-explicit-any
+  446:1   error    File has too many lines (454). Maximum allowed is 400                    max-lines
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/makers/hooks/useMakersPageModel.ts
+  12:8  error  Function 'useMakersPageModel' has too many lines (85). Maximum allowed is 80  max-lines-per-function
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/makers/pages/MakersPage.tsx
+  24:22  error  'sorted' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/orders/hooks/useOrderLineComputed.ts
+   79:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  118:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/suppliers/hooks/useSupplierListPage.ts
+  13:8  error  Function 'useSupplierListPage' has too many lines (102). Maximum allowed is 80  max-lines-per-function
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/suppliers/pages/SuppliersListPage.tsx
+  16:8  error  Function 'SuppliersListPage' has too many lines (114). Maximum allowed is 80  max-lines-per-function
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/warehouses/hooks/useWarehouseListPage.ts
+  13:8  error  Function 'useWarehouseListPage' has too many lines (102). Maximum allowed is 80  max-lines-per-function
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/features/warehouses/pages/WarehousesListPage.tsx
+  18:8  error  Function 'WarehousesListPage' has too many lines (108). Maximum allowed is 80  max-lines-per-function
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/routes/admin-routes.tsx
+   4:1  error  There should be no empty line within import group                       import/order
+  23:8  error  Function 'AdminRoutes' has too many lines (137). Maximum allowed is 80  max-lines-per-function
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/routes/inventory-routes.tsx
+  4:1  error  There should be no empty line within import group  import/order
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/routes/master-routes.tsx
+   5:1  error  There should be no empty line within import group                        import/order
+  30:8  error  Function 'MasterRoutes' has too many lines (121). Maximum allowed is 80  max-lines-per-function
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/routes/report-routes.tsx
+  4:1  error  There should be no empty line within import group  import/order
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/routes/rpa-routes.tsx
+  4:1  error  There should be no empty line within import group  import/order
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/shared/components/data/EditableCells/index.tsx
+  27:8  error  Function 'EditableTextCell' has too many lines (92). Maximum allowed is 80  max-lines-per-function
+  27:8  error  Function 'EditableTextCell' has a complexity of 13. Maximum allowed is 12   complexity
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/shared/components/layout/MasterDialogContainer.tsx
+   28:8    error    Function 'MasterDialogContainer' has too many lines (99). Maximum allowed is 80  max-lines-per-function
+   28:8    error    Function 'MasterDialogContainer' has a complexity of 17. Maximum allowed is 12   complexity
+   83:40   warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+   83:75   warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+   83:119  warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  100:40   warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  100:75   warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  100:119  warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  106:39   warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  107:41   warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  108:41   warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  123:41   warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  123:77   warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  123:122  warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/shared/components/layout/MasterPageTemplate.tsx
+  61:8  error  Function 'MasterPageTemplate' has too many lines (103). Maximum allowed is 80  max-lines-per-function
+  61:8  error  Function 'MasterPageTemplate' has a complexity of 28. Maximum allowed is 12    complexity
+
+/Users/kazuya/dev/projects/lot-management-system/frontend/src/shared/utils/keyboard-navigation.ts
+  21:43  error  Arrow function has too many parameters (7). Maximum allowed is 4  max-params
+  70:43  error  Arrow function has too many parameters (6). Maximum allowed is 4  max-params
+
+✖ 44 problems (29 errors, 15 warnings)
+

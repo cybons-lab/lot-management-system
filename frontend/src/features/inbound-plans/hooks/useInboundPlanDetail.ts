@@ -81,7 +81,7 @@ export function useInboundPlanDetail() {
     try {
       await updateMutation.mutateAsync({
         planned_arrival_date: data.planned_arrival_date,
-        notes: data.notes,
+        ...(data.notes ? { notes: data.notes } : {}),
       });
       toast.success("入荷予定を更新しました");
       setIsEditDialogOpen(false);

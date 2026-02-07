@@ -59,8 +59,8 @@ export function DataTable<T>({
     ...props,
     data,
     columns,
-    dense,
-    enableVirtualization,
+    ...(dense !== undefined && { dense }),
+    ...(enableVirtualization !== undefined && { enableVirtualization }),
     parentRef,
   });
   const rows = table.getRowModel().rows;
@@ -69,20 +69,21 @@ export function DataTable<T>({
     return (
       <DataTableLoading
         columnCount={columns.length + (props.selectable ? 1 : 0)}
-        dense={dense}
-        className={className}
+
+        {...(dense !== undefined && { dense })}
+        {...(className !== undefined && { className })}
       />
     );
   if (data.length === 0) return <DataTableEmpty message={emptyMessage} />;
 
   const paddingTop =
     enableVirtualization && rowVirtualizer.getVirtualItems().length > 0
-      ? rowVirtualizer.getVirtualItems()[0].start
+      ? rowVirtualizer.getVirtualItems()[0]!.start
       : 0;
   const paddingBottom =
     enableVirtualization && rowVirtualizer.getVirtualItems().length > 0
       ? rowVirtualizer.getTotalSize() -
-        rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1].end
+      rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1]!.end
       : 0;
 
   return (
@@ -103,8 +104,9 @@ export function DataTable<T>({
         <table className="responsive-table w-full" style={{ tableLayout: "fixed" }}>
           <DataTableHeader
             table={table}
-            dense={dense}
-            enableVirtualization={enableVirtualization}
+
+            {...(dense !== undefined && { dense })}
+            {...(enableVirtualization !== undefined && { enableVirtualization })}
           />
           <tbody>
             {paddingTop > 0 && (
@@ -116,18 +118,19 @@ export function DataTable<T>({
               </tr>
             )}
             {(enableVirtualization ? rowVirtualizer.getVirtualItems() : rows).map((v: any) => {
-              const row = enableVirtualization ? rows[v.index] : v;
+              const row = enableVirtualization ? rows[v.index]! : v;
               return (
                 <DataTableRow
                   key={row.id}
                   row={row}
-                  dense={dense}
-                  striped={props.striped}
-                  onRowClick={props.onRowClick}
-                  renderHoverActions={props.renderHoverActions}
-                  renderExpandedRow={props.renderExpandedRow}
-                  getRowClassName={props.getRowClassName}
-                  measureElement={enableVirtualization ? rowVirtualizer.measureElement : undefined}
+
+                  {...(dense !== undefined && { dense })}
+                  {...(props.striped !== undefined && { striped: props.striped })}
+                  {...(props.onRowClick !== undefined && { onRowClick: props.onRowClick })}
+                  {...(props.renderHoverActions !== undefined && { renderHoverActions: props.renderHoverActions })}
+                  {...(props.renderExpandedRow !== undefined && { renderExpandedRow: props.renderExpandedRow })}
+                  {...(props.getRowClassName !== undefined && { getRowClassName: props.getRowClassName })}
+                  {...(enableVirtualization && { measureElement: rowVirtualizer.measureElement })}
                 />
               );
             })}

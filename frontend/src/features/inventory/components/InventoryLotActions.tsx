@@ -30,7 +30,7 @@ export function InventoryLotActions({
 }: InventoryLotActionsProps) {
   const lotWithWarehouseName = {
     ...lot,
-    warehouse_name: lot.warehouse_name || warehouseNameFallback,
+    warehouse_name: lot.warehouse_name || warehouseNameFallback || null,
   };
 
   const available = parseDecimal(lot.available_quantity ?? "0");

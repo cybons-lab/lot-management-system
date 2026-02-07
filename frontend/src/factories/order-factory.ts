@@ -3,9 +3,7 @@
  * 受注関連のテストデータ生成ファクトリー
  */
 
-// Utility to convert null to undefined
-const nullToUndefined = <T>(value: T | null | undefined): T | undefined =>
-  value === null ? undefined : value;
+
 
 import { faker } from "@faker-js/faker/locale/ja";
 
@@ -30,7 +28,7 @@ function resolveDeliveryDate(overrides?: Partial<OrderLineFactoryResult>): strin
   if (overrides && "due_date" in overrides && overrides.due_date) {
     return overrides.due_date;
   }
-  return faker.date.soon({ days: 30 }).toISOString().split("T")[0];
+  return faker.date.soon({ days: 30 }).toISOString().split("T")[0] ?? "";
 }
 
 /** Helper: Resolve extra fields (product_name, customer_code, customer_name) */
@@ -54,7 +52,7 @@ export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
 
   return {
     id: faker.number.int({ min: 1, max: 10000 }),
-    order_date: faker.date.recent({ days: 30 }).toISOString().split("T")[0],
+    order_date: faker.date.recent({ days: 30 }).toISOString().split("T")[0] ?? "",
     customer_id: faker.number.int({ min: 1, max: 100 }), // DDL v2.2: FK to customers
 
     status: faker.helpers.arrayElement(statuses),
@@ -62,8 +60,8 @@ export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
     updated_at: faker.date.recent().toISOString(),
     // Legacy fields for backward compatibility
     // order_no: overrides?.order_no ?? `ORD-${faker.string.alphanumeric(6).toUpperCase()}`,
-    customer_code: overrides?.customer_code ?? `CUST-${faker.string.alphanumeric(4).toUpperCase()}`,
-    customer_name: overrides?.customer_name ?? faker.company.name(),
+    ...(overrides?.customer_code ? { customer_code: overrides.customer_code } : { customer_code: `CUST-${faker.string.alphanumeric(4).toUpperCase()}` }),
+    ...(overrides?.customer_name ? { customer_name: overrides.customer_name } : { customer_name: faker.company.name() }),
     ...overrides,
   };
 }
@@ -125,9 +123,9 @@ export function createOrderLine(
     forecast_qty: overrides?.forecast_qty ?? null,
     forecast_version_no: overrides?.forecast_version_no ?? null,
     allocated_lots: allocatedLots,
-    product_name: productName,
-    customer_code: customerCode ?? undefined,
-    customer_name: customerName ?? undefined,
+    product_name: productName ?? null,
+    ...(customerCode ? { customer_code: customerCode } : {}),
+    ...(customerName ? { customer_name: customerName } : {}),
   };
 }
 
@@ -154,17 +152,12 @@ export function createOrderWithLines(
         index + 1,
       id: "id" in line ? (line.id as number) : index + 1,
       ...line,
-      customer_code:
-        "customer_code" in line
-          ? nullToUndefined(line.customer_code as string | null | undefined)
-          : nullToUndefined(overrides?.customer_code ?? order.customer_code),
-      customer_name:
-        "customer_name" in line
-          ? nullToUndefined(line.customer_name as string | null | undefined)
-          : nullToUndefined(
-              (overrides as { customer_name?: string | null })?.customer_name ??
-                (order as { customer_name?: string | null }).customer_name,
-            ),
+      ...(("customer_code" in line && line.customer_code !== undefined) ? { customer_code: line.customer_code } :
+        (overrides?.customer_code !== undefined ? { customer_code: overrides.customer_code } :
+          (order.customer_code !== undefined ? { customer_code: order.customer_code } : {}))),
+      ...(("customer_name" in line && line.customer_name !== undefined) ? { customer_name: line.customer_name } :
+        (overrides?.customer_name !== undefined ? { customer_name: overrides.customer_name } :
+          (order.customer_name !== undefined ? { customer_name: order.customer_name } : {}))),
     }),
   );
 

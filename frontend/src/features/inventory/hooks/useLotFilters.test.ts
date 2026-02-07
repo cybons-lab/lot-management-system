@@ -165,7 +165,7 @@ describe("useLotFilters", () => {
       const { result } = renderHook(() => useLotFilters(mockLots, filters));
 
       expect(result.current).toHaveLength(1);
-      expect(result.current[0].lot_number).toBe("LOT-001");
+      expect(result.current[0]!.lot_number).toBe("LOT-001");
     });
 
     it("製品コードで検索できる", () => {
@@ -181,7 +181,7 @@ describe("useLotFilters", () => {
       const { result } = renderHook(() => useLotFilters(mockLots, filters));
 
       expect(result.current).toHaveLength(1);
-      expect(result.current[0].product_name).toBe("製品B");
+      expect(result.current[0]!.product_name).toBe("製品B");
     });
 
     it("大文字小文字を区別しない", () => {
@@ -189,7 +189,7 @@ describe("useLotFilters", () => {
       const { result } = renderHook(() => useLotFilters(mockLots, filters));
 
       expect(result.current).toHaveLength(1);
-      expect(result.current[0].lot_number).toBe("LOT-001");
+      expect(result.current[0]!.lot_number).toBe("LOT-001");
     });
 
     it("検索条件が空の場合は全件返す", () => {
@@ -238,7 +238,7 @@ describe("useLotFilters", () => {
       const { result } = renderHook(() => useLotFilters(mockLots, filters));
 
       expect(result.current).toHaveLength(1);
-      expect(result.current[0].lot_number).toBe("LOT-002");
+      expect(result.current[0]!.lot_number).toBe("LOT-002");
     });
   });
 

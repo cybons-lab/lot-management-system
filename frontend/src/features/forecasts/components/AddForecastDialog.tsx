@@ -36,7 +36,7 @@ export function AddForecastDialog({ open, onOpenChange, onSuccess }: AddForecast
   const { data: customers = [] } = useCustomersQuery({ enabled: open });
   const { data: products = [] } = useProductsQuery({ enabled: open });
   const { data: deliveryPlaces = [] } = useDeliveryPlaces(
-    { customerId: customerId ? Number(customerId) : undefined },
+    { ...(customerId ? { customerId: Number(customerId) } : {}) },
     { enabled: open && !!customerId },
   );
 

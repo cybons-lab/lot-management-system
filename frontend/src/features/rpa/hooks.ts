@@ -19,6 +19,7 @@ import {
   type MaterialDeliverySimpleRequest,
   type CloudFlowConfigUpdate,
   type GenericCloudFlowExecuteRequest,
+  type CloudFlowConfigResponse,
 } from "./api";
 
 /**
@@ -67,18 +68,18 @@ export function useExecuteGenericCloudFlow() {
 }
 
 export function useCloudFlowConfig(key: string, options?: { enabled?: boolean }) {
-  return useQuery({
+  return useQuery<CloudFlowConfigResponse>({
     queryKey: ["rpa", "config", key],
     queryFn: () => getCloudFlowConfig(key),
-    enabled: options?.enabled,
+    ...(options?.enabled !== undefined ? { enabled: options.enabled } : {}),
   });
 }
 
 export function useCloudFlowConfigOptional(key: string, options?: { enabled?: boolean }) {
-  return useQuery({
+  return useQuery<CloudFlowConfigResponse | null>({
     queryKey: ["rpa", "config", key],
     queryFn: () => getCloudFlowConfigOptional(key),
-    enabled: options?.enabled,
+    ...(options?.enabled !== undefined ? { enabled: options.enabled } : {}),
   });
 }
 

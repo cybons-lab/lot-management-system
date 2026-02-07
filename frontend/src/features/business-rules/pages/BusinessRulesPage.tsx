@@ -32,8 +32,8 @@ export function BusinessRulesPage() {
     isLoading,
     isError,
   } = useBusinessRules({
-    is_active: isActiveFilter,
-    rule_type: ruleTypeFilter,
+    ...(isActiveFilter !== undefined ? { is_active: isActiveFilter } : {}),
+    ...(ruleTypeFilter ? { rule_type: ruleTypeFilter } : {}),
   });
 
   // Toggle active mutation

@@ -73,8 +73,8 @@ export function DataFetchTab() {
     queryFn: () =>
       getSapCache({
         connection_id: selectedConnectionId,
-        kunnr: kunnrFilter || undefined,
-        zkdmat_b_search: searchTerm || undefined,
+        kunnr: kunnrFilter || null,
+        zkdmat_b_search: searchTerm || null,
         page,
         page_size: pageSize,
       }),
@@ -114,8 +114,8 @@ export function DataFetchTab() {
   const handleFetch = () => {
     fetchMutation.mutate({
       connection_id: selectedConnectionId,
-      kunnr_f: kunnrFilter || undefined,
-      kunnr_t: kunnrFilter || undefined,
+      kunnr_f: kunnrFilter || null,
+      kunnr_t: kunnrFilter || null,
     });
   };
 
@@ -123,7 +123,7 @@ export function DataFetchTab() {
     if (confirm("キャッシュをクリアしますか？")) {
       clearMutation.mutate({
         connection_id: selectedConnectionId,
-        kunnr: kunnrFilter || undefined,
+        kunnr: kunnrFilter || null,
       });
     }
   };
@@ -286,12 +286,11 @@ export function DataFetchTab() {
                         cacheData.items.map((item, idx) => (
                           <TableRow
                             key={`${item.zkdmat_b}-${item.kunnr}-${idx}`}
-                            className={`cursor-pointer hover:bg-muted/50 ${
-                              selectedItem?.zkdmat_b === item.zkdmat_b &&
+                            className={`cursor-pointer hover:bg-muted/50 ${selectedItem?.zkdmat_b === item.zkdmat_b &&
                               selectedItem?.kunnr === item.kunnr
-                                ? "bg-muted"
-                                : ""
-                            }`}
+                              ? "bg-muted"
+                              : ""
+                              }`}
                             onClick={() => setSelectedItem(item)}
                           >
                             {visibleColumnsData.map((col) => (

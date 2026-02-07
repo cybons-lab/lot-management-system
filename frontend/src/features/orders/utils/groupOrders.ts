@@ -65,8 +65,8 @@ export function groupByDelivery(lines: OrderLineRow[]): GroupedOrderLine[] {
     const key = line.delivery_place_code || "unknown";
     if (!acc[key]) {
       acc[key] = {
-        deliveryPlaceCode: line.delivery_place_code || undefined,
-        deliveryPlaceName: line.delivery_place_name || undefined,
+        ...(line.delivery_place_code ? { deliveryPlaceCode: line.delivery_place_code } : {}),
+        ...(line.delivery_place_name ? { deliveryPlaceName: line.delivery_place_name } : {}),
         lines: [],
       };
     }
@@ -87,10 +87,10 @@ export function groupByOrder(lines: OrderLineRow[]): GroupedOrderLine[] {
     const key = code || "unknown";
     if (!acc[key]) {
       acc[key] = {
-        orderNumber: code || undefined,
-        customerName: line.customer_name || undefined,
-        orderDate: line.order_date || undefined,
-        status: line.order_status || undefined,
+        ...(code ? { orderNumber: code } : {}),
+        ...(line.customer_name ? { customerName: line.customer_name } : {}),
+        ...(line.order_date ? { orderDate: line.order_date } : {}),
+        ...(line.order_status ? { status: line.order_status } : {}),
         lines: [],
       };
     }

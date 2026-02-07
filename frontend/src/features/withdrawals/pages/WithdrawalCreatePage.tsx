@@ -68,7 +68,7 @@ export function WithdrawalCreatePage() {
         </CardHeader>
         <CardContent>
           <WithdrawalFormFiltered
-            preselectedLot={preselectedLot ?? undefined}
+            preselectedLot={preselectedLot ?? null}
             lots={lots}
             isLoadingLots={isLoadingLots}
             onSubmit={handleSubmit}

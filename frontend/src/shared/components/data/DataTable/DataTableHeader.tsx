@@ -37,7 +37,7 @@ function getHeaderClassName(
     meta?.align === "center" && "text-center",
     meta?.align === "right" && "text-right",
     header.column.getCanSort() &&
-      "cursor-pointer transition-colors select-none hover:bg-slate-100/70",
+    "cursor-pointer transition-colors select-none hover:bg-slate-100/70",
     isSticky && "sticky z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]",
     meta?.className,
   );
@@ -109,7 +109,7 @@ export function DataTableHeader<T>({
       {table.getHeaderGroups().map((headerGroup) => (
         <tr key={headerGroup.id}>
           {headerGroup.headers.map((header) => (
-            <HeaderCell key={header.id} header={header} dense={dense} />
+            <HeaderCell key={header.id} header={header} {...(dense !== undefined ? { dense } : {})} />
           ))}
         </tr>
       ))}

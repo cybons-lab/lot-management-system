@@ -77,9 +77,11 @@ export function InventoryPage() {
     isLoading: isItemsLoading,
     refetch: refetchItems,
   } = useInventoryItems({
-    ...queryParams,
     skip: (page - 1) * pageSize,
     limit: pageSize,
+    ...(filters.supplier_item_id ? { supplier_item_id: Number(filters.supplier_item_id) } : {}),
+    ...(filters.supplier_id ? { supplier_id: Number(filters.supplier_id) } : {}),
+    ...(filters.warehouse_id ? { warehouse_id: Number(filters.warehouse_id) } : {}),
   });
 
   const inventoryItems = data?.items ?? [];
@@ -91,9 +93,9 @@ export function InventoryPage() {
 
   // Mutual filtering with auto-selection
   const { productOptions, supplierOptions, warehouseOptions } = useFilterOptions({
-    supplier_item_id: filters.supplier_item_id || undefined,
-    supplier_id: filters.supplier_id || undefined,
-    warehouse_id: filters.warehouse_id || undefined,
+    ...(filters.supplier_item_id ? { supplier_item_id: filters.supplier_item_id } : {}),
+    ...(filters.supplier_id ? { supplier_id: filters.supplier_id } : {}),
+    ...(filters.warehouse_id ? { warehouse_id: filters.warehouse_id } : {}),
     tab: filters.tab,
     assigned_staff_only: filters.assigned_staff_only,
     mode: filters.candidate_mode,
@@ -283,31 +285,28 @@ export function InventoryPage() {
         {showTabFilters && (
           <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
             <button
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                filters.tab === "all"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${filters.tab === "all"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+                }`}
               onClick={() => updateFilter("tab", "all")}
             >
               すべて
             </button>
             <button
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                filters.tab === "in_stock"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${filters.tab === "in_stock"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+                }`}
               onClick={() => updateFilter("tab", "in_stock")}
             >
               ✅ 在庫あり
             </button>
             <button
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                filters.tab === "no_stock"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              } ${filters.candidate_mode === "stock" ? "cursor-not-allowed opacity-50" : ""}`}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${filters.tab === "no_stock"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+                } ${filters.candidate_mode === "stock" ? "cursor-not-allowed opacity-50" : ""}`}
               disabled={filters.candidate_mode === "stock"}
               onClick={() => updateFilter("tab", "no_stock")}
               title={
@@ -401,10 +400,9 @@ export function InventoryPage() {
                 data={inventoryItems}
                 isLoading={isItemsLoading}
                 onRefresh={refetchItems}
-                filterSupplierId={filters.supplier_id ? Number(filters.supplier_id) : undefined}
-                headerContent={`ページ ${page} (全${totalCount}件中 ${
-                  (page - 1) * pageSize + 1
-                }-${Math.min(page * pageSize, totalCount)}件を表示)`}
+                {...(filters.supplier_id ? { filterSupplierId: Number(filters.supplier_id) } : {})}
+                headerContent={`ページ ${page} (全${totalCount}件中 ${(page - 1) * pageSize + 1
+                  }-${Math.min(page * pageSize, totalCount)}件を表示)`}
               />
               {/* Pagination Controls */}
               <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">

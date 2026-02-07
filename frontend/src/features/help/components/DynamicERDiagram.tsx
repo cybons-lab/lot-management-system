@@ -117,7 +117,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = "TB") => 
   dagre.layout(dagreGraph);
 
   const newNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
+    const nodeWithPosition = dagreGraph.node(node.id)!;
     return {
       ...node,
       position: {
@@ -167,7 +167,7 @@ function createNodesAndEdges(
     type: "table",
     data: table,
     position: { x: 0, y: 0 },
-    style: targetTable === table.name ? { border: "3px solid #6366f1" } : undefined,
+    style: targetTable === table.name ? { border: "3px solid #6366f1" } : {},
   }));
 
   const edges: Edge[] = [];
@@ -259,8 +259,8 @@ export function DynamicERDiagram({ className, targetTable }: DynamicERDiagramPro
     [nodes, edges, setNodes, setEdges],
   );
 
-  if (loading) return <LoadingState className={className} />;
-  if (error) return <ErrorState className={className} error={error} />;
+  if (loading) return <LoadingState {...(className ? { className } : {})} />;
+  if (error) return <ErrorState {...(className ? { className } : {})} error={error} />;
 
   return (
     <div className={`${className} relative er-diagram-wrapper`}>

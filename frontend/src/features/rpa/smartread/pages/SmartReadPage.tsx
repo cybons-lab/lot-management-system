@@ -151,7 +151,7 @@ export function SmartReadPage() {
     if (!selectedConfigId || selectedWatchFiles.length === 0 || isDiagnosing) return;
     setIsDiagnosing(true);
     try {
-      await runDiagnostic(selectedConfigId, selectedWatchFiles[0]);
+      await runDiagnostic(selectedConfigId, selectedWatchFiles[0]!);
     } finally {
       setIsDiagnosing(false);
     }
@@ -193,7 +193,7 @@ export function SmartReadPage() {
         return current.map((run) => ({
           ...run,
           status: isDone ? "SUCCEEDED" : "RUNNING",
-          step: PAD_RUN_STEP_ORDER[nextIndex].key,
+          step: PAD_RUN_STEP_ORDER[nextIndex]!.key,
           wide_data_count: isDone ? 12 : run.wide_data_count,
           long_data_count: isDone ? 36 : run.long_data_count,
           completed_at: isDone ? now : null,

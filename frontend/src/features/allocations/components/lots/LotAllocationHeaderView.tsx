@@ -66,8 +66,9 @@ export function LotAllocationHeaderView({
     totalAllocated,
     remainingQty,
     justSaved,
+    // canSave removed to avoid duplicate
     canSave: false, // canSave is removed, so setting a default or removing if not needed by useAllocationStatus
-    lineStatus,
+    ...(lineStatus !== undefined ? { lineStatus } : {}),
   });
 
   return (
@@ -96,7 +97,7 @@ export function LotAllocationHeaderView({
         {/* 3-Column Layout */}
         <div className="grid grid-cols-12 gap-6">
           <OrderContextSection
-            supplierName={supplierName}
+            {...(supplierName ? { supplierName } : { supplierName: "" })}
             deliveryPlaceName={deliveryPlaceName}
             deliveryDate={deliveryDate}
           />
@@ -105,8 +106,8 @@ export function LotAllocationHeaderView({
             <QuantityProgressSection
               required={orderQuantity}
               allocated={totalAllocated}
-              hardAllocated={hardAllocated}
-              softAllocated={softAllocated}
+              hardAllocated={hardAllocated ?? 0}
+              softAllocated={softAllocated ?? 0}
               unit={orderUnit}
             />
           </div>

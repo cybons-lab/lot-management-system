@@ -24,14 +24,14 @@ describe("Feature Config Validation", () => {
 
   it("should verify that major pages have their sub-features registered", () => {
     // Inventory
-    expect(FEATURE_CONFIG.inventory.subFeatures).toBeDefined();
-    const invSubs = FEATURE_CONFIG.inventory.subFeatures?.map((s) => s.id);
+    expect(FEATURE_CONFIG.inventory!.subFeatures).toBeDefined();
+    const invSubs = FEATURE_CONFIG.inventory!.subFeatures!.map((s) => s.id);
     expect(invSubs).toContain("lots");
     expect(invSubs).toContain("forecast");
 
     // Help
-    expect(FEATURE_CONFIG["database-schema"].subFeatures).toBeDefined();
-    const dbSubs = FEATURE_CONFIG["database-schema"].subFeatures?.map((s) => s.id);
+    expect(FEATURE_CONFIG["database-schema"]!.subFeatures).toBeDefined();
+    const dbSubs = FEATURE_CONFIG["database-schema"]!.subFeatures!.map((s) => s.id);
     expect(dbSubs).toContain("tables");
   });
 });

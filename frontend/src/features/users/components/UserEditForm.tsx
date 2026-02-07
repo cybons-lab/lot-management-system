@@ -57,7 +57,7 @@ export function UserEditForm({
       email: data.email,
       display_name: data.display_name,
       is_active: data.is_active,
-      password: data.password || undefined,
+      ...(data.password ? { password: data.password } : {}),
     };
     onSubmit(updateData);
   };

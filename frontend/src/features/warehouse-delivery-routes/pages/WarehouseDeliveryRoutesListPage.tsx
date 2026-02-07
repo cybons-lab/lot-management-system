@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import type { WarehouseDeliveryRoute, WarehouseDeliveryRouteCreate } from "../api";
 import { WarehouseDeliveryRouteForm } from "../components";
 import { useWarehouseDeliveryRoutes } from "../hooks";
+import type { DeliveryPlace } from "@/features/delivery-places/api";
 
 import { createColumns } from "./columns";
 import * as styles from "./styles";
@@ -62,7 +63,7 @@ export function WarehouseDeliveryRoutesListPage() {
   // Master data for selects
   const { useList: useWarehouseList } = useWarehouses();
   const { data: warehousesRaw = [] } = useWarehouseList();
-  const { data: deliveryPlacesRaw = [] } = useDeliveryPlaces();
+  const { data: deliveryPlacesRaw = [] } = useDeliveryPlaces() as { data: DeliveryPlace[] };
   const { useList: useProductList } = useSupplierProducts();
   const { data: productsRaw = [] } = useProductList();
 
@@ -147,14 +148,33 @@ export function WarehouseDeliveryRoutesListPage() {
   );
 
   const handleCreate = useCallback(
-    (data: WarehouseDeliveryRouteCreate) => {
-      createRoute(data, { onSuccess: () => setIsCreateOpen(false) });
+    (data: {
+      warehouse_id: number;
+      delivery_place_id: number;
+      transport_lead_time_days: number;
+      is_active: boolean;
+      supplier_item_id?: number | null | undefined;
+      notes?: string | null | undefined;
+    }) => {
+      const apiData: WarehouseDeliveryRouteCreate = {
+        ...data,
+        supplier_item_id: data.supplier_item_id ?? null,
+        notes: data.notes ?? null,
+      };
+      createRoute(apiData, { onSuccess: () => setIsCreateOpen(false) });
     },
     [createRoute],
   );
 
   const handleUpdate = useCallback(
-    (data: WarehouseDeliveryRouteCreate) => {
+    (data: {
+      warehouse_id: number;
+      delivery_place_id: number;
+      transport_lead_time_days: number;
+      is_active: boolean;
+      supplier_item_id?: number | null | undefined;
+      notes?: string | null | undefined;
+    }) => {
       if (!editingRoute) return;
       updateRoute(
         {
@@ -162,7 +182,7 @@ export function WarehouseDeliveryRoutesListPage() {
           data: {
             transport_lead_time_days: data.transport_lead_time_days,
             is_active: data.is_active,
-            notes: data.notes,
+            notes: data.notes ?? null,
             version: editingRoute.version,
           },
         },

@@ -225,8 +225,8 @@ export function SearchableSelect({
       <SearchableSelectTrigger
         isOpen={isOpen}
         disabled={disabled}
-        value={value}
-        selectedOptionLabel={selectedOption?.label}
+        {...(value ? { value } : {})}
+        {...(selectedOption?.label ? { selectedOptionLabel: selectedOption.label } : {})}
         placeholder={placeholder}
         inputRef={inputRef}
         searchTerm={searchTerm}
@@ -237,7 +237,7 @@ export function SearchableSelect({
 
       {isOpen && (
         <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg">
-          <OptionsList options={filteredOptions} selectedValue={value} onSelect={handleSelect} />
+          <OptionsList options={filteredOptions} {...(value ? { selectedValue: value } : {})} onSelect={handleSelect} />
         </div>
       )}
     </div>

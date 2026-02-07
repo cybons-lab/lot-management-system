@@ -48,6 +48,7 @@ export function UomConversionsPage() {
         handleSoftDelete={state.openSoftDeleteDialog}
         handlePermanentDelete={state.openPermanentDeleteDialog}
         handleRestore={state.openRestoreDialog}
+        isLoading={state.isLoading}
       />
 
       <div className="text-sm text-slate-600">{state.filteredConversions.length} 件の単位換算</div>

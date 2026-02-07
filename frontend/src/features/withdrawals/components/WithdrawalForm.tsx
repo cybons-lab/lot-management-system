@@ -54,7 +54,7 @@ export function WithdrawalForm({
     availableQuantity,
     user,
     quantityError,
-  } = useWithdrawalForm({ preselectedLot, lots });
+  } = useWithdrawalForm({ preselectedLot: preselectedLot ?? null, lots });
 
   const {
     handleSubmit,
@@ -74,12 +74,12 @@ export function WithdrawalForm({
       lot_id: data.lot_id,
       quantity: data.quantity,
       withdrawal_type: data.withdrawal_type,
-      customer_id: data.customer_id,
-      delivery_place_id: data.delivery_place_id,
-      ship_date: data.ship_date,
+      ...(data.customer_id ? { customer_id: data.customer_id } : {}),
+      ...(data.delivery_place_id ? { delivery_place_id: data.delivery_place_id } : {}),
+      ...(data.ship_date ? { ship_date: data.ship_date } : {}),
       due_date: data.due_date,
-      reason: data.reason || undefined,
-      reference_number: data.reference_number || undefined,
+      ...(data.reason ? { reason: data.reason } : {}),
+      ...(data.reference_number ? { reference_number: data.reference_number } : {}),
     });
   };
 
@@ -90,8 +90,8 @@ export function WithdrawalForm({
         errors={errors}
         lots={lots}
         isLoadingLots={isLoadingLots}
-        preselectedLot={preselectedLot}
-        selectedLot={selectedLot}
+        preselectedLot={preselectedLot ?? null}
+        selectedLot={selectedLot ?? null}
         availableQuantity={availableQuantity}
       />
 
@@ -105,7 +105,7 @@ export function WithdrawalForm({
         isSubmitting={isSubmitting}
         customerId={customerId}
         availableQuantity={availableQuantity}
-        quantityError={quantityError}
+        quantityError={quantityError || ""}
       />
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>

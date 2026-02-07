@@ -15,7 +15,7 @@ describe("SmartReadCsvTransformer", () => {
       const result = transformer.transformToLong(wideData);
 
       expect(result.errors).toHaveLength(0);
-      expect(result.long_data[0]["納入量"]).toBe("1000");
+      expect(result.long_data[0]!["納入量"]).toBe("1000");
     });
 
     it("should accept decimal quantities", () => {
@@ -23,7 +23,7 @@ describe("SmartReadCsvTransformer", () => {
       const result = transformer.transformToLong(wideData);
 
       expect(result.errors).toHaveLength(0);
-      expect(result.long_data[0]["納入量"]).toBe("12.34");
+      expect(result.long_data[0]!["納入量"]).toBe("12.34");
     });
 
     it("should error on negative quantities", () => {
@@ -71,7 +71,7 @@ describe("SmartReadCsvTransformer", () => {
       const result = transformer.transformToLong(wideData);
 
       expect(result.errors).toHaveLength(0);
-      expect(result.long_data[0]["納入量"]).toBe("123");
+      expect(result.long_data[0]!["納入量"]).toBe("123");
     });
   });
 
@@ -112,8 +112,8 @@ describe("SmartReadCsvTransformer", () => {
 
       console.log("[TEST] Result:", JSON.stringify(result, null, 2));
       expect(result.long_data).toHaveLength(1);
-      expect(result.long_data[0]["材質コード"]).toBe("MAT001");
-      expect(result.long_data[0]["納入量"]).toBe("100");
+      expect(result.long_data[0]!["材質コード"]).toBe("MAT001");
+      expect(result.long_data[0]!["納入量"]).toBe("100");
     });
 
     it("should skip detail when ALL fields including Lot No/梱包数 are empty", () => {
@@ -140,7 +140,7 @@ describe("SmartReadCsvTransformer", () => {
 
       console.log("[TEST] Lot No only - Result:", JSON.stringify(result, null, 2));
       expect(result.long_data).toHaveLength(1);
-      expect(result.long_data[0]["Lot No1"]).toBe("LOT001");
+      expect(result.long_data[0]!["Lot No1"]).toBe("LOT001");
     });
 
     it("should NOT skip detail when only 梱包数 has value", () => {
@@ -155,7 +155,7 @@ describe("SmartReadCsvTransformer", () => {
 
       console.log("[TEST] 梱包数 only - Result:", JSON.stringify(result, null, 2));
       expect(result.long_data).toHaveLength(1);
-      expect(result.long_data[0]["梱包数1"]).toBe("50");
+      expect(result.long_data[0]!["梱包数1"]).toBe("50");
     });
 
     it("should handle full-width numbers in column names (材質コード１ with 全角1)", () => {
@@ -169,8 +169,8 @@ describe("SmartReadCsvTransformer", () => {
       const result = transformer.transformToLong(wideData);
 
       expect(result.long_data).toHaveLength(1);
-      expect(result.long_data[0]["材質コード"]).toBe("MAT001");
-      expect(result.long_data[0]["納入量"]).toBe("100");
+      expect(result.long_data[0]!["材質コード"]).toBe("MAT001");
+      expect(result.long_data[0]!["納入量"]).toBe("100");
     });
   });
 });

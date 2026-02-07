@@ -171,11 +171,10 @@ export function ExcelPortalPage() {
         <div className="flex items-center gap-4 text-sm font-medium text-slate-500 mb-8">
           <div className={`flex items-center gap-2 ${step === "supplier" ? "text-blue-600" : ""}`}>
             <div
-              className={`flex h-8 w-8 items-center justify-center rounded-full border ${
-                getStepNumber() >= 1
-                  ? "border-blue-600 bg-blue-50 text-blue-600"
-                  : "border-slate-300"
-              }`}
+              className={`flex h-8 w-8 items-center justify-center rounded-full border ${getStepNumber() >= 1
+                ? "border-blue-600 bg-blue-50 text-blue-600"
+                : "border-slate-300"
+                }`}
             >
               1
             </div>
@@ -184,11 +183,10 @@ export function ExcelPortalPage() {
           <ChevronRight className="h-4 w-4 text-slate-300" />
           <div className={`flex items-center gap-2 ${step === "product" ? "text-blue-600" : ""}`}>
             <div
-              className={`flex h-8 w-8 items-center justify-center rounded-full border ${
-                getStepNumber() >= 2
-                  ? "border-blue-600 bg-blue-50 text-blue-600"
-                  : "border-slate-300"
-              }`}
+              className={`flex h-8 w-8 items-center justify-center rounded-full border ${getStepNumber() >= 2
+                ? "border-blue-600 bg-blue-50 text-blue-600"
+                : "border-slate-300"
+                }`}
             >
               2
             </div>
@@ -271,7 +269,7 @@ export function ExcelPortalPage() {
                 {filteredProductGroups.map((group) => (
                   <button
                     key={group.product.id}
-                    onClick={() => handleProductSelect(group.product.id, group.items[0]?.id)}
+                    onClick={() => group.items[0] && handleProductSelect(group.product.id, group.items[0].id)}
                     className="flex items-start gap-4 p-6 rounded-xl border border-slate-200 bg-white text-left transition-all hover:border-indigo-400 hover:shadow-md hover:bg-indigo-50/30 group"
                   >
                     <div className="rounded-lg bg-indigo-100 p-3 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
@@ -282,9 +280,9 @@ export function ExcelPortalPage() {
                         {group.product.name}
                       </h3>
                       <p className="text-sm text-slate-500 mt-1 font-mono">{group.product.code}</p>
-                      {group.items.length > 0 && group.items[0].customer_part_no && (
+                      {group.items.length > 0 && group.items[0]?.customer_part_no && (
                         <p className="text-xs text-slate-400 mt-2">
-                          先方品番: {group.items[0].customer_part_no}
+                          先方品番: {group.items[0]?.customer_part_no}
                         </p>
                       )}
                     </div>

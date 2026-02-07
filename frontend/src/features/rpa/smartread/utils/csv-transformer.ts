@@ -58,17 +58,17 @@ export class SmartReadCsvTransformer {
   transformToLong(wideData: SmartReadRow[], skipEmpty = true): TransformResult {
     logger.info("CSV変換開始", { wideRowCount: wideData.length });
     if (wideData.length > 0) {
-      logger.debug("横持ちデータキー", { keys: Object.keys(wideData[0]).slice(0, 20) });
+      logger.debug("横持ちデータキー", { keys: Object.keys(wideData[0]!).slice(0, 20) });
     }
 
     const longData: SmartReadRow[] = [];
     const errors: ValidationError[] = [];
 
     for (let rowIdx = 0; rowIdx < wideData.length; rowIdx++) {
-      const row = wideData[rowIdx];
+      const row = wideData[rowIdx]!;
 
       // Extract common fields
-      let common = this.extractCommonFields(row);
+      let common = this.extractCommonFields(row as SmartReadRow);
 
       // Validate common fields
       const [validatedCommon, commonErrors] = this.validateCommonFields(common, rowIdx);
@@ -76,19 +76,23 @@ export class SmartReadCsvTransformer {
       errors.push(...commonErrors);
 
       // Extract details
-      const details = this.extractDetails(row);
+      const details = this.extractDetails(row as SmartReadRow);
 
       for (let detailIdx = 0; detailIdx < details.length; detailIdx++) {
         let detail = details[detailIdx];
 
         // Skip empty details
-        if (skipEmpty && this.isEmptyDetail(detail)) {
+        if (skipEmpty && this.isEmptyDetail(detail as SmartReadRow)) {
           continue;
         }
 
         // Validate detail
-        const [validatedDetail, detailErrors] = this.validateDetail(detail, rowIdx, detailIdx + 1);
-        detail = validatedDetail;
+        const [validatedDetail, detailErrors] = this.validateDetail(
+          detail as SmartReadRow,
+          rowIdx,
+          detailIdx + 1,
+        );
+        detail = validatedDetail!;
         errors.push(...detailErrors);
 
         // Merge common and detail
@@ -404,9 +408,9 @@ export class SmartReadCsvTransformer {
   }
 
   private formatMatchedDate(match: RegExpMatchArray, parts: number): [string, boolean] {
-    const year = parseInt(match[1], 10);
-    const month = parts >= 2 ? parseInt(match[2], 10) : 1;
-    const day = parts >= 3 ? parseInt(match[3], 10) : 1;
+    const year = parseInt(match[1]!, 10);
+    const month = parts >= 2 ? parseInt(match[2]!, 10) : 1;
+    const day = parts >= 3 ? parseInt(match[3]!, 10) : 1;
 
     // Range check
     if (

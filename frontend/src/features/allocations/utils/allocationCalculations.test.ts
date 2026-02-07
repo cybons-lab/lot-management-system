@@ -96,7 +96,7 @@ describe("allocationCalculations", () => {
         order_quantity: "50",
         product_internal_unit: undefined,
         product_qty_per_internal_unit: undefined,
-      });
+      } as unknown as Partial<OrderLine>);
       expect(getOrderQuantity(line)).toBe(50);
     });
 
@@ -105,7 +105,7 @@ describe("allocationCalculations", () => {
         order_quantity: undefined,
         quantity: "75",
         product_internal_unit: undefined,
-      });
+      } as unknown as Partial<OrderLine>);
       expect(getOrderQuantity(line)).toBe(75);
     });
   });
@@ -128,7 +128,7 @@ describe("allocationCalculations", () => {
       const line = createMockOrderLine({
         allocated_qty: undefined,
         allocated_quantity: "15",
-      });
+      } as unknown as Partial<OrderLine>);
       expect(getAllocatedQuantity(line)).toBe(15);
     });
 
@@ -136,7 +136,7 @@ describe("allocationCalculations", () => {
       const line = createMockOrderLine({
         allocated_qty: undefined,
         allocated_quantity: undefined,
-      });
+      } as unknown as Partial<OrderLine>);
       expect(getAllocatedQuantity(line)).toBe(0);
     });
   });
@@ -148,7 +148,7 @@ describe("allocationCalculations", () => {
     });
 
     it("returns 0 when available_quantity is missing", () => {
-      const lot = createMockCandidateLot({ available_quantity: undefined });
+      const lot = createMockCandidateLot({ available_quantity: undefined } as unknown as Partial<CandidateLotItem>);
       expect(getFreeQuantity(lot)).toBe(0);
     });
   });
@@ -160,7 +160,7 @@ describe("allocationCalculations", () => {
     });
 
     it("returns null when order_id is missing", () => {
-      const line = createMockOrderLine({ order_id: undefined });
+      const line = createMockOrderLine({ order_id: undefined } as unknown as Partial<OrderLine>);
       expect(getOrderId(line)).toBeNull();
     });
   });

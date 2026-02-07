@@ -27,7 +27,7 @@ function useCustomerItemFilters() {
 
   const queryParams = useMemo(
     () => ({
-      customer_id: filters.customer_id ? Number(filters.customer_id) : undefined,
+      ...(filters.customer_id ? { customer_id: Number(filters.customer_id) } : {}),
       include_inactive: showInactive,
     }),
     [filters.customer_id, showInactive],
@@ -114,7 +114,7 @@ export function useCustomerItemsPage() {
   const handleSoftDelete = useCallback(
     (id: number, version: number, endDate?: string) => {
       softDelete(
-        { id, version, endDate },
+        { id, version, ...(endDate ? { endDate } : {}) },
         {
           onSuccess: () => toast.success("得意先品番マッピングを削除しました"),
           onError: () => toast.error("削除に失敗しました"),
@@ -174,7 +174,7 @@ export function useCustomerItemsPage() {
       setIsBulkDeleting(true);
       try {
         const results = await Promise.allSettled(
-          items.map((item) => softDeleteAsync({ id: item.id, version: item.version, endDate })),
+          items.map((item) => softDeleteAsync({ id: item.id, version: item.version, ...(endDate ? { endDate } : {}) })),
         );
 
         const succeeded = results.filter((r) => r.status === "fulfilled").length;

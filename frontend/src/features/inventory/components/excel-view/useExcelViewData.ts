@@ -129,12 +129,11 @@ const mapDestinationRow = (
     destination: getDestinationInfo(dpId, context),
     shipmentQtyByDate,
     totalShipmentQty,
-    coaIssueDate: coaIssueDate ?? undefined,
+    ...(coaIssueDate ? { coaIssueDate } : {}),
     // Phase 9.2: Map comments by date
-    commentByDate: Object.keys(commentByDate).length > 0 ? commentByDate : undefined,
+    ...(Object.keys(commentByDate).length > 0 ? { commentByDate } : {}),
     // Phase 9.3: Map manual shipment dates by date
-    manualShipmentDateByDate:
-      Object.keys(manualShipmentDateByDate).length > 0 ? manualShipmentDateByDate : undefined,
+    ...(Object.keys(manualShipmentDateByDate).length > 0 ? { manualShipmentDateByDate } : {}),
   };
 };
 
@@ -192,9 +191,9 @@ export function useExcelViewData(
   const { data: inventoryData, isLoading: itemLoading } = useInventoryItems(
     isEnabled
       ? {
-          supplier_item_id: productId,
-          limit: 100,
-        }
+        supplier_item_id: productId,
+        limit: 100,
+      }
       : undefined,
   );
 
@@ -215,19 +214,19 @@ export function useExcelViewData(
   const { data: lots = [], isLoading: lotsLoading } = useLotsQuery(
     isEnabled
       ? {
-          supplier_item_id: productId,
-          status: "active",
-          with_stock: true,
-        }
+        supplier_item_id: productId,
+        status: "active",
+        with_stock: true,
+      }
       : undefined,
   );
 
   const { data: suggestionResponse, isLoading: suggestionsLoading } = useAllocationSuggestions(
     isEnabled && (!customerItemId || !!customerItem)
       ? {
-          supplier_item_id: productId,
-          customer_id: customerItem?.customer_id,
-        }
+        supplier_item_id: productId,
+        ...(customerItem?.customer_id ? { customer_id: customerItem.customer_id } : {}),
+      }
       : undefined,
   );
 
@@ -263,8 +262,8 @@ export function useExcelViewData(
       // If we are filtering by one customer item, just fetch that
       const targetItems = customerItemId
         ? (allCustomerItems as CustomerItem[]).filter(
-            (ci: CustomerItem) => ci.id === customerItemId,
-          )
+          (ci: CustomerItem) => ci.id === customerItemId,
+        )
         : (allCustomerItems as CustomerItem[]);
 
       const results = await Promise.all(
@@ -381,9 +380,9 @@ export function useExcelViewData(
             ? `${inventoryItem.warranty_period_days}日`
             : "-",
         // Customer item info (when filtering by customer_item)
-        customerName: customerItem?.customer_name,
-        customerCode: customerItem?.customer_code,
-        customerPartNo: customerItem?.customer_part_no,
+        ...(customerItem?.customer_name ? { customerName: customerItem.customer_name } : {}),
+        ...(customerItem?.customer_code ? { customerCode: customerItem.customer_code } : {}),
+        ...(customerItem?.customer_part_no ? { customerPartNo: customerItem.customer_part_no } : {}),
       },
       involvedDestinations,
       dateColumns,

@@ -63,13 +63,13 @@ export function useWithdrawalFormState({
   onSubmit,
 }: UseWithdrawalFormStateProps) {
   const { user } = useAuth();
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0]!;
 
   // 担当仕入先フィルターロジック（共通フック）
   const { assignedSupplierIds } = useSupplierFilter();
 
   // 担当仕入先が1つのみの場合、自動選択
-  const initialSupplierId = assignedSupplierIds.length === 1 ? assignedSupplierIds[0] : 0;
+  const initialSupplierId = assignedSupplierIds.length === 1 ? assignedSupplierIds[0]! : 0;
 
   // Master data queries
   const { data: suppliers = [], isLoading: isLoadingSuppliers } = useSuppliersQuery();
@@ -127,7 +127,7 @@ export function useWithdrawalFormState({
   // 担当仕入先が変更された場合、初期値を更新（preselectedLotがない場合のみ）
   useEffect(() => {
     if (assignedSupplierIds.length === 1 && !preselectedLot && filters.supplier_id === 0) {
-      setFilters((prev) => ({ ...prev, supplier_id: assignedSupplierIds[0] }));
+      setFilters((prev) => ({ ...prev, supplier_id: assignedSupplierIds[0]! }));
     }
   }, [assignedSupplierIds, preselectedLot, filters.supplier_id]);
 
@@ -238,8 +238,8 @@ export function useWithdrawalFormState({
   // Available quantity
   const availableQuantity = selectedLot
     ? Number(selectedLot.current_quantity) -
-      Number(selectedLot.allocated_quantity) -
-      Number(selectedLot.locked_quantity || 0)
+    Number(selectedLot.allocated_quantity) -
+    Number(selectedLot.locked_quantity || 0)
     : 0;
 
   // Update filter
@@ -313,12 +313,12 @@ export function useWithdrawalFormState({
         lot_id: formData.lot_id,
         quantity: formData.quantity,
         withdrawal_type: formData.withdrawal_type,
-        customer_id: formData.customer_id || undefined,
-        delivery_place_id: formData.delivery_place_id || undefined,
-        ship_date: formData.ship_date,
-        due_date: formData.due_date,
-        reason: formData.reason || undefined,
-        reference_number: formData.reference_number || undefined,
+        ...(formData.customer_id ? { customer_id: formData.customer_id } : {}),
+        ...(formData.delivery_place_id ? { delivery_place_id: formData.delivery_place_id } : {}),
+        ...(formData.ship_date ? { ship_date: formData.ship_date } : {}),
+        due_date: formData.due_date || today,
+        ...(formData.reason ? { reason: formData.reason } : {}),
+        ...(formData.reference_number ? { reference_number: formData.reference_number } : {}),
       };
 
       await onSubmit(request);

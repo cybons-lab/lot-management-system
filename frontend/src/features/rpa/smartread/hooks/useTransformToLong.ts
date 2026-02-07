@@ -56,7 +56,7 @@ async function cacheToIDB(data: TransformData): Promise<string | null> {
 }
 
 async function saveToDatabase(data: Omit<TransformData, "errors">): Promise<void> {
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0] ?? "";
 
   const saveResponse = await saveLongData(data.taskId, {
     config_id: data.configId,
