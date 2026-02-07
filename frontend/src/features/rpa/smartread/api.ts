@@ -26,7 +26,7 @@ import type {
 } from "./types";
 import { logger, operationLogger } from "./utils/logger";
 
-import { http } from "@/shared/api/http-client";
+import { apiClient, http } from "@/shared/api/http-client";
 
 export * from "./types";
 
@@ -399,9 +399,9 @@ export async function adminUploadHybrid(configId: number, files: File[]): Promis
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
 
-  return http.postFormData<Blob>(
-    `rpa/smartread/admin/upload-hybrid?config_id=${configId}`,
-    formData,
-    { responseType: "blob" },
-  );
+  return apiClient
+    .post(`rpa/smartread/admin/upload-hybrid?config_id=${configId}`, {
+      body: formData,
+    })
+    .blob();
 }
