@@ -239,7 +239,7 @@ export default [
 
   // Temporary overrides for function length/complexity
   // TODO: Refactor these files to split into smaller components/hooks
-  // 現在: 116ファイル | 目標(2026-Q1): 60ファイル以下 | 進捗: docs/project/BACKLOG.md参照
+  // 現在: 44ファイル | 目標(2026-Q1): 0ファイル (順次解消) | 進捗: docs/project/BACKLOG.md参照
   {
     files: [
       // Core components

@@ -30,7 +30,8 @@
 - [x] `frontend/knip.json` - デッドコード検出設定追加
 - [x] CI/CDワークフローの最適化（Python 3.12統一、--all-extras対応、schema-sync修正）
 - [x] `frontend/eslint.config.js` - api.d.tsをESLint対象外に追加（CI/ローカル出力一致）
-- [x] ESLint Temporary overrides削減（116 → 55ファイル、2026-02-07達成）
+- [x] ESLint Temporary overrides削減（116 → 44ファイル、2026-02-07 1-A完了）
+
 
 **残タスク:**
 - [ ] 後続タスク: BACKLOG 3-0 参照
@@ -248,6 +249,20 @@ Phase 4調査により、部分的失敗処理とロック期限切れ管理の�
 ---
 
 
+
+### 1-C. 残存するESLint Temporary overridesの解消
+**優先度:** 中
+**作成:** 2026-02-07
+**カテゴリ:** コード品質・リファクタリング
+**現状:**
+- `eslint.config.js` の `overrides` に登録されているファイル数: **44ファイル** (2026-02-07時点)
+- `1-A` で55ファイル以下という当初目標は達成したが、完全なルール準拠のためには残りも順次解消が必要。
+
+**方針:**
+- 機能改修やリファクタリングのついでに、関連するファイルの overrides を解除していく。
+- 特に `max-lines-per-function`, `complexity` が主な原因であるため、コンポーネント分割やフック抽出を行う。
+
+---
 
 ## 2. 優先度: 中 (UI/UX・不整合修正)
 
