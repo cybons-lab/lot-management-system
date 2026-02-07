@@ -64,7 +64,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.12'
 
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -72,7 +72,7 @@ jobs:
       - name: Install dependencies
         working-directory: backend
         run: |
-          uv sync
+          uv sync --all-extras
           uv pip install pytest-cov
 
       - name: Run ruff check
@@ -135,14 +135,14 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.12'
 
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Install backend dependencies
         working-directory: backend
-        run: uv sync
+        run: uv sync --all-extras
 
       - name: Initialize test database
         working-directory: backend
@@ -235,14 +235,14 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.12'
 
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Install backend dependencies
         working-directory: backend
-        run: uv sync
+        run: uv sync --all-extras
 
       - name: Initialize test database
         working-directory: backend
