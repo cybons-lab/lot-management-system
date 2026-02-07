@@ -1,6 +1,7 @@
 import type { OrdersListParams, OrderGetResponse, WarehouseAllocationItem } from "./types";
 
 import { http } from "@/shared/api/http-client";
+import { buildQueryParams } from "@/shared/libs/url-utils";
 import type { OrderLine } from "@/shared/types/aliases";
 import type {
   CandidateLotsResponse,
@@ -12,32 +13,17 @@ import type {
 export * from "./types";
 
 /**
- * クエリパラメータを構築するヘルパー
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildQueryParams(params: Record<string, any>): string {
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      searchParams.append(key, value.toString());
-    }
-  });
-  const queryString = searchParams.toString();
-  return queryString ? "?" + queryString : "";
-}
-
-/**
  * 受注一覧取得
  */
 export const getOrders = (params?: OrdersListParams & { prioritize_assigned?: boolean }) => {
-  const queryString = buildQueryParams(params ?? {});
+  const queryString = buildQueryParams((params ?? {}) as Record<string, unknown>);
   return http.get<OrderResponse[]>(`orders${queryString}`);
 };
 
 export const getOrderLines = (
   params?: OrdersListParams & { product_code?: string; prioritize_assigned?: boolean },
 ) => {
-  const queryString = buildQueryParams(params ?? {});
+  const queryString = buildQueryParams((params ?? {}) as Record<string, unknown>);
   // Note: OrderLineResponse[] is returned, but we use OrderLine[] alias in frontend
   return http.get<OrderLine[]>(`orders/lines${queryString}`);
 };
@@ -70,14 +56,8 @@ export const getWarehouseAllocList = (): Promise<unknown> => http.get("warehouse
  * @endpoint GET /allocation-candidates (was /allocations/candidate-lots - deprecated 2026-02-15)
  */
 export const getCandidateLots = (params: { order_line_id: number; limit?: number }) => {
-  const searchParams = new URLSearchParams();
-  searchParams.append("order_line_id", params.order_line_id.toString());
-  if (params.limit !== undefined) searchParams.append("limit", params.limit.toString());
-
-  const queryString = searchParams.toString();
-  return http.get<CandidateLotsResponse>(
-    `allocation-candidates${queryString ? "?" + queryString : ""}`,
-  );
+  const queryString = buildQueryParams(params as unknown as Record<string, unknown>);
+  return http.get<CandidateLotsResponse>(`allocation-candidates${queryString}`);
 };
 
 /**

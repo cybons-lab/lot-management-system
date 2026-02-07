@@ -12,16 +12,18 @@ export interface PageHeaderProps {
   /** ページタイトル */
   title: string;
   /** サブタイトル */
-  subtitle?: string;
+  subtitle?: string | undefined;
   /** 右側のアクションボタン */
-  actions?: React.ReactNode;
+  actions?: React.ReactNode | undefined;
   /** 戻りリンク（リンク先とラベル） */
-  backLink?: {
-    to: string;
-    label: string;
-  };
+  backLink?:
+    | {
+        to: string;
+        label: string;
+      }
+    | undefined;
   /** 追加のクラス名 */
-  className?: string;
+  className?: string | undefined;
 }
 
 /**

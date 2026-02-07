@@ -25,21 +25,21 @@ import { Checkbox } from "@/components/ui";
 export interface UseDataTableProps<T> {
   data: T[];
   columns: Column<T>[];
-  sort?: SortConfig;
-  onSortChange?: (sort: SortConfig) => void;
-  selectable?: boolean;
-  selectedIds?: (string | number)[];
-  onSelectionChange?: (selectedIds: (string | number)[]) => void;
-  getRowId?: (row: T) => string | number;
-  rowActions?: (row: T) => React.ReactNode;
-  expandable?: boolean;
-  expandMode?: "single" | "multi";
-  expandedRowIds?: (string | number)[];
-  onExpandedRowsChange?: (ids: (string | number)[]) => void;
-  renderExpandedRow?: (row: T) => React.ReactNode;
-  isRowSelectable?: (row: T) => boolean;
-  enableVirtualization?: boolean;
-  dense?: boolean;
+  sort?: SortConfig | undefined;
+  onSortChange?: ((sort: SortConfig) => void) | undefined;
+  selectable?: boolean | undefined;
+  selectedIds?: (string | number)[] | undefined;
+  onSelectionChange?: ((selectedIds: (string | number)[]) => void) | undefined;
+  getRowId?: ((row: T) => string | number) | undefined;
+  rowActions?: ((row: T) => React.ReactNode) | undefined;
+  expandable?: boolean | undefined;
+  expandMode?: "single" | "multi" | undefined;
+  expandedRowIds?: (string | number)[] | undefined;
+  onExpandedRowsChange?: ((ids: (string | number)[]) => void) | undefined;
+  renderExpandedRow?: ((row: T) => React.ReactNode) | undefined;
+  isRowSelectable?: ((row: T) => boolean) | undefined;
+  enableVirtualization?: boolean | undefined;
+  dense?: boolean | undefined;
   parentRef: React.RefObject<HTMLDivElement | null>;
 }
 
