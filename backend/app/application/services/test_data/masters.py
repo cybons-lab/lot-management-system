@@ -1,4 +1,5 @@
 import random
+import string
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -19,6 +20,11 @@ from app.infrastructure.persistence.models.masters_models import (
 from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 from .utils import fake
+
+
+def _generate_jiku_code() -> str:
+    """Generate jiku code in format: [A-Z][0-9]{3}."""
+    return f"{random.choice(string.ascii_uppercase)}{random.randint(0, 999):03d}"
 
 
 def generate_makers(db: Session, options: object = None) -> list[Maker]:
@@ -155,6 +161,7 @@ def generate_customers_and_delivery_places(
         for _ in range(dp_count):
             dp = DeliveryPlace(
                 customer_id=c.id,
+                jiku_code=_generate_jiku_code(),
                 delivery_place_code=fake.unique.bothify(text="DP-####"),
                 delivery_place_name=fake.city() + "センター",
             )

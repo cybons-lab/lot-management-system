@@ -11180,7 +11180,7 @@ export interface components {
        * Jiku Code
        * @description 次区コード(SAP連携用)
        */
-      jiku_code?: string | null;
+      jiku_code: string;
       /**
        * Jiku Match Pattern
        * @description 次区マッチングルール（例: 2***）

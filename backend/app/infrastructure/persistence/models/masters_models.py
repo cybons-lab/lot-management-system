@@ -345,7 +345,7 @@ class DeliveryPlace(SoftDeleteMixin, Base):
     __tablename__ = "delivery_places"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    jiku_code: Mapped[str] = mapped_column(String(50), nullable=False, server_default="")
+    jiku_code: Mapped[str] = mapped_column(String(50), nullable=False, server_default="A000")
     jiku_match_pattern: Mapped[str | None] = mapped_column(
         String(100), nullable=True, comment="次区マッチングルール（例: 2***）"
     )
