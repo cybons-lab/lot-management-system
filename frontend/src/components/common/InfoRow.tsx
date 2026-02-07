@@ -8,14 +8,14 @@
 /**
  * InfoRowコンポーネントのProps
  */
-type Props = {
+interface Props {
   /** ラベルテキスト */
   label: string;
   /** 表示する値 */
   value: string | number;
   /** ハイライト表示するかどうか（デフォルト: false） */
   highlight?: boolean;
-};
+}
 
 /**
  * 情報行を表示

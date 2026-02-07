@@ -6,7 +6,7 @@ from app.application.services.smartread.task_service import SmartReadTaskService
 
 
 __all__ = [
-    "SmartReadService",
     "SmartReadConfigService",
+    "SmartReadService",
     "SmartReadTaskService",
 ]

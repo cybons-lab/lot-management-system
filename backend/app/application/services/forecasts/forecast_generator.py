@@ -169,7 +169,7 @@ def create_jyun_forecasts_from_daily(
     Example:
         >>> from random import Random
         >>> rng = Random(42)
-        >>> period_totals = {'chuujun': Decimal(600), 'gejun': Decimal(700)}
+        >>> period_totals = {"chuujun": Decimal(600), "gejun": Decimal(700)}
         >>> entries = create_jyun_forecasts_from_daily(
         ...     customer_id=1,
         ...     delivery_place_id=1,
@@ -251,7 +251,7 @@ def create_monthly_forecasts_from_daily(
         List with 1 ForecastCurrent entry (monthly total)
 
     Example:
-        >>> period_totals = {'monthly': Decimal(1500)}
+        >>> period_totals = {"monthly": Decimal(1500)}
         >>> entries = create_monthly_forecasts_from_daily(
         ...     customer_id=1,
         ...     delivery_place_id=1,

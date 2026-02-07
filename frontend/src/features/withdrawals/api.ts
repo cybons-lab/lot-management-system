@@ -25,7 +25,7 @@ export const WITHDRAWAL_TYPE_LABELS: Record<WithdrawalType, string> = {
   other: "その他",
 };
 
-export const WITHDRAWAL_TYPES: Array<{ value: WithdrawalType; label: string }> = [
+export const WITHDRAWAL_TYPES: { value: WithdrawalType; label: string }[] = [
   { value: "order_manual", label: "受注（手動）" },
   { value: "internal_use", label: "社内使用" },
   { value: "disposal", label: "廃棄処理" },
@@ -55,7 +55,7 @@ export const CANCEL_REASON_LABELS: Record<WithdrawalCancelReason, string> = {
   other: "その他",
 };
 
-export const CANCEL_REASONS: Array<{ value: WithdrawalCancelReason; label: string }> = [
+export const CANCEL_REASONS: { value: WithdrawalCancelReason; label: string }[] = [
   { value: "input_error", label: "入力ミス" },
   { value: "wrong_quantity", label: "数量誤り" },
   { value: "wrong_lot", label: "ロット選択誤り" },

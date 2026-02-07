@@ -74,7 +74,7 @@ export const FORBIDDEN_ERROR_EVENT = "auth:forbidden";
 let lastAuthErrorTime = 0;
 const AUTH_ERROR_DEBOUNCE_MS = 500;
 
-function dispatchAuthError(message: string = "セッションの有効期限が切れました"): void {
+function dispatchAuthError(message = "セッションの有効期限が切れました"): void {
   const now = Date.now();
   if (now - lastAuthErrorTime < AUTH_ERROR_DEBOUNCE_MS) {
     // デバウンス期間内は発火しない
@@ -98,7 +98,7 @@ function dispatchAuthError(message: string = "セッションの有効期限が�
 let lastForbiddenErrorTime = 0;
 const FORBIDDEN_ERROR_DEBOUNCE_MS = 500;
 
-function dispatchForbiddenError(message: string = "この操作を行う権限がありません"): void {
+function dispatchForbiddenError(message = "この操作を行う権限がありません"): void {
   const now = Date.now();
   if (now - lastForbiddenErrorTime < FORBIDDEN_ERROR_DEBOUNCE_MS) {
     return;

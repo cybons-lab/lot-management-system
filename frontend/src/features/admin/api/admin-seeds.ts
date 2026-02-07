@@ -1,6 +1,6 @@
 // frontend/src/features/admin/api/admin-seeds.ts
 import { http } from "@/shared/api/http-client";
-export type SeedRequest = {
+export interface SeedRequest {
   seed?: number;
   dry_run?: boolean;
   customers?: number;
@@ -8,8 +8,8 @@ export type SeedRequest = {
   warehouses?: number;
   lots?: number;
   orders?: number;
-};
-export type SeedResponse = {
+}
+export interface SeedResponse {
   dry_run: boolean;
   seed: number;
   summary: {
@@ -21,7 +21,7 @@ export type SeedResponse = {
     order_lines: number;
     allocations: number;
   };
-};
+}
 
 export async function postSeeds(body: SeedRequest): Promise<SeedResponse> {
   // http に baseURL が設定されている前提（/api など）

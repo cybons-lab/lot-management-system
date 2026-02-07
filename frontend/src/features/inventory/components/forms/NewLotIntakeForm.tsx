@@ -1,7 +1,10 @@
 import { Input, Label } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 
-type SelectOption = { value: string; label: string };
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface NewLotIntakeFormProps {
   lotNumber: string;

@@ -46,7 +46,7 @@ import { parseDecimal } from "@/shared/utils/decimal";
 /**
  * フィルター値の型定義
  */
-export type LotFilterValues = {
+export interface LotFilterValues {
   /** 検索キーワード（ロット番号、製品コード、製品名） */
   search: string;
   /** 製品コード */
@@ -57,7 +57,7 @@ export type LotFilterValues = {
   status: string;
   /** 在庫ありのみ表示 */
   hasStock: boolean;
-};
+}
 
 /**
  * ステータスフィルターの型

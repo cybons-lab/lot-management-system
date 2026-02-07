@@ -288,7 +288,7 @@ export function removeZeroAllocations(allocations: LineAllocations): LineAllocat
  */
 export function convertAllocationsToPayload(
   allocations: LineAllocations,
-): Array<{ lot_id: number; quantity: number }> {
+): { lot_id: number; quantity: number }[] {
   return Object.entries(allocations)
     .map(([lotIdStr, qty]) => ({
       lot_id: Number(lotIdStr),

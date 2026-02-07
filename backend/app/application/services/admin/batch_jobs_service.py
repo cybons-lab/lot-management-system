@@ -128,7 +128,7 @@ class BatchJobService(BaseService[BatchJob, BatchJobCreate, BatchJobUpdate, int]
 
         except Exception as e:
             db_job.status = "failed"
-            db_job.result_message = f"Error: {str(e)}"
+            db_job.result_message = f"Error: {e!s}"
 
         db_job.completed_at = utcnow()
         self.db.commit()

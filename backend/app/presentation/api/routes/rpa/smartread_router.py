@@ -359,7 +359,7 @@ async def _run_simple_sync_background(
                     NotificationCreate(
                         user_id=user_id,
                         title="SmartRead処理失敗",
-                        message=f"ファイルの処理中にエラーが発生しました: {filename}\n{str(e)}",
+                        message=f"ファイルの処理中にエラーが発生しました: {filename}\n{e!s}",
                         type="error",
                         display_strategy="immediate",  # エラーは即座に確認が必要
                     )
@@ -833,7 +833,7 @@ async def save_long_data(
             exc_info=True,
         )
         uow.session.rollback()
-        raise HTTPException(status_code=500, detail=f"保存に失敗しました: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"保存に失敗しました: {e!s}")
 
 
 @router.delete(

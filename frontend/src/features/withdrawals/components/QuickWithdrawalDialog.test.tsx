@@ -19,41 +19,41 @@ import * as mastersHook from "@/hooks/api/useMastersQuery";
 import { http } from "@/shared/api/http-client";
 import type { LotUI } from "@/shared/libs/normalize";
 
-type ChildrenProps = {
+interface ChildrenProps {
   children?: React.ReactNode;
-};
+}
 
-type DialogProps = {
+interface DialogProps {
   open?: boolean;
   children?: React.ReactNode;
-};
+}
 
-type SelectRootProps = {
+interface SelectRootProps {
   children?: React.ReactNode;
   value?: string;
   onValueChange?: (value: string) => void;
   disabled?: boolean;
-};
+}
 
-type SelectTriggerProps = {
+interface SelectTriggerProps {
   children?: React.ReactNode;
   value?: string;
-};
+}
 
-type SelectValueProps = {
+interface SelectValueProps {
   placeholder?: string;
-};
+}
 
-type SelectContentProps = {
+interface SelectContentProps {
   children?: React.ReactNode;
   onSelect?: (value: string) => void;
-};
+}
 
-type SelectItemProps = {
+interface SelectItemProps {
   children?: React.ReactNode;
   value?: string;
   onSelect?: (value: string) => void;
-};
+}
 
 function isNamedElement(node: React.ReactNode, name: string): node is React.ReactElement {
   return React.isValidElement(node) && typeof node.type !== "string" && node.type.name === name;

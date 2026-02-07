@@ -134,19 +134,13 @@ Design:
         def register_allocation(self, reservation):
             try:
                 response = sap_client.post(
-                    f"{self.sap_url}/allocations",
-                    json=reservation.to_sap_format()
+                    f"{self.sap_url}/allocations", json=reservation.to_sap_format()
                 )
                 return SapRegistrationResult(
-                    success=True,
-                    document_no=response["document_no"],
-                    registered_at=utcnow()
+                    success=True, document_no=response["document_no"], registered_at=utcnow()
                 )
             except Exception as e:
-                return SapRegistrationResult(
-                    success=False,
-                    error_message=str(e)
-                )
+                return SapRegistrationResult(success=False, error_message=str(e))
     ```
 """
 

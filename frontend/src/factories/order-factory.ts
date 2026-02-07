@@ -12,13 +12,13 @@ import { faker } from "@faker-js/faker/locale/ja";
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
 import type { OrderLine, OrderResponse, OrderWithLinesResponse } from "@/shared/types/aliases";
 
-type OrderLineFactoryExtras = {
+interface OrderLineFactoryExtras {
   product_name?: string | null;
   customer_code?: string | null;
   customer_name?: string | null;
   order_id?: number;
   allocated_quantity?: number | string | null;
-};
+}
 
 export type OrderLineFactoryResult = OrderLine & OrderLineFactoryExtras;
 
@@ -135,9 +135,9 @@ export function createOrderLine(
  * 受注と明細を含む完全なデータを生成
  */
 export function createOrderWithLines(
-  lineCount: number = 3,
+  lineCount = 3,
   overrides?: Partial<OrderWithLinesResponse> & {
-    lines?: Array<Partial<OrderLineFactoryResult>>;
+    lines?: Partial<OrderLineFactoryResult>[];
   },
 ): OrderWithLinesResponse & { lines: OrderLineFactoryResult[] } {
   const order = createOrder(overrides);

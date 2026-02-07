@@ -12,12 +12,12 @@ const DB_NAME = "smartread-export-cache";
 const DB_VERSION = 3;
 const STORE_NAME = "exports";
 type SmartReadRow = Record<string, unknown>;
-type TransformError = {
+interface TransformError {
   row: number;
   field: string;
   message: string;
   value: string | null;
-};
+}
 
 export interface CachedExport {
   id: string; // {config_id}_{task_id}_{export_id}

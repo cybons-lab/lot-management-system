@@ -43,8 +43,8 @@
    データ構造:
    ```python
    {
-     OrderStatus.OPEN: {OrderStatus.PART_ALLOCATED, OrderStatus.ALLOCATED, ...},
-     # → OPEN から遷移可能な状態のセット
+       OrderStatus.OPEN: {OrderStatus.PART_ALLOCATED, OrderStatus.ALLOCATED, ...},
+       # → OPEN から遷移可能な状態のセット
    }
    ```
    メリット:

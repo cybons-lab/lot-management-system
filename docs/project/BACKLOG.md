@@ -17,44 +17,26 @@
 **優先度:** 高
 **作成:** 2026-02-06
 **カテゴリ:** コード品質・堅牢性
-**工数:** 2-3日
+**状態:** 進行中（設定ファイル厳密化PRで大部分対応済み）
 
-**背景:**
-業務システムとして堅牢性が重要。現在の設定ファイル（ESLint, TypeScript, Ruff, Mypy等）が本番運用に耐えうるレベルか包括的にレビューする必要がある。
+**完了済み:**
+- [x] `backend/pyproject.toml` - 依存整理、Ruffルール強化（SIM/RET/C4/PERF/TRY/RUF/S/LOG/T20/ERA/ARG/C90/PL追加）、Mypy strict化、pytest統合
+- [x] `frontend/tsconfig.json` - `noUncheckedIndexedAccess`, `forceConsistentCasingInFileNames` 追加
+- [x] `frontend/vite.config.ts` - optimizeDeps整理、sourcemap: "hidden" 追加
+- [x] `frontend/vitest.config.ts` - clearMocks/restoreMocks/coverage設定追加
+- [x] `frontend/package.json` - 依存整理（重複削除、dev移動、knip/coverage-v8追加）
+- [x] `.pre-commit-config.yaml` - TypeScriptチェック追加、パス処理改善、make→npm統一
+- [x] `backend/pytest.ini` → `pyproject.toml` に統合
+- [x] `frontend/knip.json` - デッドコード検出設定追加
 
-**レビュー対象:**
-1. **フロントエンド**
-   - `frontend/eslint.config.js` - 現在116ファイルがTemporary overrides（要削減）
-   - `frontend/tsconfig.json` - strict mode設定の確認
-   - `frontend/vite.config.ts` - ビルド最適化設定
-   - `frontend/.prettierrc` - コードフォーマット統一
-
-2. **バックエンド**
-   - `backend/pyproject.toml` (Ruff設定) - Lintルールの厳格性
-   - `backend/mypy.ini` - 型チェックの厳格性
-   - `backend/pytest.ini` - テストカバレッジ目標
-   - `backend/alembic.ini` - マイグレーション設定
-
-3. **CI/CD**
-   - `.github/workflows/*.yml` - CI設定の網羅性
-   - `.pre-commit-config.yaml` - コミット前チェック
-   - `docker-compose.yml` - 本番環境との差異
-
-**実施内容:**
-1. 各設定ファイルの現状調査
-2. 業界ベストプラクティスとの比較
-3. 堅牢性を高めるための推奨変更案作成
-4. 段階的な改善ロードマップ策定
-
-**期待される成果:**
-- 型安全性の向上
-- バグの早期発見
-- コード品質の標準化
-- メンテナンス性の向上
+**残タスク:**
+- [ ] CI/CDワークフローの最適化
+- [ ] ESLint Temporary overrides削減（116 → 60ファイル以下、2026-Q1目標）
+- [ ] 後続タスク: BACKLOG 3-0 参照
 
 **関連タスク:**
 - `docs/project/SUPPRESSION_RESOLUTION_ROUND3.md` - 警告抑制の解消
-- ESLint Temporary overrides削減（116 → 60ファイル以下、2026-Q1目標）
+- `docs/project/plans/strictness-robustness-plan.md` - 詳細計画
 
 ### 1-B. 納入先マスタ `次区コード` 必須化の最終仕上げ（後方互換解消）
 
@@ -797,6 +779,59 @@ async def start_pad_run_from_upload(
 
 **背景:**
 後方互換エイリアス一掃（`32bc1943`）で大半のエイリアスを削除したが、`RpaRunStatus` の旧ステータス名エイリアス（8個）は使用箇所が38箇所・7ファイルに及ぶため見送った。
+
+---
+
+### 2-16. フロントエンド厳格Lint対応の残存課題解消 (ESLint v10)
+
+**優先度:** 中（長期的に解消）
+**作成:** 2026-02-07
+**カテゴリ:** コード品質・リファクタリング
+
+**背景:**
+ESLint v10へのアップグレード時に、厳格なルール（`no-explicit-any`, `no-non-null-assertion` 等）を導入したが、既存コードの修正コストが高いため、一時的に `eslint.config.js` で特定のルールを `off` にして対応した。
+真の厳格さを達成するためには、コード側を修正してこれらの無効化設定を削除する必要がある。
+
+**対象ルール (eslint.config.js で off になっているもの):**
+- `@typescript-eslint/no-non-null-assertion`
+- `@typescript-eslint/no-explicit-any`
+- `@typescript-eslint/no-empty-function`
+- `@typescript-eslint/no-invalid-void-type`
+- `@typescript-eslint/no-extraneous-class`
+- `no-useless-assignment`
+- `@typescript-eslint/prefer-for-of`
+- `@typescript-eslint/no-dynamic-delete`
+- `preserve-caught-error` (e2e)
+
+**タスク内容:**
+1. 各ルール違反箇所の修正（コード修正、型定義の改善）
+2. `eslint.config.js` から該当ルールの `off` 設定を削除
+3. CIでリントエラーが出ないことを確認
+
+**備考:**
+`e2e` ディレクトリについてはテストコード特有の事情で一部許容しても良いが、`src` 配下は原則解消すべき。
+
+---
+
+### 2-17. jsdom v28 アップグレード (WebSocket回帰対応待ち)
+
+**優先度:** 低（回帰バグ修正待ち）
+**作成:** 2026-02-07
+**カテゴリ:** 依存関係・テスト環境
+
+**背景:**
+jsdom v28.0.0 で WebSocket の接続制限に関する既知の退行（Regression）が報告されている（nodejs/undici に起因）。
+本プロジェクトでは `LogViewer.tsx` (frontend) および `backend/tests/api/test_logs_websocket.py` (backend test, though running in python) で WebSocket を使用しており、フロントエンドのテスト(`vitest`)環境として `jsdom` を採用しているため、影響を受ける可能性がある。
+
+**タスク内容:**
+1. jsdom v28 以降の新しいパッチリリースで当該バグが修正されたか確認
+2. 修正確認後、`jsdom` を v28.0.0+ にアップグレード
+3. WebSocketを使用するコンポーネントのテストが正常に動作することを確認
+
+**参照:**
+- jsdom v28.0.0 リリースノート: "Known Regression: WebSocket connection limits bug"
+
+
 
 **対象:** `backend/app/infrastructure/persistence/models/rpa_models.py` L176-184
 ```python
@@ -1951,3 +1986,38 @@ Phase 4で SmartRead/OCR系と主要マスタ系に楽観的ロック (`version`
 **元:** Phase 4実装完了後の残課題 (2026-02-05)
 
 ---
+
+## 3. 優先度: 低 (Maintenance/Major Updates)
+
+### 3-0. 厳密化・堅牢性の後続タスク
+
+**優先度:** 低
+**作成:** 2026-02-07
+**カテゴリ:** コード品質・堅牢性
+
+**後続タスク:**
+1. **asyncpg移行** - psycopg2-binary → asyncpg（非同期DB接続）
+2. **eslint-plugin-import → eslint-plugin-import-x 移行** - ESM対応・パフォーマンス改善
+3. **ESLint `no-explicit-any` の段階的有効化** - 現在off → warn → error
+4. **Vite manual chunks 最適化** - バンドルサイズ削減
+5. **`exactOptionalPropertyTypes: true`** - tsconfig.json（エラー量次第で段階的対応）
+6. **requests → httpx 統一** - SmartReadサービスで使用中のrequestsをhttpxに統一
+
+### 3-1. Major Dependency Updates (2026-02-07)
+
+**優先度:** 低
+**作成:** 2026-02-07
+**カテゴリ:** メンテナンス
+
+**対象パッケージ:**
+1. **Frontend:**
+   - `eslint`: 9.39.2 -> 10.0.0 (Major update, check for config changes)
+   - `jsdom`: 27.4.0 -> 28.0.0 (Major update)
+2. **Backend:**
+   - `ruff`: <0.15.0 -> 0.15.0+ (Major/Breaking checks required)
+
+**タスク内容:**
+- 各パッケージのCHANGELOGを確認
+- アップデート実施と破壊的変更の修正
+- 設定ファイル (`eslint.config.js`, `pyproject.toml`) の更新
+

@@ -43,13 +43,13 @@ function ReportContent({
   isLoading: boolean;
   isError: boolean;
   error: unknown;
-  reportRows: Array<{
+  reportRows: {
     delivery_place_id: number;
     destination_name: string;
     customer_name: string;
     total_quantity: number | string;
     lot_count: number;
-  }>;
+  }[];
   queryEnabled: boolean;
   totalQuantity: number;
   totalLotCount: number;

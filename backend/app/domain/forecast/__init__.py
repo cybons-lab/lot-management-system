@@ -90,8 +90,7 @@ Forecast Domain Layer
    使用例:
    ```python
    confidence = ForecastDomainService.calculate_match_confidence(
-       order_date=date(2024, 11, 19),
-       forecast_date=date(2024, 11, 20)
+       order_date=date(2024, 11, 19), forecast_date=date(2024, 11, 20)
    )
    # → 0.9（3日以内）
    ```
@@ -114,7 +113,7 @@ Forecast Domain Layer
     ```python
     ForecastValidator.validate_forecast_quantity(100.0)  # OK
     ForecastValidator.validate_forecast_quantity(-10.0)  # NG → InvalidForecastError
-    ForecastValidator.validate_forecast_quantity(0.0)    # OK
+    ForecastValidator.validate_forecast_quantity(0.0)  # OK
     ```
 """
 
@@ -197,12 +196,11 @@ class ForecastDomainService:
         diff_days = abs((order_date - forecast_date).days)
         if diff_days <= 3:
             return 0.9  # 3日以内
-        elif diff_days <= 7:
+        if diff_days <= 7:
             return 0.7  # 1週間以内
-        elif diff_days <= 30:
+        if diff_days <= 30:
             return 0.5  # 1ヶ月以内
-        else:
-            return 0.2  # それ以上
+        return 0.2  # それ以上
 
 
 class ForecastValidator:
@@ -224,9 +222,9 @@ class ForecastValidator:
 
 __all__ = [
     "ForecastDomainError",
-    "ForecastNotFoundError",
-    "InvalidForecastError",
-    "ForecastMatch",
     "ForecastDomainService",
+    "ForecastMatch",
+    "ForecastNotFoundError",
     "ForecastValidator",
+    "InvalidForecastError",
 ]

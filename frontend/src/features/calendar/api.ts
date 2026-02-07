@@ -1,85 +1,85 @@
 import { http } from "@/shared/api/http-client";
 
-export type HolidayCalendar = {
+export interface HolidayCalendar {
   id: number;
   holiday_date: string;
   holiday_name: string | null;
   created_at: string;
   updated_at: string;
-};
+}
 
-export type HolidayCalendarCreate = {
+export interface HolidayCalendarCreate {
   holiday_date: string;
   holiday_name?: string | null;
-};
+}
 
-export type HolidayCalendarUpdate = {
+export interface HolidayCalendarUpdate {
   holiday_date?: string;
   holiday_name?: string | null;
-};
+}
 
-export type CompanyCalendar = {
+export interface CompanyCalendar {
   id: number;
   calendar_date: string;
   is_workday: boolean;
   description: string | null;
   created_at: string;
   updated_at: string;
-};
+}
 
-export type CompanyCalendarCreate = {
+export interface CompanyCalendarCreate {
   calendar_date: string;
   is_workday: boolean;
   description?: string | null;
-};
+}
 
-export type CompanyCalendarUpdate = {
+export interface CompanyCalendarUpdate {
   calendar_date?: string;
   is_workday?: boolean;
   description?: string | null;
-};
+}
 
-export type OriginalDeliveryCalendar = {
+export interface OriginalDeliveryCalendar {
   id: number;
   delivery_date: string;
   description: string | null;
   created_at: string;
   updated_at: string;
-};
+}
 
-export type OriginalDeliveryCalendarCreate = {
+export interface OriginalDeliveryCalendarCreate {
   delivery_date: string;
   description?: string | null;
-};
+}
 
-export type OriginalDeliveryCalendarUpdate = {
+export interface OriginalDeliveryCalendarUpdate {
   delivery_date?: string;
   description?: string | null;
-};
+}
 
-export type BusinessDayCalculationRequest = {
+export interface BusinessDayCalculationRequest {
   start_date: string;
   days: number;
   direction: "after" | "before";
   include_start: boolean;
-};
+}
 
-export type HolidayImportRequest = {
+export interface HolidayImportRequest {
   tsv_data: string;
-};
+}
 
-export type SyncImportResponse = {
+export interface SyncImportResponse {
   message: string;
   count: number;
-};
+}
 
-export type BusinessDayCalculationResponse = {
+export interface BusinessDayCalculationResponse {
   start_date: string;
   result_date: string;
   days: number;
   direction: "after" | "before";
   include_start: boolean;
-};
+}
 
 const BASE_PATH = "calendar";
 

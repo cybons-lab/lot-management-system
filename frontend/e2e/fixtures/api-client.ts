@@ -240,7 +240,7 @@ export class ApiClient {
    */
   async createAllocations(
     orderId: number,
-    allocations: Array<{ lot_id: number; quantity: number }>,
+    allocations: { lot_id: number; quantity: number }[],
   ): Promise<Record<string, unknown>> {
     const response = await this.request.post(`${API_BASE_URL}/api/allocations`, {
       headers: this.getHeaders(),

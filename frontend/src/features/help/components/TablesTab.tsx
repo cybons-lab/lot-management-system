@@ -19,9 +19,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-type TablesTabProps = {
+interface TablesTabProps {
   searchTerm: string;
-};
+}
 
 export function TablesTab({ searchTerm }: TablesTabProps) {
   const [selectedTable, setSelectedTable] = useState<TableInfo | null>(null);

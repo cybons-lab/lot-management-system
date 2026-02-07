@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum as PyEnum
+from enum import StrEnum
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, Index, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column
@@ -15,7 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from .base_model import Base
 
 
-class HistoryOperation(str, PyEnum):
+class HistoryOperation(StrEnum):
     """Operation type for history records."""
 
     INSERT = "INSERT"

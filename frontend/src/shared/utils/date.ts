@@ -27,12 +27,12 @@ export type DateInput = string | Date | null | undefined;
 /**
  * 日付フォーマットオプション
  */
-export type FormatDateOptions = {
+export interface FormatDateOptions {
   /** フォーマット文字列（デフォルト: "yyyy/MM/dd"） */
   format?: string;
   /** フォールバック値（日付が無効な場合に返す文字列） */
   fallback?: string;
-};
+}
 
 // ========================================
 // Section 2: フォーマット関数（表示用）

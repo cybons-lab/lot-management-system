@@ -21,20 +21,20 @@ const mockCancelMutation = {
   isPending: false,
 };
 
-type DialogProps = {
+interface DialogProps {
   open?: boolean;
   children?: React.ReactNode;
-};
+}
 
-type ChildrenProps = {
+interface ChildrenProps {
   children?: React.ReactNode;
-};
+}
 
-type SelectItemProps = {
+interface SelectItemProps {
   children?: React.ReactNode;
   value?: string;
   onSelect?: (value: string) => void;
-};
+}
 
 vi.mock("../hooks", () => ({
   useWithdrawals: () => ({

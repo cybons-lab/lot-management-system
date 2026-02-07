@@ -260,11 +260,11 @@ async def validation_exception_handler(
         def _make_serializable(data):
             if isinstance(data, dict):
                 return {k: _make_serializable(v) for k, v in data.items()}
-            elif isinstance(data, list):
+            if isinstance(data, list):
                 return [_make_serializable(v) for v in data]
-            elif isinstance(data, bytes):
+            if isinstance(data, bytes):
                 return data.decode("utf-8", errors="replace")
-            elif isinstance(data, Exception):
+            if isinstance(data, Exception):
                 return str(data)
             return data
 

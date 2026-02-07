@@ -182,7 +182,7 @@ export function SystemSettingsPage() {
   const handleShowDetails = async () => {
     try {
       const result = await http.get<{
-        columns: Array<{ name: string }>;
+        columns: { name: string }[];
         related_tables: Record<
           string,
           { exists: boolean; record_count?: number; columns?: string[] }

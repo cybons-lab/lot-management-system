@@ -237,7 +237,7 @@ async def result_rpa_job(
             # アーカイブ失敗時はロールバックして不整合を防ぐ
             db.rollback()
             logger.error(f"Archiving failed after SAP registration: {e}")
-            job.error_message = f"Registration success, but archiving failed: {str(e)}"
+            job.error_message = f"Registration success, but archiving failed: {e!s}"
             # フロントエンドには成功として返すが、ジョブメッセージに残す
             pass
 

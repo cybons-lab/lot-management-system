@@ -80,7 +80,7 @@ class MasterImportService:
 
         except Exception as e:
             self.db.rollback()
-            global_errors.append(f"Import failed: {str(e)}")
+            global_errors.append(f"Import failed: {e!s}")
             logger.exception("Import failed")
 
         # Determine overall status
@@ -235,10 +235,9 @@ class MasterImportService:
         if existing:
             existing.supplier_name = name
             return existing
-        else:
-            supplier = Supplier(supplier_code=code, supplier_name=name)
-            self.db.add(supplier)
-            return supplier
+        supplier = Supplier(supplier_code=code, supplier_name=name)
+        self.db.add(supplier)
+        return supplier
 
     def _upsert_product(
         self, code: str, name: str | None, base_unit: str | None
@@ -251,14 +250,13 @@ class MasterImportService:
             if base_unit:
                 existing.internal_unit = base_unit
             return existing
-        else:
-            product = SupplierItem(
-                maker_part_no=code,
-                display_name=name or code,
-                internal_unit=base_unit or "EA",
-            )
-            self.db.add(product)
-            return product
+        product = SupplierItem(
+            maker_part_no=code,
+            display_name=name or code,
+            internal_unit=base_unit or "EA",
+        )
+        self.db.add(product)
+        return product
 
     def _upsert_product_supplier(
         self,
@@ -281,10 +279,9 @@ class MasterImportService:
             if lead_time_days is not None:
                 existing.lead_time_days = lead_time_days
             return existing
-        else:
-            # Phase1: SupplierItem is the product itself, not a link table.
-            # This logic might be obsolete but keeping it for compatibility with ID-based lookup.
-            return None
+        # Phase1: SupplierItem is the product itself, not a link table.
+        # This logic might be obsolete but keeping it for compatibility with ID-based lookup.
+        return None
 
     def _upsert_customer(self, code: str, name: str) -> Customer | None:
         """Upsert customer by code."""
@@ -292,10 +289,9 @@ class MasterImportService:
         if existing:
             existing.customer_name = name
             return existing
-        else:
-            customer = Customer(customer_code=code, customer_name=name)
-            self.db.add(customer)
-            return customer
+        customer = Customer(customer_code=code, customer_name=name)
+        self.db.add(customer)
+        return customer
 
     def _upsert_delivery_place(
         self,
@@ -314,15 +310,14 @@ class MasterImportService:
             if jiku_code:
                 existing.jiku_code = jiku_code
             return existing
-        else:
-            dp = DeliveryPlace(
-                customer_id=customer_id,
-                delivery_place_code=code,
-                delivery_place_name=name,
-                jiku_code=jiku_code,
-            )
-            self.db.add(dp)
-            return dp
+        dp = DeliveryPlace(
+            customer_id=customer_id,
+            delivery_place_code=code,
+            delivery_place_name=name,
+            jiku_code=jiku_code,
+        )
+        self.db.add(dp)
+        return dp
 
     def _upsert_customer_item(
         self,
@@ -369,18 +364,17 @@ class MasterImportService:
             if special_instructions:
                 existing.special_instructions = special_instructions
             return existing
-        else:
-            ci = CustomerItem(
-                customer_id=customer_id,
-                customer_part_no=customer_part_no,
-                supplier_item_id=supplier_item.id,
-                base_unit=base_unit or "個",  # Phase1: base_unit is required
-                pack_unit=pack_unit,
-                pack_quantity=pack_quantity,
-                special_instructions=special_instructions,
-            )
-            self.db.add(ci)
-            return ci
+        ci = CustomerItem(
+            customer_id=customer_id,
+            customer_part_no=customer_part_no,
+            supplier_item_id=supplier_item.id,
+            base_unit=base_unit or "個",  # Phase1: base_unit is required
+            pack_unit=pack_unit,
+            pack_quantity=pack_quantity,
+            special_instructions=special_instructions,
+        )
+        self.db.add(ci)
+        return ci
 
     def _upsert_product_mapping(
         self,
@@ -434,17 +428,16 @@ class MasterImportService:
             else:
                 existing.soft_delete()
             return existing
-        else:
-            pm = ProductMapping(
-                customer_id=customer_id,
-                customer_part_code=customer_part_code,
-                supplier_id=supplier.id,
-                supplier_item_id=product.id,
-                base_unit=base_unit,
-                pack_unit=pack_unit,
-                pack_quantity=pack_quantity,
-                special_instructions=special_instructions,
-                is_active=is_active,
-            )
-            self.db.add(pm)
-            return pm
+        pm = ProductMapping(
+            customer_id=customer_id,
+            customer_part_code=customer_part_code,
+            supplier_id=supplier.id,
+            supplier_item_id=product.id,
+            base_unit=base_unit,
+            pack_unit=pack_unit,
+            pack_quantity=pack_quantity,
+            special_instructions=special_instructions,
+            is_active=is_active,
+        )
+        self.db.add(pm)
+        return pm

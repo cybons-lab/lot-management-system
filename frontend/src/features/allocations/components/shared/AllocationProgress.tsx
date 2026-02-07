@@ -1,13 +1,13 @@
 // frontend/src/features/orders/components/AllocationProgress.tsx
 
-type Props = {
+interface Props {
   lineId?: number;
   progressPct: number;
   allocatedTotal: number;
   totalQty: number;
   unit: string;
   remainingQty: number;
-};
+}
 
 export function AllocationProgress({
   progressPct,

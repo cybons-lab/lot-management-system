@@ -2,7 +2,7 @@
 import { http } from "@/shared/api/http-client";
 
 // リクエスト型
-export type SimulateSeedRequest = {
+export interface SimulateSeedRequest {
   profile?: string | null;
   random_seed?: number | null;
   warehouses?: number;
@@ -19,30 +19,30 @@ export type SimulateSeedRequest = {
   snapshot_name?: string | null;
   use_last_snapshot?: boolean;
   case_mix?: Record<string, number> | null;
-};
+}
 
 // レスポンス型
-export type SimulateSeedResponse = {
+export interface SimulateSeedResponse {
   task_id: string;
   message: string;
-};
+}
 
-export type SimulateProgressResponse = {
+export interface SimulateProgressResponse {
   task_id: string;
   status: string;
   phase: string;
   progress_pct: number;
   logs: string[];
   error?: string | null;
-};
+}
 
-export type CapCheckResult = {
+export interface CapCheckResult {
   lot_split: string;
   destinations: string;
   order_lines: string;
-};
+}
 
-export type SimulateResultSummary = {
+export interface SimulateResultSummary {
   warehouses: number;
   forecasts: number;
   orders: number;
@@ -52,26 +52,26 @@ export type SimulateResultSummary = {
   cap_checks: CapCheckResult;
   stock_equation_ok: boolean;
   orphan_count: number;
-};
+}
 
-export type SimulateResultResponse = {
+export interface SimulateResultResponse {
   success: boolean;
   summary?: SimulateResultSummary | null;
   snapshot_id?: number | null;
   error?: string | null;
-};
+}
 
-export type SeedSnapshotListItem = {
+export interface SeedSnapshotListItem {
   id: number;
   name: string;
   created_at: string;
   params_json: Record<string, unknown>;
   summary_json?: Record<string, unknown> | null;
-};
+}
 
-export type SeedSnapshotListResponse = {
+export interface SeedSnapshotListResponse {
   snapshots: SeedSnapshotListItem[];
-};
+}
 
 // API関数
 export async function postSimulateSeedData(

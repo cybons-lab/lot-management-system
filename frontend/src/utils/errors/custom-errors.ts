@@ -34,7 +34,7 @@ export class ValidationError extends ApiError {
  * 認証エラー
  */
 export class AuthenticationError extends ApiError {
-  constructor(message: string = "認証に失敗しました") {
+  constructor(message = "認証に失敗しました") {
     super(message, 401, "AUTHENTICATION_ERROR");
     this.name = "AuthenticationError";
     Object.setPrototypeOf(this, AuthenticationError.prototype);
@@ -45,7 +45,7 @@ export class AuthenticationError extends ApiError {
  * 認可エラー
  */
 export class AuthorizationError extends ApiError {
-  constructor(message: string = "この操作を実行する権限がありません") {
+  constructor(message = "この操作を実行する権限がありません") {
     super(message, 403, "AUTHORIZATION_ERROR");
     this.name = "AuthorizationError";
     Object.setPrototypeOf(this, AuthorizationError.prototype);
@@ -56,7 +56,7 @@ export class AuthorizationError extends ApiError {
  * リソースが見つからない
  */
 export class NotFoundError extends ApiError {
-  constructor(message: string = "リソースが見つかりません") {
+  constructor(message = "リソースが見つかりません") {
     super(message, 404, "NOT_FOUND");
     this.name = "NotFoundError";
     Object.setPrototypeOf(this, NotFoundError.prototype);
@@ -67,7 +67,7 @@ export class NotFoundError extends ApiError {
  * サーバーエラー
  */
 export class ServerError extends ApiError {
-  constructor(message: string = "サーバーエラーが発生しました") {
+  constructor(message = "サーバーエラーが発生しました") {
     super(message, 500, "SERVER_ERROR");
     this.name = "ServerError";
     Object.setPrototypeOf(this, ServerError.prototype);
@@ -78,7 +78,7 @@ export class ServerError extends ApiError {
  * ネットワークエラー
  */
 export class NetworkError extends Error {
-  constructor(message: string = "ネットワークエラーが発生しました") {
+  constructor(message = "ネットワークエラーが発生しました") {
     super(message);
     this.name = "NetworkError";
     Object.setPrototypeOf(this, NetworkError.prototype);

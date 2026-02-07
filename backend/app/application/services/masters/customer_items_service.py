@@ -440,7 +440,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             except Exception as e:
                 summary["failed"] += 1
                 errors.append(
-                    f"customer={row.customer_code}, part_no={row.customer_part_no}: {str(e)}"
+                    f"customer={row.customer_code}, part_no={row.customer_part_no}: {e!s}"
                 )
                 self.db.rollback()
                 continue
@@ -451,7 +451,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 self.db.commit()
             except Exception as e:
                 self.db.rollback()
-                errors.append(f"Commit failed: {str(e)}")
+                errors.append(f"Commit failed: {e!s}")
                 summary["failed"] = summary["total"]
                 summary["created"] = 0
                 summary["updated"] = 0

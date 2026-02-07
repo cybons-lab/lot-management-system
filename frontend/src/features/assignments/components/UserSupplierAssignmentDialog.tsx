@@ -55,7 +55,7 @@ function SupplierSelectField({
   options,
 }: {
   control: Control<FormValues>;
-  options: Array<{ value: string; label: string }>;
+  options: { value: string; label: string }[];
 }) {
   return (
     <FormField

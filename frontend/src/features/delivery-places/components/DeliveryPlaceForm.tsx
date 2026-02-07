@@ -51,7 +51,7 @@ interface DeliveryPlaceFormProps {
     jiku_code?: string | null;
     jiku_match_pattern?: string | null;
   };
-  customers: Array<{ id: number; customer_name: string; customer_code: string }>;
+  customers: { id: number; customer_name: string; customer_code: string }[];
   onSubmit: (data: FormValues & { jiku_code: string; jiku_match_pattern?: string }) => void;
   onCancel: () => void;
   isSubmitting?: boolean;

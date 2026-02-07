@@ -3,11 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 
 import { DataTable, type Column } from "./DataTable";
 
-type TestData = {
+interface TestData {
   id: string;
   name: string;
   category: string;
-};
+}
 
 const columns: Column<TestData>[] = [
   {

@@ -18,7 +18,7 @@ interface UomConversionCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   products: Product[];
-  suppliers: Array<{ id: number; supplier_name: string; supplier_code: string }>;
+  suppliers: { id: number; supplier_name: string; supplier_code: string }[];
   onSubmit: (data: UomConversionCreate) => void;
   isSubmitting: boolean;
 }

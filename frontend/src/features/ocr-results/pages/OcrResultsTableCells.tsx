@@ -78,10 +78,10 @@ const insertSoftBreaks = (text: string) => {
 
 export type EditableFieldKey = keyof RowInputState;
 
-type OcrInputsContextType = {
+interface OcrInputsContextType {
   getInputs: (row: OcrResultItem) => RowInputState;
   updateInputs: (row: OcrResultItem, patch: Partial<RowInputState>) => void;
-};
+}
 
 export const OcrInputsContext = createContext<OcrInputsContextType | null>(null);
 
@@ -93,14 +93,14 @@ export function useOcrInputs() {
 
 type ActiveCell = { rowId: number; field: EditableFieldKey } | null;
 
-type OcrCellEditingContextType = {
+interface OcrCellEditingContextType {
   activeCell: ActiveCell;
   setActiveCell: (cell: ActiveCell) => void;
   editableFieldOrder: EditableFieldKey[];
   rowIds: number[];
   getRowById: (rowId: number) => OcrResultItem | undefined;
   isReadOnly?: boolean;
-};
+}
 
 export const OcrCellEditingContext = createContext<OcrCellEditingContextType | null>(null);
 

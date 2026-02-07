@@ -1,6 +1,10 @@
 // features/orders/hooks/useMasters.ts
 
-type MasterOption = { id: number | string; code: string; name: string };
+interface MasterOption {
+  id: number | string;
+  code: string;
+  name: string;
+}
 /**
  * 得意先のデフォルト出荷倉庫を取得する将来拡張用フック。
  * 現状は API 未実装でも落ちないようにフェールセーフで空配列を返します。

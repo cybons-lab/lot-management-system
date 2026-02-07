@@ -82,7 +82,7 @@ GRANT ALL PRIVILEGES ON DATABASE lot_management TO your_db_user;
 
 ```bash
 cd /path/to/lot-management-system/backend
-python3.13 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```

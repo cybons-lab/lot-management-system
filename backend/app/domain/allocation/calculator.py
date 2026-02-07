@@ -251,31 +251,30 @@ def calculate_allocation(
             trace_logs.append(decision)
             remaining_qty = Decimal("0")
             break
+        # 部分的に引き当て
+        if request.allow_partial:
+            decision = AllocationDecision(
+                lot_id=lot.lot_id,
+                lot_number=lot.lot_number or "",
+                score=score,
+                decision="adopted",
+                reason="FEFO採用（部分充足）",
+                allocated_qty=allocatable_qty,
+            )
+            allocated_lots.append(decision)
+            trace_logs.append(decision)
+            remaining_qty -= allocatable_qty
         else:
-            # 部分的に引き当て
-            if request.allow_partial:
-                decision = AllocationDecision(
-                    lot_id=lot.lot_id,
-                    lot_number=lot.lot_number or "",
-                    score=score,
-                    decision="adopted",
-                    reason="FEFO採用（部分充足）",
-                    allocated_qty=allocatable_qty,
-                )
-                allocated_lots.append(decision)
-                trace_logs.append(decision)
-                remaining_qty -= allocatable_qty
-            else:
-                # 分納不可ならスキップ（ただし通常はallow_partial=True）
-                decision = AllocationDecision(
-                    lot_id=lot.lot_id,
-                    lot_number=lot.lot_number or "",
-                    score=score,
-                    decision="rejected",
-                    reason="在庫不足かつ分納不可",
-                    allocated_qty=Decimal("0"),
-                )
-                trace_logs.append(decision)
+            # 分納不可ならスキップ（ただし通常はallow_partial=True）
+            decision = AllocationDecision(
+                lot_id=lot.lot_id,
+                lot_number=lot.lot_number or "",
+                score=score,
+                decision="rejected",
+                reason="在庫不足かつ分納不可",
+                allocated_qty=Decimal("0"),
+            )
+            trace_logs.append(decision)
 
     # 全て処理しても不足がある場合
     if remaining_qty > 0 and len(allocated_lots) == 0:

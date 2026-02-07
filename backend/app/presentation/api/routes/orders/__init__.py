@@ -12,8 +12,8 @@ from app.presentation.api.routes.orders.orders_router import router as orders_ro
 
 
 __all__ = [
-    "orders_router",
-    "order_lines_router",
     "confirmed_lines_router",
+    "order_lines_router",
+    "orders_router",
     # "orders_validate_router",  # Disabled: requires OrderValidation* schemas
 ]

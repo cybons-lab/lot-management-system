@@ -23,18 +23,18 @@ import { useEffect, useState, useCallback } from "react";
 
 import httpClient from "@/shared/api/http-client";
 
-type TableData = {
+interface TableData extends Record<string, unknown> {
   name: string;
   comment: string;
-  columns: Array<{
+  columns: {
     name: string;
     type: string;
     nullable: boolean;
     primary_key: boolean;
     foreign_key: { table: string; column: string } | null;
     comment: string;
-  }>;
-};
+  }[];
+}
 
 // --- Custom Table Node Component ---
 
@@ -105,7 +105,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = "TB") => 
 
   nodes.forEach((node) => {
     // カスタムノードのサイズを指定（概算）
-    const tableData = node.data as TableData;
+    const tableData = node.data as unknown as TableData;
     const height = 60 + (tableData.columns?.length || 0) * 25;
     dagreGraph.setNode(node.id, { width: nodeWidth, height });
   });
@@ -206,10 +206,10 @@ function createNodesAndEdges(
 
 // --- Main Component ---
 
-type DynamicERDiagramProps = {
+interface DynamicERDiagramProps {
   className?: string;
   targetTable?: string;
-};
+}
 
 export function DynamicERDiagram({ className, targetTable }: DynamicERDiagramProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);

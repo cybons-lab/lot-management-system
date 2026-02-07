@@ -22,9 +22,9 @@ from app.domain.events.stock_events import (
 
 
 __all__ = [
+    "AllocationConfirmedEvent",
+    "AllocationCreatedEvent",
     "DomainEvent",
     "EventDispatcher",
     "StockChangedEvent",
-    "AllocationCreatedEvent",
-    "AllocationConfirmedEvent",
 ]

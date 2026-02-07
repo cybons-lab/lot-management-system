@@ -313,7 +313,7 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
 
             except Exception as e:
                 summary["failed"] += 1
-                errors.append(f"{row.customer_code}: {str(e)}")
+                errors.append(f"{row.customer_code}: {e!s}")
                 self.db.rollback()
                 continue
 
@@ -323,7 +323,7 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
                 self.db.commit()
             except Exception as e:
                 self.db.rollback()
-                errors.append(f"Commit failed: {str(e)}")
+                errors.append(f"Commit failed: {e!s}")
                 summary["failed"] = summary["total"]
                 summary["created"] = 0
                 summary["updated"] = 0

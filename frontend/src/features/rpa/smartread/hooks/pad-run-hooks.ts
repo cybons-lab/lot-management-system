@@ -25,7 +25,7 @@ import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 /**
  * PAD互換フロー一覧を取得
  */
-export function usePadRuns(configId: number | null, statusFilter?: string, limit: number = 20) {
+export function usePadRuns(configId: number | null, statusFilter?: string, limit = 20) {
   const queryKey = SMARTREAD_QUERY_KEYS.padRuns(configId ?? 0);
   return useQuery({
     queryKey,

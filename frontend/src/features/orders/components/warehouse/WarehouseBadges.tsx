@@ -1,8 +1,8 @@
 // frontend/src/features/orders/components/WarehouseBadges.tsx
 
-type Props = {
+interface Props {
   warehouses: string[];
-};
+}
 
 export function WarehouseBadges({ warehouses }: Props) {
   if (warehouses.length === 0) {

@@ -99,23 +99,23 @@ export interface UpdateInboundPlanLineRequest {
  * Receive Inbound Request (重要: ロット自動生成)
  */
 export interface ReceiveInboundRequest {
-  lines: Array<{
+  lines: {
     inbound_plan_line_id: number;
     received_quantity: number;
-  }>;
+  }[];
 }
 
 /**
  * Receive Inbound Response (生成されたロット情報)
  */
 export interface ReceiveInboundResponse {
-  generated_lots: Array<{
+  generated_lots: {
     lot_id: number;
     lot_number: string;
     supplier_item_id: number;
     quantity: number;
     warehouse_id: number;
-  }>;
+  }[];
 }
 
 export interface InboundPlansListParams {

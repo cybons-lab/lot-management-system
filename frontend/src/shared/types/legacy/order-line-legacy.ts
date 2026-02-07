@@ -1,6 +1,6 @@
 import type { AllocatedLot } from "../allocation-types";
 
-export type OrderLineLegacy = {
+export interface OrderLineLegacy {
   line_no?: number | null;
   product_code?: string | null;
   product_name?: string | null;
@@ -21,5 +21,5 @@ export type OrderLineLegacy = {
   product_qty_per_internal_unit?: number | null;
 
   allocated_lots?: AllocatedLot[];
-  delivery_place_allocations?: Array<{ delivery_place_code: string; quantity: number }>;
-};
+  delivery_place_allocations?: { delivery_place_code: string; quantity: number }[];
+}

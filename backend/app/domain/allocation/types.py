@@ -49,7 +49,7 @@
        score=Decimal("30"),  # 30日後に期限
        decision="adopted",
        reason="FEFO採用（完全充足）",
-       allocated_qty=Decimal("100")
+       allocated_qty=Decimal("100"),
    )
    ```
 
@@ -104,7 +104,7 @@
        score=None,
        decision="rejected",
        reason="引当可能ロットなし",
-       allocated_qty=Decimal("0")
+       allocated_qty=Decimal("0"),
    )
    ```
    → トレースログに「なぜ引当できなかったか」を記録

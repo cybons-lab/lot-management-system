@@ -3,7 +3,7 @@ import type { paths } from "@/types/api";
 
 // ===== Lots Types (v2) =====
 
-export type LotsGetParams = {
+export interface LotsGetParams {
   skip?: number;
   limit?: number;
   supplier_item_id?: number | null;
@@ -16,7 +16,7 @@ export type LotsGetParams = {
   with_stock?: boolean;
   status?: string | null;
   prioritize_assigned?: boolean;
-};
+}
 export type LotResponse =
   paths["/api/v2/lot/"]["get"]["responses"][200]["content"]["application/json"][number];
 export type LotDetailResponse =
@@ -58,14 +58,14 @@ export type InventoryItem =
     warranty_period_days?: number | null;
   };
 
-export type InventoryListResponse = {
+export interface InventoryListResponse {
   items: InventoryItem[];
   total: number;
   page: number;
   size: number;
-};
+}
 
-export type InventoryItemsListParams = {
+export interface InventoryItemsListParams {
   skip?: number;
   limit?: number;
   supplier_item_id?: number | null;
@@ -74,9 +74,9 @@ export type InventoryItemsListParams = {
   tab?: string;
   group_by?: string;
   assigned_staff_only?: boolean;
-};
+}
 
-export type InventoryBySupplierResponse = {
+export interface InventoryBySupplierResponse {
   supplier_id: number;
   supplier_name: string;
   supplier_code: string;
@@ -84,16 +84,16 @@ export type InventoryBySupplierResponse = {
   total_quantity: string;
   lot_count: number;
   product_count: number;
-};
-export type InventoryByWarehouseResponse = {
+}
+export interface InventoryByWarehouseResponse {
   warehouse_id: number;
   warehouse_name: string;
   warehouse_code: string;
   total_quantity: string;
   lot_count: number;
   product_count: number;
-};
-export type InventoryByProductResponse = {
+}
+export interface InventoryByProductResponse {
   supplier_item_id: number;
   product_name: string;
   product_code: string;
@@ -102,7 +102,7 @@ export type InventoryByProductResponse = {
   available_quantity: string;
   lot_count: number;
   warehouse_count: number;
-};
+}
 
 export interface FilterOption {
   id: number;
@@ -176,13 +176,13 @@ export const getAvailableLots = (params: {
 /**
  * ロット検索 (v2) - Server-Side Pagination & Filtering
  */
-export type LotSearchResponse = {
+export interface LotSearchResponse {
   items: LotResponse[];
   total: number;
   page: number;
   size: number;
-};
-export type LotSearchParams = {
+}
+export interface LotSearchParams {
   q?: string;
   page?: number;
   size?: number;
@@ -198,7 +198,7 @@ export type LotSearchParams = {
 
   status?: string;
   with_stock?: boolean;
-};
+}
 
 export const searchLots = (params: LotSearchParams) => {
   const searchParams = new URLSearchParams();

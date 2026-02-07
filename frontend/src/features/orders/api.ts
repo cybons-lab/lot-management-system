@@ -118,13 +118,13 @@ export const cancelLotAllocations = (
     request,
   );
 
-export type WarehouseAllocationItem = {
+export interface WarehouseAllocationItem {
   delivery_place_id: number;
   delivery_place_code: string;
   warehouse_name?: string;
   lot_id: number;
   quantity: number;
-};
+}
 
 /**
  * 倉庫別引当保存

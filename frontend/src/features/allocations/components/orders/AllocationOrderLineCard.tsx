@@ -181,14 +181,14 @@ export function AllocationOrderLineCard({
             {(
               ((Array.isArray(line.reservations) ? line.reservations : []) ||
                 line.allocated_lots ||
-                []) as Array<{
+                []) as {
                 reserved_qty?: number | string | null;
                 allocated_quantity?: number | string | null;
                 allocated_qty?: number | null;
                 lot_number?: string | null;
                 lot_id?: number | string;
                 status?: string;
-              }>
+              }[]
             ).map((alloc, idx) => {
               // Handle both API naming
               const qty = Number(

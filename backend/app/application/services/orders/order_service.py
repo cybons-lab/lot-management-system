@@ -529,16 +529,15 @@ class OrderService:
                     order.lock_expires_at = now + timedelta(minutes=10)
                     self.db.flush()  # Commit is handled by caller or UoW
                     return {"message": "Lock renewed"}
-                else:
-                    # Locked by another user
-                    locked_by_name = (
-                        order.locked_by_user.username if order.locked_by_user else "Unknown User"
-                    )
-                    raise OrderLockedError(
-                        order_id=order.id,
-                        locked_by_user_name=locked_by_name,
-                        locked_at=order.locked_at,
-                    )
+                # Locked by another user
+                locked_by_name = (
+                    order.locked_by_user.username if order.locked_by_user else "Unknown User"
+                )
+                raise OrderLockedError(
+                    order_id=order.id,
+                    locked_by_user_name=locked_by_name,
+                    locked_at=order.locked_at,
+                )
 
         # Acquire lock
         order.locked_by_user_id = user_id

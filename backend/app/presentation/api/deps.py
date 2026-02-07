@@ -31,10 +31,7 @@
    - 例:
    ```python
    @router.post("/orders")
-   def create_order(
-       data: OrderCreate,
-       uow: UnitOfWork = Depends(get_uow)
-   ):
+   def create_order(data: OrderCreate, uow: UnitOfWork = Depends(get_uow)):
        service = OrderService(uow.session)
        order = service.create(data)
        uow.commit()  # 明示的にコミット

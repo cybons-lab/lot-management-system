@@ -48,7 +48,11 @@ export default defineConfig(({ mode }) => {
       },
     },
     optimizeDeps: {
-      include: ["@radix-ui/react-scroll-area", "d3", "dagre-d3"],
+      include: ["@radix-ui/react-scroll-area"],
+    },
+    build: {
+      target: "esnext", // Modern browsers (Latest Edge/Chrome)
+      sourcemap: "hidden",
     },
   };
 });

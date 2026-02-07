@@ -91,14 +91,13 @@ def preview_allocation_suggestions(
 
         return service.regenerate_for_periods(request.forecast_scope.forecast_periods)
 
-    elif request.mode == "order":
+    if request.mode == "order":
         if not request.order_scope or not request.order_scope.order_line_id:
             raise HTTPException(status_code=400, detail="Order line ID required for order mode")
 
         return service.preview_for_order(request.order_scope.order_line_id)
 
-    else:
-        raise HTTPException(status_code=400, detail=f"Invalid mode: {request.mode}")
+    raise HTTPException(status_code=400, detail=f"Invalid mode: {request.mode}")
 
 
 @router.get("/suggestions", response_model=AllocationSuggestionListResponse)

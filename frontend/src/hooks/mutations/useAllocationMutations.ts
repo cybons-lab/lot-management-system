@@ -226,7 +226,7 @@ export function useAutoAllocate(options?: {
       // Backend API: POST /api/allocations/auto-allocate
       const data = await httpAuth.post<{
         order_id: number;
-        allocated_lots: Array<{ lot_id: number }>;
+        allocated_lots: { lot_id: number }[];
         message: string;
       }>("allocations/auto-allocate", { order_line_id, strategy });
 

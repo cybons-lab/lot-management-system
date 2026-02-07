@@ -62,11 +62,11 @@ export function AdminPage() {
 
   // Test Data Generation State
   const [presets, setPresets] = useState<
-    Array<{
+    {
       id: string;
       description: string;
       options: object;
-    }>
+    }[]
   >([]);
   const [selectedPresetId, setSelectedPresetId] = useState("quick");
 
@@ -74,11 +74,11 @@ export function AdminPage() {
   const loadPresets = async () => {
     try {
       const data = await http.get<
-        Array<{
+        {
           id: string;
           description: string;
           options: object;
-        }>
+        }[]
       >("admin/test-data/presets");
       setPresets(data);
     } catch (e) {

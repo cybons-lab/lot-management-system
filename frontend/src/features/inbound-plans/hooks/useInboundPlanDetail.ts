@@ -48,7 +48,7 @@ export function useInboundPlanDetail() {
   };
 
   const handleReceive = async (data: {
-    lots: Array<{ expected_lot_id: number; lot_number: string }>;
+    lots: { expected_lot_id: number; lot_number: string }[];
   }) => {
     try {
       const lot_numbers = data.lots.reduce(

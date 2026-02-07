@@ -315,11 +315,7 @@ export function useSyncTaskResults() {
 /**
  * 保存済み縦持ちデータを取得
  */
-export function useSmartReadLongData(
-  configId: number | null,
-  taskId?: string,
-  limit: number = 1000,
-) {
+export function useSmartReadLongData(configId: number | null, taskId?: string, limit = 1000) {
   return useQuery({
     queryKey: SMARTREAD_QUERY_KEYS.longData(configId ?? 0, taskId),
     queryFn: async () => {

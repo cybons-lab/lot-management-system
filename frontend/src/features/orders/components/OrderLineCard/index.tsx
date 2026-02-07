@@ -18,11 +18,11 @@ import { formatCodeAndName } from "@/shared/libs/utils";
 import type { AllocatedLot, LotCandidateResponse } from "@/shared/types/aliases";
 import { formatYmd } from "@/shared/utils/date";
 
-type Props = {
+interface Props {
   order?: OrderSource | null;
   line?: OrderLineSource | null;
   onRematch?: () => void;
-};
+}
 
 export function OrderLineCard({ order, line, onRematch }: Props) {
   const computed = useOrderLineComputed(line, order ?? undefined);

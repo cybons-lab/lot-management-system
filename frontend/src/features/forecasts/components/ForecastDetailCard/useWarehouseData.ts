@@ -8,17 +8,17 @@ export interface WarehouseData {
     lotCount: number;
     unit: string;
   };
-  upcomingInbounds: Array<{
+  upcomingInbounds: {
     date: string;
     quantity: number;
-  }>;
+  }[];
 }
 
-type WarehouseSource = {
+interface WarehouseSource {
   warehouse_name?: string;
   warehouse_code?: string;
   warehouse_id?: number;
-};
+}
 
 type InboundPlanLineLike = WarehouseSource & {
   supplier_item_id?: number;

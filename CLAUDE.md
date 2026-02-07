@@ -33,13 +33,13 @@ A full-stack inventory management system for tracking materials by lot, with aut
 ## Technology Stack
 
 ### Backend
-- **Runtime:** Python 3.13
+- **Runtime:** Python 3.12
 - **Framework:** FastAPI 0.115.5
 - **ORM:** SQLAlchemy 2.0.36 with Alembic migrations
 - **Validation:** Pydantic 2.10.1
 - **Database:** PostgreSQL 15
 - **Testing:** pytest
-- **Linting:** Ruff v0.6.9
+- **Linting:** Ruff v0.15.0
 
 ### Frontend
 - **Framework:** React 19 with TypeScript 5.9.3 (strict mode)
@@ -896,7 +896,7 @@ Detailed standards are maintained in `docs/standards/`:
 ## Version Information
 
 - **Project:** v2.1.0
-- **Backend:** Python 3.13, FastAPI 0.115.5
+- **Backend:** Python 3.12, FastAPI 0.115.5
 - **Frontend:** React 19, TypeScript 5.9.3, Vite 7.2.0
 - **Last Updated:** 2025-12-05
 

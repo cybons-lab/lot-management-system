@@ -2,14 +2,14 @@
 
 import React from "react";
 
-type Props = {
+interface Props {
   /** 選択可能な倉庫リスト（受注に指定された倉庫） */
   warehouses: string[];
   /** 選択中の倉庫 */
   selectedWarehouse: string;
   /** 倉庫選択時のコールバック */
   onSelectWarehouse: (warehouse: string) => void;
-};
+}
 
 export function WarehouseSelector({ warehouses, selectedWarehouse, onSelectWarehouse }: Props) {
   // 倉庫が1つの場合は自動選択

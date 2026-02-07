@@ -1,5 +1,5 @@
 # backend/Dockerfile
-FROM python:3.13-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -7,9 +7,9 @@ WORKDIR /app
 # PostgreSQLドライバーのビルドに必要
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        gcc \
-        libpq-dev \
-        postgresql-client && \
+    gcc \
+    libpq-dev \
+    postgresql-client && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

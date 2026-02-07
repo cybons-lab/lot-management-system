@@ -6,7 +6,7 @@ export type FilterStatus = "all" | "complete" | "shortage" | "over" | "unallocat
 
 export type ViewMode = "line" | "order";
 
-export type LineWithOrderInfo = {
+export interface LineWithOrderInfo {
   id: number;
   line: OrderLine;
   order: OrderWithLinesResponse;
@@ -14,17 +14,17 @@ export type LineWithOrderInfo = {
   customer_name: string;
   order_date: string;
   order_id: number;
-};
+}
 
-export type GroupedOrder = {
+export interface GroupedOrder {
   order_id: number;
   order_code: string;
   customer_name: string;
   order_date: string;
   lines: LineWithOrderInfo[];
-};
+}
 
-export type AllocationListProps = {
+export interface AllocationListProps {
   orders: OrderWithLinesResponse[];
   isLoading: boolean;
   onSaveAllocations: (lineId: number) => void;
@@ -37,4 +37,4 @@ export type AllocationListProps = {
   onAutoAllocate: (lineId: number) => void;
   onClearAllocations: (lineId: number) => void;
   lineStatuses: Record<number, LineStatus>;
-};
+}

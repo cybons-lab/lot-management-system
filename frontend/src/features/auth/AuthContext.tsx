@@ -16,7 +16,7 @@ export interface User {
   username: string;
   display_name: string;
   roles: string[];
-  assignments: Array<{ supplier_id: number; is_primary: boolean }>;
+  assignments: { supplier_id: number; is_primary: boolean }[];
 }
 
 interface AuthContextType {

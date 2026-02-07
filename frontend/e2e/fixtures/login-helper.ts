@@ -12,7 +12,7 @@ import { Page } from "@playwright/test";
  * @param page - Playwright page object
  * @param username - Username to log in as (default: "admin")
  */
-export async function loginAs(page: Page, username: string = "admin"): Promise<void> {
+export async function loginAs(page: Page, username = "admin"): Promise<void> {
   // Check if already on login page
   if (!page.url().includes("/login") && !page.url().includes("/auth")) {
     // Already logged in or not on login page
@@ -78,11 +78,7 @@ export async function loginAs(page: Page, username: string = "admin"): Promise<v
  * @param url - URL to navigate to
  * @param username - Username to log in as (default: "admin")
  */
-export async function navigateAndLogin(
-  page: Page,
-  url: string,
-  username: string = "admin",
-): Promise<void> {
+export async function navigateAndLogin(page: Page, url: string, username = "admin"): Promise<void> {
   await page.goto(url);
   await page.waitForLoadState("networkidle");
 

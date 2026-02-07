@@ -11,12 +11,12 @@ from .smartread_router import router as smartread_router
 
 
 __all__ = [
-    "rpa_router",
-    "material_delivery_note_router",
-    "material_delivery_simple_router",
     "cloud_flow_router",
     "layer_code_router",
-    "smartread_router",
-    "smartread_admin_router",
+    "material_delivery_note_router",
+    "material_delivery_simple_router",
+    "rpa_router",
     "sap_orders_router",
+    "smartread_admin_router",
+    "smartread_router",
 ]

@@ -6,14 +6,14 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field, computed_field
 
 from app.presentation.schemas.common.base import BaseSchema, TimestampMixin
 
 
-class LotStatus(str, Enum):
+class LotStatus(StrEnum):
     """Valid lot lifecycle statuses."""
 
     ACTIVE = "active"
@@ -24,7 +24,7 @@ class LotStatus(str, Enum):
     ARCHIVED = "archived"
 
 
-class LotOriginType(str, Enum):
+class LotOriginType(StrEnum):
     """Valid lot origin types.
 
     - order: Inbound plan / order-linked lots (existing path)
@@ -41,7 +41,7 @@ class LotOriginType(str, Enum):
     ADHOC = "adhoc"
 
 
-class InventoryState(str, Enum):
+class InventoryState(StrEnum):
     """在庫状態.
 
     - in_stock: 利用可能在庫あり
@@ -222,7 +222,7 @@ class LotLabelRequest(BaseSchema):
     lot_ids: list[int]
 
 
-class StockTransactionType(str, Enum):
+class StockTransactionType(StrEnum):
     """Transaction types tracked in stock history."""
 
     INBOUND = "inbound"
@@ -256,7 +256,7 @@ class StockHistoryResponse(StockHistoryBase):
     transaction_date: datetime
 
 
-class AdjustmentType(str, Enum):
+class AdjustmentType(StrEnum):
     """Allowed adjustment reason codes."""
 
     PHYSICAL_COUNT = "physical_count"

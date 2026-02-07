@@ -4,13 +4,13 @@
  * データベーススキーマ用の型定義
  */
 
-export type TableInfo = {
+export interface TableInfo {
   name: string;
   label: string;
   description: string;
-};
+}
 
-export type TableGroup = {
+export interface TableGroup {
   label: string;
   tables: TableInfo[];
-};
+}

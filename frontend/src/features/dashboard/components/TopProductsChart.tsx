@@ -41,11 +41,11 @@ const formatTooltipValue = (value: ValueType | undefined, _name?: NameType): [st
   return [Number(value ?? 0).toLocaleString("ja-JP"), "在庫数"];
 };
 
-type BarChartClickEvent = {
-  activePayload?: Array<{
+interface BarChartClickEvent {
+  activePayload?: {
     payload?: ChartData;
-  }>;
-};
+  }[];
+}
 
 export function TopProductsChart() {
   const navigate = useNavigate();

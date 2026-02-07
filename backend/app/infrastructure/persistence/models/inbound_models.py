@@ -120,7 +120,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum as PyEnum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -147,7 +147,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .masters_models import Supplier, SupplierItem
 
 
-class InboundPlanStatus(str, PyEnum):
+class InboundPlanStatus(StrEnum):
     """Valid status values for inbound plans."""
 
     PLANNED = "planned"

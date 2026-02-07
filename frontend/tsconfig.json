@@ -19,6 +19,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    // "noUncheckedIndexedAccess": true,  // TODO: 段階的に有効化 (BACKLOG 3-0参照)
 
     /* Path aliases */
     "baseUrl": ".",

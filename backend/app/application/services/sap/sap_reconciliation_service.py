@@ -11,7 +11,7 @@ from __future__ import annotations
 import base64
 import logging
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from sqlalchemy import select
@@ -28,7 +28,7 @@ from app.infrastructure.persistence.models.shipping_master_models import (
 logger = logging.getLogger(__name__)
 
 
-class SapMatchType(str, Enum):
+class SapMatchType(StrEnum):
     """SAP突合タイプ."""
 
     EXACT = "exact"  # 完全一致（材質コード直接）
@@ -38,14 +38,14 @@ class SapMatchType(str, Enum):
     NOT_FOUND = "not_found"  # 未一致
 
 
-class MasterMatchType(str, Enum):
+class MasterMatchType(StrEnum):
     """マスタ突合タイプ."""
 
     MATCHED = "matched"  # 一致
     NOT_FOUND = "not_found"  # 未一致
 
 
-class OverallStatus(str, Enum):
+class OverallStatus(StrEnum):
     """総合ステータス."""
 
     OK = "ok"  # SAP + マスタ両方一致

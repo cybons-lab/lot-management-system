@@ -29,7 +29,7 @@ function ConnectionFilter({
 }: {
   selectedConnectionId: number | null;
   onConnectionChange: (id: number | null) => void;
-  connections: Array<{ id: number; name: string }>;
+  connections: { id: number; name: string }[];
 }) {
   return (
     <div className="space-y-2">

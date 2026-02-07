@@ -3,12 +3,12 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { searchLots, type LotSearchParams } from "@/features/inventory/api";
 import { normalizeLot, type LotUI } from "@/shared/libs/normalize";
 
-export type LotSearchUI = {
+export interface LotSearchUI {
   items: LotUI[];
   total: number;
   page: number;
   size: number;
-};
+}
 
 export function useLotSearch(params: LotSearchParams) {
   return useQuery<LotSearchUI>({

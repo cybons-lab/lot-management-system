@@ -731,7 +731,7 @@ class SmartReadClient:
 
             if state == "COMPLETED" or state == "SUCCEEDED":
                 return export
-            elif state == "FAILED":
+            if state == "FAILED":
                 logger.error(f"Export failed for {export_id}: {export.error_message}")
                 return export
 
@@ -943,7 +943,7 @@ class SmartReadClient:
             if status.is_completed():
                 logger.info(f"Request {request_id} completed with state: {status.state}")
                 return status
-            elif status.is_failed():
+            if status.is_failed():
                 logger.error(f"Request {request_id} failed with state: {status.state}")
                 return status
 

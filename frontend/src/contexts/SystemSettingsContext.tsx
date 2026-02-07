@@ -14,7 +14,10 @@ interface SystemSettingsContextType {
 
 const SystemSettingsContext = createContext<SystemSettingsContextType | null>(null);
 
-type VisibilityEntry = { user: boolean; guest: boolean };
+interface VisibilityEntry {
+  user: boolean;
+  guest: boolean;
+}
 
 function normalizeVisibilityEntry(value: unknown): VisibilityEntry {
   if (typeof value === "boolean") {

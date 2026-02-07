@@ -21,10 +21,10 @@ export interface UomConversionCreate {
   factor: number;
 }
 
-export type UomConversionUpdate = {
+export interface UomConversionUpdate {
   factor?: number;
   version: number;
-};
+}
 
 /**
  * Create a new UOM conversion

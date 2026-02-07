@@ -7,7 +7,7 @@
 
 import logging
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from sqlalchemy.orm import Session
 
@@ -21,7 +21,7 @@ from app.infrastructure.persistence.models.masters_models import (
 logger = logging.getLogger(__name__)
 
 
-class MatchType(str, Enum):
+class MatchType(StrEnum):
     """検索マッチ種別."""
 
     EXACT = "exact"

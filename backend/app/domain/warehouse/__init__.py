@@ -191,9 +191,9 @@ class AllocationPolicy:
 
 
 __all__ = [
-    "WarehouseDomainError",
-    "WarehouseNotFoundError",
+    "AllocationPolicy",
     "InvalidAllocationError",
     "WarehouseAllocation",
-    "AllocationPolicy",
+    "WarehouseDomainError",
+    "WarehouseNotFoundError",
 ]

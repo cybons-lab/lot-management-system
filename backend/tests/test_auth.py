@@ -68,7 +68,7 @@ def test_token_generation(db: Session, test_user: User):
     token = auth_service.create_access_token(data={"sub": test_user.username})
 
     # Verify we can decode it
-    from jose import jwt
+    import jwt
 
     from app.core.config import settings
 

@@ -10,7 +10,7 @@
  *
  * 受注明細に対して引き当てられたロットの詳細情報を表現します。
  */
-export type AllocatedLot = {
+export interface AllocatedLot {
   /** ロットID */
   lot_id: number;
   /** 引当数量（DDL v2.2: DECIMAL(15,3)） */
@@ -29,4 +29,4 @@ export type AllocatedLot = {
   lot_number?: string | null;
   /** ステータス */
   status?: string;
-};
+}

@@ -527,7 +527,7 @@ def check_view_definition(
 
     except Exception as e:
         logger.exception(f"ビュー診断エラー: {e}")
-        raise HTTPException(status_code=500, detail=f"ビュー診断に失敗しました: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"ビュー診断に失敗しました: {e!s}")
 
 
 @router.post("/diagnostics/view-fix")
@@ -677,7 +677,7 @@ WHERE
 
     except Exception as e:
         logger.exception(f"ビュー修正エラー: {e}")
-        raise HTTPException(status_code=500, detail=f"ビュー修正に失敗しました: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"ビュー修正に失敗しました: {e!s}")
 
 
 @router.get("/diagnostics/view-definition")
@@ -801,7 +801,7 @@ def get_view_definition(
         raise
     except Exception as e:
         logger.exception(f"ビュー定義取得エラー: {e}")
-        raise HTTPException(status_code=500, detail=f"ビュー定義の取得に失敗しました: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"ビュー定義の取得に失敗しました: {e!s}")
 
 
 @router.get("/diagnostics/schema-check")
@@ -1001,4 +1001,4 @@ def check_schema_integrity(
 
     except Exception as e:
         logger.exception(f"スキーマチェックエラー: {e}")
-        raise HTTPException(status_code=500, detail=f"スキーマチェックに失敗しました: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"スキーマチェックに失敗しました: {e!s}")

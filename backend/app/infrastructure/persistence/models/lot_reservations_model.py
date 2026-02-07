@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum as PyEnum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -34,7 +34,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from .lot_receipt_models import LotReceipt
 
 
-class ReservationSourceType(str, PyEnum):
+class ReservationSourceType(StrEnum):
     """Source type for lot reservations.
 
     Defines the origin of the reservation:
@@ -48,7 +48,7 @@ class ReservationSourceType(str, PyEnum):
     MANUAL = "manual"
 
 
-class ReservationStatus(str, PyEnum):
+class ReservationStatus(StrEnum):
     """ロット予約のステータス.
 
     【設計意図】

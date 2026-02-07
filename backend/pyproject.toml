@@ -3,12 +3,11 @@ name = "lot-management-backend"
 version = "0.1.0"
 description = "Lot Management System Backend"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "alembic<2.0.0",
-    "anyio>=4.12.1",
     "email-validator>=2.3.0",
-    "fastapi>=0.128.0",
+    "fastapi>=0.128.3",
     "psycopg2-binary>=2.9.11",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
@@ -17,36 +16,33 @@ dependencies = [
     "pyyaml>=6.0.3",
     "sqlalchemy<3.0.0",
     "uvicorn[standard]>=0.40.0",
-    "python-jose[cryptography]>=3.3.0",
     "bcrypt>=5.0.0",
-    "faker>=40.1.2",
-    "python-json-logger>=2.0.7",
     "structlog>=25.4.0",
     "asgi-correlation-id>=4.3.4",
-    "pandas>=3.0.0",
-    "openpyxl>=3.1.0",
     "PyJWT>=2.8.0",
     "httpx>=0.28.1",
-    "reportlab>=4.4.9",
     "requests>=2.32.0",
-    "pycparser<3.0",
-    "certifi>=2025.11.12",
-    "cryptography<47.0.0",
-    "greenlet>=3.2.4",
-    "hypothesis<7.0.0",
-    "librt>=0.6.3",
-    "numpy<3.0.0",
-    "packaging>=25.0",
-    "pathspec>=0.12.1",
-    "pyasn1>=0.6.1",
-    "ruff<0.15.0",
-    "tzdata>=2025.2",
-    "websockets>=16.0.0",
+    "cryptography>=43.0.0,<47.0.0",
 ]
+
+[project.optional-dependencies]
+seed = ["faker>=40.4.0"]
+export = ["pandas>=3.0.0", "openpyxl>=3.1.0", "reportlab>=4.4.9"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+# ==============================================================================
+# Ruff - Linter & Formatter
+# ==============================================================================
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
+target-version = "py312"
 
 [tool.ruff.lint]
 # E: pycodestyle errors
@@ -55,36 +51,109 @@ target-version = "py313"
 # D: pydocstyle (docstring conventions)
 # UP: pyupgrade (Python version upgrades)
 # B: flake8-bugbear (likely bugs and design problems)
-select = ["E", "F", "I", "D", "UP", "B"]
+# SIM: コード簡略化
+# RET: 不要なreturn検知
+# C4: 内包表記の最適化
+# PERF: パフォーマンス
+# TRY: 例外処理パターン
+# RUF: ruff独自ルール
+# S: セキュリティ (Bandit相当)
+# LOG: ロギングパターン
+# T20: print()残留禁止
+# ERA: コメントアウトコード禁止
+# ARG: 未使用引数検知
+# C90: 複雑度チェック
+# PL: Pylint互換
+select = ["E", "F", "I", "D", "UP", "B", "SIM", "RET", "C4", "PERF", "TRY", "RUF", "S", "LOG", "T20", "ERA", "ARG", "C90", "PL"]
 
 ignore = [
-  "D203",  # one-blank-line-before-class (conflicts with D211)
-  "D212",  # multi-line-summary-first-line (conflicts with D213)
-  "D100",  # Missing docstring in public module
-  "D101",  # Missing docstring in public class
-  "D102",  # Missing docstring in public method
-  "D103",  # Missing docstring in public function
-  "D105",  # Missing docstring in magic method
-  "D107",  # Missing docstring in __init__
-  "D205",  # 1 blank line required between summary line and description
-  "B008",  # Do not perform function call in default argument
-  "B904",  # Within an except clause, raise without from
-  "E501",  # Line too long (we use ruff format for line length)
-  "E741",  # Ambiguous variable name
+  "D203",    # one-blank-line-before-class (conflicts with D211)
+  "D212",    # multi-line-summary-first-line (conflicts with D213)
+  "D100",    # Missing docstring in public module
+  "D101",    # Missing docstring in public class
+  "D102",    # Missing docstring in public method
+  "D103",    # Missing docstring in public function
+  "D105",    # Missing docstring in magic method
+  "D107",    # Missing docstring in __init__
+  "D205",    # 1 blank line required between summary line and description
+  "B008",    # Do not perform function call in default argument (FastAPI Depends)
+  "E501",    # Line too long (we use ruff format for line length)
+  "E741",    # Ambiguous variable name
+  "TRY003",  # 長いexceptionメッセージ (FastAPIでは一般的)
+  "S101",    # assert使用 (テストでは必要、per-file-ignoresでも緩和)
+  "PLR0913", # 引数多すぎ (サービス層で一般的)
+  "PLR2004", # マジックナンバー (段階的対応)
+  "RUF001",  # 全角文字使用 (日本語コードベースでは正常)
+  "RUF002",  # 全角括弧等 (日本語docstringでは正常)
+  "RUF003",  # 全角文字コメント (日本語コメントでは正常)
+  "PLC0415", # import not at top level (循環import回避パターン)
+  "S311",    # random使用 (暗号用途ではない)
+  "ERA001",  # コメントアウトコード (段階的対応)
+  "TRY400",  # logging.error instead of logging.exception (段階的対応)
+  "RET501",  # 不要な明示的return None (段階的対応)
+  "PLR1711", # 不要な明示的return (段階的対応)
+  "RUF012",  # mutable class variable (SQLAlchemy modelで一般的)
+  "PLR0915", # too many statements (段階的対応)
+  "PLR0912", # too many branches (段階的対応)
+  "ARG001",  # 未使用の関数引数 (段階的対応 - インターフェース統一で必要な場合あり)
+  "ARG002",  # 未使用のメソッド引数 (段階的対応)
+  "TRY300",  # try-except-pass (段階的対応)
+  "TRY301",  # raise within try (段階的対応)
+  "PLC2401", # 非ASCII文字の識別子 (日本語変数名は使用しない方針だが段階的対応)
+  "B904",    # raise without from (段階的対応 - 103箇所)
+  "T201",    # print()使用 (段階的対応 - logger移行中)
+  "RET504",  # 不要な変数代入の後return (可読性のため許容)
+  "TRY401",  # 冗長なexception logging (段階的対応)
+  "TRY201",  # raise in except (段階的対応)
+  "RUF022",  # __all__ のソート順 (自動修正不可、段階的対応)
+  "S608",    # SQL injection (SQLAlchemy使用のため許容)
+  "S106",    # ハードコードされたパスワード (テスト/設定のデフォルト値)
+  "S105",    # ハードコードされたパスワード文字列 (テスト/設定のデフォルト値)
+  "PLW0603", # global statement使用 (段階的対応)
+  "PLW2901", # ループ変数の再代入 (段階的対応)
+  "S110",    # try-except-pass (段階的対応)
+  "S113",    # requestsのtimeout省略 (段階的対応)
+  "T203",    # pprint使用 (段階的対応)
+  "PERF401", # 不要なlist() in for loop (段階的対応)
+  "SIM102",  # ネストされたif統合 (段階的対応)
+  "SIM103",  # bool直接返却 (段階的対応)
+  "SIM108",  # 三項演算子使用 (可読性のため許容)
+  "SIM105",  # contextlib.suppress使用 (段階的対応)
+  "PLR0911", # too many return statements (段階的対応)
+  "C416",    # 不要なリスト内包表記 (段階的対応)
+  "RUF059",  # unused unpacking (段階的対応)
+  "C901",    # 複雑度超過 (段階的リファクタリング - 49箇所)
+  "PERF102", # dict.keys()使用推奨 (段階的対応)
+  "TRY004",  # TypeError の prefer (段階的対応)
+  "SIM118",  # key in dict (段階的対応)
+  "RUF015",  # 不要なnext+iter (段階的対応)
+  "RUF005",  # collection連結 (段階的対応)
+  "PLR1714", # 複数の比較統合 (段階的対応)
+  "RUF046",  # 不要なcast (段階的対応)
+  "RUF006",  # asyncio.create_task (段階的対応)
+  "PERF403", # dict comprehension (段階的対応)
+  "LOG014",  # logging.exception重複 (段階的対応)
 ]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.ruff.lint.isort]
-# Import sorting configuration
 force-single-line = false
 lines-after-imports = 2
 known-first-party = ["app"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["D"]  # Relax all docstring rules in tests
-"alembic/**" = ["D", "F401"]  # Relax in migrations
+"tests/**" = ["D", "S101", "ARG", "PLR2004"]
+"alembic/**" = ["D", "F401"]
+"scripts/**" = ["T20", "S"]
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
 
 [tool.docformatter]
 recursive = true
@@ -95,28 +164,63 @@ pre-summary-newline = true
 make-summary-multi-line = true
 blank = true
 
+# ==============================================================================
+# Mypy - Type Checker
+# ==============================================================================
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+
+[[tool.mypy.overrides]]
+module = ["reportlab.*", "pandas.*", "openpyxl.*"]
+ignore_missing_imports = true
+
+# ==============================================================================
+# Pytest
+# ==============================================================================
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --strict-markers --tb=short"
+asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning:sqlalchemy.*",
+]
+markers = [
+    "integration: integration tests",
+    "slow: slow tests",
+    "skip_n_plus_one: skip N+1 query detection",
+]
+
+# ==============================================================================
+# Dependencies (Dev)
+# ==============================================================================
+
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
-    "hypothesis>=6.150.2",
+    "hypothesis>=6.151.5",
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
-    "ruff>=0.14.13",
+    "ruff>=0.15.0",
     "mypy>=1.19.1",
     "types-passlib>=1.7.7",
-    "types-python-jose>=3.3.4",
     "types-pyyaml>=6.0.12.20250915",
     "types-requests>=2.32.4.20260107",
     "poethepoet>=0.31.1",
 ]
-
-[tool.mypy]
-ignore_missing_imports = true
-plugins = ["sqlalchemy.ext.mypy.plugin"]
-
-[[tool.mypy.overrides]]
-module = "reportlab.*"
-ignore_missing_imports = true
 
 # ==============================================================================
 # Poe the Poet - Task Runner (Cross-platform alternative to Makefile)

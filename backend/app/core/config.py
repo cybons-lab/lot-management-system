@@ -28,9 +28,7 @@
    理由: 環境変数名の柔軟性（大文字・小文字両対応）
    例:
    ```python
-   secret_key: str = Field(
-       validation_alias=AliasChoices("SECRET_KEY", "secret_key")
-   )
+   secret_key: str = Field(validation_alias=AliasChoices("SECRET_KEY", "secret_key"))
    ```
    → SECRET_KEY, secret_key のどちらでも設定可能
    背景:

@@ -33,7 +33,7 @@ export function ReceiveModal({ planId, lines, onClose, onSuccess }: ReceiveModal
   const [result, setResult] = useState<{
     success: boolean;
     message: string;
-    generatedLots?: Array<{ lot_number: string; supplier_item_id: number; quantity: number }>;
+    generatedLots?: { lot_number: string; supplier_item_id: number; quantity: number }[];
   } | null>(null);
 
   const receiveMutation = useReceiveInbound(planId);

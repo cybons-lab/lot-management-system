@@ -50,7 +50,7 @@ interface AssignmentSelectFieldProps {
   label: string;
   placeholder: string;
   requiredMessage: string;
-  options: Array<{ value: string; label: string }>;
+  options: { value: string; label: string }[];
 }
 
 function AssignmentSelectField({

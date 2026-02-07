@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
@@ -12,7 +12,7 @@ from app.presentation.schemas.common.base import BaseSchema, TimestampMixin
 from app.presentation.schemas.common.common_schema import ListResponse
 
 
-class InboundPlanStatus(str, Enum):
+class InboundPlanStatus(StrEnum):
     """Valid lifecycle states for inbound plans."""
 
     PLANNED = "planned"

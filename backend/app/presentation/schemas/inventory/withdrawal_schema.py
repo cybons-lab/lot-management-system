@@ -7,14 +7,14 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
 from app.presentation.schemas.common.base import BaseSchema
 
 
-class WithdrawalType(str, Enum):
+class WithdrawalType(StrEnum):
     """出庫タイプ."""
 
     ORDER_MANUAL = "order_manual"  # 受注（手動）
@@ -35,7 +35,7 @@ WITHDRAWAL_TYPE_LABELS = {
 }
 
 
-class WithdrawalCancelReason(str, Enum):
+class WithdrawalCancelReason(StrEnum):
     """出庫取消理由."""
 
     INPUT_ERROR = "input_error"  # 入力ミス

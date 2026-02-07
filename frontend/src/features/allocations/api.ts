@@ -77,11 +77,11 @@ export type ManualAllocationRequest =
 export type ManualAllocationResponse =
   paths["/api/v2/allocation/manual"]["post"]["responses"][200]["content"]["application/json"];
 
-export type ManualAllocationBatchResponse = {
+export interface ManualAllocationBatchResponse {
   success: boolean;
   created_count: number;
   message: string;
-};
+}
 
 export type FefoPreviewRequest =
   paths["/api/v2/allocation/preview"]["post"]["requestBody"]["content"]["application/json"];
@@ -94,16 +94,16 @@ export type AllocationCommitResponse =
   paths["/api/v2/allocation/commit"]["post"]["responses"][200]["content"]["application/json"];
 
 // Alias for compatibility
-export type CandidateLotsResponse = {
-  items: Array<{
+export interface CandidateLotsResponse {
+  items: {
     lot_id: number;
     lot_number: string;
     available_quantity: number;
     expiry_date?: string;
     product_code?: string;
     warehouse_code?: string;
-  }>;
-};
+  }[];
+}
 
 // ===== New API Functions (v2) =====
 
@@ -155,7 +155,7 @@ export const getAllocationCandidates = async (params: {
 // ===== Legacy / v1 API Functions (Restored) =====
 // ==========================================
 
-export type CandidateLotItem = {
+export interface CandidateLotItem {
   lot_id: number;
   lot_number: string;
   free_qty: number;
@@ -179,26 +179,26 @@ export type CandidateLotItem = {
   internal_unit?: string | null;
   qty_per_internal_unit?: number | null;
   external_unit?: string | null;
-};
+}
 
 // Legacy types for createAllocations
-export type AllocationInputItem = {
+export interface AllocationInputItem {
   lotId: number;
   lot?: unknown; // For UI logic compatibility
   quantity: number;
   delivery_place_id?: number | null;
-};
+}
 
-export type CreateAllocationPayload = {
+export interface CreateAllocationPayload {
   order_line_id: number;
   allocations: AllocationInputItem[];
   product_code?: string; // Compatibility
   // other fields if necessary
-};
+}
 
-export type AllocationResult = {
+export interface AllocationResult {
   order_id: number;
-};
+}
 
 /**
  * Create allocations for an order line
@@ -362,7 +362,7 @@ export const autoAllocateOrders = (data: BatchAutoOrderRequest) => {
 
 // ===== Allocation Suggestions API (v1) =====
 
-export type AllocationSuggestionRequest = {
+export interface AllocationSuggestionRequest {
   mode: "forecast" | "order";
   forecast_scope?: {
     forecast_periods: string[];
@@ -379,9 +379,9 @@ export type AllocationSuggestionRequest = {
     allow_cross_warehouse?: boolean;
     ignore_existing_suggestions?: boolean;
   };
-};
+}
 
-export type AllocationSuggestionResponse = {
+export interface AllocationSuggestionResponse {
   id: number;
   forecast_period: string;
   customer_id: number;
@@ -402,18 +402,18 @@ export type AllocationSuggestionResponse = {
   comment?: string | null;
   // Phase 9.3: Manual shipment date
   manual_shipment_date?: string | null;
-};
+}
 
-export type AllocationSuggestionPreviewResponse = {
+export interface AllocationSuggestionPreviewResponse {
   suggestions: AllocationSuggestionResponse[];
   stats: Record<string, unknown>;
   gaps: unknown[];
-};
+}
 
-export type AllocationSuggestionListResponse = {
+export interface AllocationSuggestionListResponse {
   suggestions: AllocationSuggestionResponse[];
   total: number;
-};
+}
 
 export const generateAllocationSuggestions = (data: AllocationSuggestionRequest) => {
   return http.post<AllocationSuggestionPreviewResponse>("v2/forecast/suggestions/preview", data);
@@ -499,10 +499,10 @@ export const cancelAllocation = (allocationId: number) => {
  */
 export const saveManualAllocations = async (data: {
   order_line_id: number;
-  allocations: Array<{
+  allocations: {
     lot_id: number;
     quantity: number;
-  }>;
+  }[];
 }) => {
   const promises = data.allocations.map((a) =>
     createManualAllocationSuggestion({
@@ -549,16 +549,15 @@ export const RESERVATION_CANCEL_REASON_LABELS: Record<ReservationCancelReason, s
   other: "その他",
 };
 
-export const RESERVATION_CANCEL_REASONS: Array<{ value: ReservationCancelReason; label: string }> =
-  [
-    { value: "input_error", label: "入力ミス" },
-    { value: "wrong_quantity", label: "数量誤り" },
-    { value: "wrong_lot", label: "ロット選択誤り" },
-    { value: "wrong_product", label: "品目誤り" },
-    { value: "customer_request", label: "顧客都合" },
-    { value: "duplicate", label: "重複登録" },
-    { value: "other", label: "その他" },
-  ];
+export const RESERVATION_CANCEL_REASONS: { value: ReservationCancelReason; label: string }[] = [
+  { value: "input_error", label: "入力ミス" },
+  { value: "wrong_quantity", label: "数量誤り" },
+  { value: "wrong_lot", label: "ロット選択誤り" },
+  { value: "wrong_product", label: "品目誤り" },
+  { value: "customer_request", label: "顧客都合" },
+  { value: "duplicate", label: "重複登録" },
+  { value: "other", label: "その他" },
+];
 
 export interface ReservationCancelRequest {
   reason: ReservationCancelReason;

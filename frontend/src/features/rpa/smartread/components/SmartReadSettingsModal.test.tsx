@@ -20,11 +20,11 @@ vi.mock("../hooks", () => ({
 vi.mock("@/components/ui", async () => {
   const actual = await vi.importActual<typeof UiComponents>("@/components/ui");
 
-  type SelectRootProps = {
+  interface SelectRootProps {
     children?: React.ReactNode;
     onValueChange?: (value: string) => void;
     value?: string;
-  };
+  }
 
   type SelectTriggerProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
     children?: React.ReactNode;
@@ -32,18 +32,18 @@ vi.mock("@/components/ui", async () => {
     value?: string;
   };
 
-  type SelectValueProps = {
+  interface SelectValueProps {
     placeholder?: string;
-  };
+  }
 
-  type SelectContentProps = {
+  interface SelectContentProps {
     children?: React.ReactNode;
-  };
+  }
 
-  type SelectItemProps = {
+  interface SelectItemProps {
     children?: React.ReactNode;
     value?: string;
-  };
+  }
 
   return {
     ...actual,

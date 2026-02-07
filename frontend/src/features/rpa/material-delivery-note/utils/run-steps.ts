@@ -31,9 +31,7 @@ export function getMaterialDeliveryRunStepIndex(eventType: string | null | undef
  * @param events - Run Eventのリスト（時系列順）
  * @returns 最新の進捗ステップのインデックス
  */
-export function getCurrentStepFromEvents(
-  events: Array<{ event_type: string }> | undefined,
-): number {
+export function getCurrentStepFromEvents(events: { event_type: string }[] | undefined): number {
   if (!events || events.length === 0) return -1;
 
   // 最新のイベントから順に検索し、定義済みステップに該当するものを見つける
