@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useExcelViewData } from "./useExcelViewData";
+import { useExcelViewData } from "../useExcelViewData";
 import { useUpdateAllocationSuggestionsBatch } from "@/features/allocations/hooks/api/useAllocationSuggestions";
 import { useDeleteLot } from "@/hooks/mutations";
 import { inventoryItemKeys } from "@/features/inventory/hooks";
@@ -401,7 +401,10 @@ export function useExcelView(productId: number, customerItemId?: number) {
             if (dateStr) setAddedDates((prev) => [...prev, dateStr]);
         },
         handleDeleteLot: (lotId: number) => deleteLotMutation.mutate(lotId),
-        handleArchiveLot: (lotId: number, lotNumber?: string) => archiveMutation.mutate({ id: lotId, lotNumber }),
+        handleArchiveLot: (lotId: number, lotNumber?: string) => archiveMutation.mutate({
+            id: lotId,
+            ...(lotNumber ? { lotNumber } : {})
+        }),
         handleSmartSplitLot,
         handleUpdateQuantity,
         handleReorderDestination,

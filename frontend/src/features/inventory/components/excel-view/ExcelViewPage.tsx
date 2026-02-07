@@ -109,8 +109,8 @@ export function ExcelViewPage() {
 
       <ExcelViewDialogs
         productId={Number(productId)}
-        supplierId={p.supplierId ?? undefined}
-        customerItem={p.customerItem}
+        {...(p.supplierId !== undefined ? { supplierId: p.supplierId } : {})}
+        {...(p.customerItem !== undefined ? { customerItem: p.customerItem } : {})}
         data={p.data}
         isLotIntakeDialogOpen={p.isLotIntakeDialogOpen}
         setIsLotIntakeDialogOpen={p.setIsLotIntakeDialogOpen}

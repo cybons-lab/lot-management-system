@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { AddDestinationDialog, type NewDestinationFormData } from "./AddDestinationDialog";
+import { AddDestinationDialog, type NewDestinationFormData } from "../subcomponents/AddDestinationDialog";
 import { LotQuantityUpdateDialog } from "@/features/inventory/components/LotQuantityUpdateDialog";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
 import { SmartLotSplitDialog } from "@/features/inventory/components/SmartLotSplitDialog";
@@ -80,7 +80,7 @@ export function ExcelViewDialogs({
                     open={isLotIntakeDialogOpen}
                     onOpenChange={setIsLotIntakeDialogOpen}
                     initialProductId={productId}
-                    initialSupplierId={supplierId}
+                    {...(supplierId ? { initialSupplierId: supplierId } : {})}
                 />
             )}
 
@@ -162,7 +162,7 @@ export function ExcelViewDialogs({
             {customerItem && (
                 <AddDestinationDialog
                     open={selectedLotIdForAddDest !== null}
-                    onOpenChange={(open) => !open && setSelectedLotIdForAddDest(null)}
+                    onOpenChange={(open: boolean) => !open && setSelectedLotIdForAddDest(null)}
                     onConfirm={onAddDestinationConfirm}
                     customerId={customerItem.customer_id}
                     customerName={customerItem.customer_name}
