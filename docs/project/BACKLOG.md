@@ -40,43 +40,6 @@
 - `docs/project/SUPPRESSION_RESOLUTION_ROUND3.md` - 警告抑制の解消
 - `docs/project/plans/strictness-robustness-plan.md` - 詳細計画
 
-### 1-B. 納入先マスタ `次区コード` 必須化の最終仕上げ（後方互換解消）
-
-**優先度:** 高  
-**作成:** 2026-02-06  
-**カテゴリ:** データ整合性・マスタ運用  
-**工数:** 0.5-1日
-
-**背景:**
-- API/画面では `次区コード` を新規・更新時に必須化した。
-- ただし既存データに空文字 `jiku_code` が残っており、一覧API互換のため一時的にレスポンス許容（nullable）へ調整した。
-
-**対応タスク:**
-1. 既存 `delivery_places` の空 `jiku_code` を棚卸し・件数確認
-2. 業務ルールに沿って空データを補正（手動 or 一括更新）
-3. 補正完了後にスキーマ厳格化
-   - DB: `jiku_code` の空文字禁止（CHECK制約等）
-   - API Response: `jiku_code` を non-null + min_length=1 に戻す
-4. 影響確認
-   - `/api/masters/delivery-places` が 500 にならないこと
-   - 納入先作成/編集画面、CSVインポートの必須バリデーション整合
-
-**完了条件:**
-- 既存データに空 `jiku_code` がない
-- 後方互換コード（nullable許容）を削除できる
-- 本番/検証環境で一覧・作成・更新が正常
-
-**調査メモ (2026-02-07):**
-- 2026-02-06 に導入された `admin/data-integrity` の NULLスキャンは `IS NULL` のみ検出対象。
-- 1-B の主課題である「空文字 `jiku_code`」はこの仕組みだけでは検出/修正できない。
-- 1-B を同時解決するには、`delivery_places.jiku_code = ''`（空白trim後含む）を別ルールで検出・補正する拡張が必要。
-
-**完了 (2026-02-07):**
-- DB: CHECK制約 `ck_delivery_places_jiku_code_not_blank` 追加、server_default を `A000` に変更
-- API: `DeliveryPlaceBase` / `DeliveryPlaceResponse` の `jiku_code` を `str | None` → `str` (non-null) に厳格化
-- テストデータ: `_generate_jiku_code()` で `[A-Z][0-9]{3}` 形式を自動生成
-- 全完了条件を満たした。
-
 ### 1-0. Phase 4-A: SmartReadデータの楽観的ロック導入
 
 **優先度:** 高（最優先タスク）
@@ -1130,32 +1093,6 @@ def get_product_name(product: Optional[HasProductName], default: str = "") -> st
 - [Testing Strategy](./TESTING_STRATEGY.md) - 詳細なテスト戦略とテストピラミッド
 - [Testing Quick Start Guide](./TESTING_QUICKSTART.md) - 今すぐ使えるテスト実行ガイド
 
-### 5-0. テスト用DBコンテナのネットワーク接続問題
-
-**優先度**: 高
-**作成**: 2026-02-06
-**カテゴリ**: テスト基盤・インフラ
-
-**現象:**
-`npm run be:test` で `backend` コンテナ内からテストを実行すると、テスト用DBホスト名 `db-postgres-test` が名前解決できず全テストが失敗する。
-
-```
-psycopg2.OperationalError: could not translate host name "db-postgres-test" to address: Name or service not known
-```
-
-**原因:**
-`backend` コンテナと `test-db` コンテナが同一Dockerネットワーク上にあるが、テスト設定が `db-postgres-test` というホスト名を参照している。`backend-test` コンテナからは接続できるが、`backend` コンテナからは解決できない。
-
-**対応:**
-1. `docker-compose.yml` でサービス名を `db`, `db-test` に簡略化・統一。
-2. `docker-compose.test.yml` を廃止し、メインの構成ファイルに統合。
-3. `scripts/setup_test_db.py` を導入し、クロスプラットフォーム対応。
-4. `backend` から `db-test` への接続を確認。
-
-✅ 完了: 2026-02-06
-
----
-
 ### 5-1. 統合テスト・E2Eテストの拡充
 
 **優先度**: High
@@ -1820,53 +1757,6 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 
 ## 10. Excelビュー機能 (材料ロット管理/個別)
 
-### 10-1. 収容数・保証期間フィールドの実装
-
-**優先度**: Low
-**状態**: 完了
-
-**内容**:
-- ヘッダーの「収容数」「保証期間」が常に `-` 表示
-- `Product` に `capacity` / `warranty_period_days` を追加し、APIレスポンスに含める
-  - 実装: `supplier_items` カラム追加 → `v_lot_receipt_stock` → Inventory API → Excel Viewヘッダー反映
-
-**関連ファイル**:
-- `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts:177-178`
-- `backend/app/presentation/schemas/inventory/inventory_schema.py`
-
----
-
-### 10-2. 先方品番（customerPartNo）の表示
-
-**優先度**: Medium
-**状態**: 完了
-
-**内容**:
-- 得意先情報の「先方品番」が常に `-`
-- `customer_items` を参照して表示できるようにする
-  - 実装: `customer_items` を `supplier_item_id` で取得し、得意先IDごとの先方品番をマッピング
-
-**関連ファイル**:
-- `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts`
-- `backend/app/presentation/api/v2/forecast/router.py`
-
----
-
-### 10-3. 発注NO.の表示
-
-**優先度**: Low
-**状態**: 完了
-
-**内容**:
-- ロット情報の「発注NO.」が常に `-`
-- 要件確認後に `purchase_order_number` 等のフィールドを検討
-  - 実装: `lot_receipts.order_no` を追加し、Excel Viewで表示/更新
-
-**関連ファイル**:
-- `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts`
-
----
-
 ### 10-4. 日付列の仕様整理（予測 vs 実績）
 
 **優先度**: High
@@ -1875,18 +1765,6 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 **内容**:
 - 予測（フォーキャスト）と実績（出荷確定）の扱い方針を決定
 - 日付が過ぎた列の扱い（自動確定/手動確定）の整理
-
----
-
-### 10-5. 同一ロット番号・入荷日別の行表示確認
-
-**優先度**: Medium
-**状態**: 完了
-
-**内容**:
-- 同一ロット番号でも入荷日違いで別行表示されることのUI確認
-  - 制約: 同一ロット番号・同一入荷日は不可（分割時は入荷日をずらす）
-  - 納入先は全ロットで同一行構成（グローバル表示）
 
 ---
 
@@ -1899,47 +1777,6 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 - ShipmentTable / DateGrid の縦線が揃わない
 - 境界線の重複を整理し、縦線の揃いを改善
   - 目視確認の結果、現状も解消せず。時間対効果を考慮しバックログに残す
-
----
-
-### 10-7. 納入先追加の反映遅延
-
-**優先度**: Medium
-**状態**: 完了
-
-**内容**:
-- 納入先追加後の再取得を強化し、反映遅延が残るか再確認
-
----
-
-### 10-8. コメント・手動出荷日の保存反映確認
-
-**優先度**: Medium
-**状態**: 完了
-
-**内容**:
-- 数量0でもコメント/手動出荷日が保存されるようにし、保存 → 再読み込みで反映されるか確認
-
----
-
-### 10-9. ロット重複時のエラーハンドリング
-
-**優先度**: Medium
-**状態**: 完了
-
-**内容**:
-- 既存ロット番号保存時のトースト/バリデーション表示改善
-
----
-
-### 10-10. 納入先行の並び替え機能
-
-**優先度**: Low
-**状態**: 完了
-
-**内容**:
-- ドラッグ&ドロップ並び替え + 保存（localStorage）
-
 
 ---
 
