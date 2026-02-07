@@ -257,18 +257,13 @@ export default [
       "src/features/allocations/components/lots/LotAllocationHeader.tsx",
       "src/features/allocations/components/lots/LotAllocationHeaderView.tsx",
       "src/features/allocations/components/lots/LotAllocationPanel.tsx",
-      "src/features/allocations/components/lots/LotListCard.tsx",
       "src/features/allocations/components/lots/AllocationRowContainer.tsx",
       "src/features/allocations/components/orders/OrderCard.tsx",
       "src/features/allocations/components/orders/AllocationOrderLineCard.tsx",
       "src/features/allocations/components/orders/OrderLinesPaneView.tsx",
       "src/features/allocations/components/orders/OrderLinesPane.tsx",
       "src/features/allocations/components/orders/OrdersPane.tsx",
-      "src/features/allocations/components/shared/LineBasedAllocationList.tsx",
       "src/features/allocations/components/shared/WarehouseAllocationModal.tsx",
-      "src/features/allocations/hooks/useLotAllocation/allocationFieldHelpers.ts",
-      "src/features/allocations/hooks/useLotAllocation/useLotAllocationComputed.ts",
-      "src/features/allocations/hooks/mutations/useAllocationMutation.ts",
       "src/features/allocations/hooks/state/useAutoSelection.ts",
 
       // Admin
@@ -283,7 +278,6 @@ export default [
 
       // Customers
       "src/features/customers/components/CustomerBulkImportDialog.tsx",
-      "src/features/customers/pages/CustomerDetailPage.tsx",
       "src/features/customers/pages/CustomersListPage.tsx",
       "src/features/customers/utils/customer-csv.ts",
 
@@ -297,13 +291,10 @@ export default [
       "src/features/inventory/api.ts",
       "src/features/inventory/pages/InventoryPage.tsx",
 
-      // Inbound Plans
       "src/features/inbound-plans/api.ts",
       "src/features/inbound-plans/components/InboundPlansList.tsx",
       "src/features/inbound-plans/components/ReceiveModal.tsx",
-      "src/features/inbound-plans/pages/InboundPlanDetailPage.tsx",
 
-      // Operation Logs
       "src/features/operation-logs/api.ts",
       "src/features/operation-logs/pages/OperationLogsPage.tsx",
 
@@ -317,20 +308,12 @@ export default [
       "src/features/orders/pages/OrdersListPage.tsx",
       "src/features/orders/pages/OrdersListPage/columns.tsx",
 
-      // Products
-      "src/features/products/components/ProductBulkImportDialog.tsx",
-      "src/features/products/components/ProductForm.tsx",
-      "src/features/products/pages/ProductDetailPage.tsx",
-      "src/features/products/pages/ProductsListPage.tsx",
-      "src/features/products/utils/product-csv.ts",
-
       // Roles
       "src/features/roles/components/RoleForm.tsx",
       "src/features/roles/pages/RolesListPage.tsx",
 
       // Suppliers
       "src/features/suppliers/components/SupplierBulkImportDialog.tsx",
-      "src/features/suppliers/pages/SupplierDetailPage.tsx",
       "src/features/suppliers/pages/SuppliersListPage.tsx",
       "src/features/suppliers/utils/supplier-csv.ts",
 
@@ -338,13 +321,10 @@ export default [
       "src/features/users/components/UserForm.tsx",
 
       // Warehouses
-      "src/features/warehouses/components/WarehouseBulkImportDialog.tsx",
       "src/features/warehouses/components/WarehouseForm.tsx",
-      "src/features/warehouses/pages/WarehouseDetailPage.tsx",
       "src/features/warehouses/pages/WarehousesListPage.tsx",
       "src/features/warehouses/utils/warehouse-csv.ts",
       // RPA
-      "src/features/rpa/pages/RPAPage.tsx",
       // Shared
       "src/shared/components/data/DataTable.tsx",
       "src/shared/components/data/TablePagination.tsx",

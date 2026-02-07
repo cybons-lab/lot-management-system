@@ -28,10 +28,11 @@
 - [x] `.pre-commit-config.yaml` - TypeScriptチェック追加、パス処理改善、make→npm統一
 - [x] `backend/pytest.ini` → `pyproject.toml` に統合
 - [x] `frontend/knip.json` - デッドコード検出設定追加
+- [x] CI/CDワークフローの最適化（Python 3.12統一、--all-extras対応、schema-sync修正）
+- [x] `frontend/eslint.config.js` - api.d.tsをESLint対象外に追加（CI/ローカル出力一致）
+- [x] ESLint Temporary overrides削減（116 → 55ファイル、2026-02-07達成）
 
 **残タスク:**
-- [ ] CI/CDワークフローの最適化
-- [ ] ESLint Temporary overrides削減（116 → 60ファイル以下、2026-Q1目標）
 - [ ] 後続タスク: BACKLOG 3-0 参照
 
 **関連タスク:**
