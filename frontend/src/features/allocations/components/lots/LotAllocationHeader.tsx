@@ -38,94 +38,71 @@ interface HeaderMetadata {
   isComplete: boolean;
 }
 
+const getOrderInfo = (order?: OrderWithLinesResponse) => ({
+  orderNumber: formatOrderCode(order) || "不明な受注",
+  lockedBy: order?.locked_by_user_name ?? order?.locked_by ?? null,
+  lockedAt: order?.locked_at ? formatDateTime(order.locked_at) : null,
+});
+
+const getProductInfo = (line: OrderLine, propName: string) => ({
+  productCode: line.product_code || "CODE",
+  productName: propName || line.product_name || "品名不明",
+  unitInfo: {
+    orderUnit: line.unit || line.product_external_unit || "",
+    inventoryUnit: line.product_internal_unit || line.unit || line.product_external_unit || "",
+  },
+});
+
 /**
  * 表示用のメタデータを取得する
  */
-function getHeaderMetadata(
-  order: OrderWithLinesResponse | undefined,
-  orderLine: OrderLine,
-  propProductName: string,
-  remainingQty: number,
-  isOverAllocated: boolean,
-): HeaderMetadata {
-  const orderNumber = formatOrderCode(order) || "不明な受注";
-  const productCode = orderLine.product_code || "CODE";
-  const productName = propProductName || orderLine.product_name || "品名不明";
-  const deliveryDate = formatDate(orderLine.delivery_date || orderLine.due_date, {
-    fallback: "未設定",
-  });
-  const orderQuantity = Number(orderLine.order_quantity ?? orderLine.quantity ?? 0);
-  const orderUnit = orderLine.unit || orderLine.product_external_unit || "";
-  const inventoryUnit = orderLine.product_internal_unit || orderUnit;
-  const lockedBy = order?.locked_by_user_name ?? order?.locked_by ?? null;
-  const lockedAt = order?.locked_at ? formatDateTime(order.locked_at) : null;
-  const isComplete = remainingQty === 0 && !isOverAllocated;
+function getHeaderMetadata(params: {
+  order: OrderWithLinesResponse | undefined;
+  orderLine: OrderLine;
+  propProductName: string;
+  remainingQty: number;
+  isOverAllocated: boolean;
+}): HeaderMetadata {
+  const { order, orderLine, propProductName, remainingQty, isOverAllocated } = params;
+  const oInfo = getOrderInfo(order);
+  const pInfo = getProductInfo(orderLine, propProductName);
 
   return {
-    orderNumber,
-    productCode,
-    productName,
-    deliveryDate,
-    orderQuantity,
-    orderUnit,
-    inventoryUnit,
-    lockedBy,
-    lockedAt,
-    isComplete,
+    ...oInfo,
+    productCode: pInfo.productCode,
+    productName: pInfo.productName,
+    deliveryDate: formatDate(orderLine.delivery_date || orderLine.due_date, { fallback: "未設定" }),
+    orderQuantity: Number(orderLine.order_quantity ?? orderLine.quantity ?? 0),
+    orderUnit: pInfo.unitInfo.orderUnit,
+    inventoryUnit: pInfo.unitInfo.inventoryUnit,
+    isComplete: remainingQty === 0 && !isOverAllocated,
   };
 }
 
-export function LotAllocationHeader({
-  order,
-  orderLine,
-  customerName,
-  productName: propProductName,
-  deliveryPlaceName,
-  requiredQty,
-  totalAllocated,
-  hardAllocated,
-  softAllocated,
-  remainingQty,
-  progressPercent,
-  isOverAllocated,
-  isLoading,
-  hasCandidates,
-  allocationCount,
-  hasExpiryWarning,
-  hasExpiredError,
-  lineStatus,
-}: LotAllocationHeaderProps) {
-  const meta = getHeaderMetadata(order, orderLine, propProductName, remainingQty, isOverAllocated);
+export function LotAllocationHeader(props: LotAllocationHeaderProps) {
+  const meta = getHeaderMetadata({
+    order: props.order,
+    orderLine: props.orderLine,
+    propProductName: props.productName,
+    remainingQty: props.remainingQty,
+    isOverAllocated: props.isOverAllocated,
+  });
 
   return (
     <LotAllocationHeaderView
+      {...props}
       orderNumber={meta.orderNumber}
-      customerName={customerName}
-      deliveryPlaceName={deliveryPlaceName}
-      deliveryDate={meta.deliveryDate}
       productCode={meta.productCode}
       productName={meta.productName}
+      deliveryDate={meta.deliveryDate}
       orderUnit={meta.orderUnit}
       inventoryUnit={meta.inventoryUnit}
       orderQuantity={meta.orderQuantity}
-      requiredQty={requiredQty}
-      totalAllocated={totalAllocated}
-      hardAllocated={hardAllocated}
-      softAllocated={softAllocated}
-      remainingQty={remainingQty}
-      progressPercent={progressPercent}
-      isOverAllocated={isOverAllocated}
       isComplete={meta.isComplete}
       justSaved={false}
-      isLoading={isLoading}
-      hasCandidates={hasCandidates ?? false}
-      supplierName={orderLine.supplier_name || undefined}
+      supplierName={props.orderLine.supplier_name || undefined}
       lockedBy={meta.lockedBy || undefined}
       lockedAt={meta.lockedAt || undefined}
-      allocationCount={allocationCount}
-      hasExpiryWarning={hasExpiryWarning}
-      hasExpiredError={hasExpiredError}
-      lineStatus={lineStatus}
     />
   );
 }

@@ -253,8 +253,6 @@ export default [
       "src/features/adjustments/components/AdjustmentForm.tsx",
       "src/features/adjustments/pages/AdjustmentsListPage.tsx",
 
-      "src/features/allocations/api.ts",
-      "src/features/allocations/components/lots/LotAllocationHeader.tsx",
       "src/features/allocations/components/lots/LotAllocationHeaderView.tsx",
       "src/features/allocations/components/lots/LotAllocationPanel.tsx",
       "src/features/allocations/components/lots/AllocationRowContainer.tsx",
@@ -264,7 +262,6 @@ export default [
       "src/features/allocations/components/orders/OrderLinesPane.tsx",
       "src/features/allocations/components/orders/OrdersPane.tsx",
       "src/features/allocations/components/shared/WarehouseAllocationModal.tsx",
-      "src/features/allocations/hooks/state/useAutoSelection.ts",
 
       // Admin
       "src/features/admin/pages/SeedDataPage.tsx",
@@ -278,7 +275,6 @@ export default [
 
       // Customers
       "src/features/customers/components/CustomerBulkImportDialog.tsx",
-      "src/features/customers/pages/CustomersListPage.tsx",
       "src/features/customers/utils/customer-csv.ts",
 
       // Forecasts
@@ -288,7 +284,6 @@ export default [
       "src/features/forecasts/pages/ForecastListPage.tsx",
 
       // Inventory
-      "src/features/inventory/api.ts",
       "src/features/inventory/pages/InventoryPage.tsx",
 
       "src/features/inbound-plans/api.ts",

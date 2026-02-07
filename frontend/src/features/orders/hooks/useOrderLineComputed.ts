@@ -20,6 +20,42 @@ export type OrderLineSource = Partial<OrderLine> & {
 export type OrderSource = Partial<OrderResponse>;
 
 /**
+ * 配送リードタイムを計算する
+ */
+function calculateShippingLeadTime(
+  dueDate: string | null,
+  shipDate: string | null,
+  plannedShipDate: string | null,
+): string | undefined {
+  const shipBase = shipDate ?? plannedShipDate;
+  if (dueDate && shipBase && isValidDate(dueDate) && isValidDate(shipBase)) {
+    const days = diffDays(dueDate, shipBase);
+    return days >= 0 ? `${days}日` : `遅延${Math.abs(days)}日`;
+  }
+  return undefined;
+}
+
+/**
+ * 納品先情報を集計する
+ */
+function aggregateDeliveryPlaces(
+  line: OrderLineSource | null | undefined,
+  allocatedLots: any[], // coerceAllocatedLots の戻り値
+): string[] {
+  const deliveryPlacesFromLine = Array.isArray(line?.delivery_places)
+    ? (line?.delivery_places ?? []).filter((dp): dp is string => Boolean(dp))
+    : [];
+
+  const deliveryPlacesFromAllocations = allocatedLots
+    .map((allocation) =>
+      formatCodeAndName(allocation.delivery_place_code ?? "", allocation.delivery_place_name ?? ""),
+    )
+    .filter((dp): dp is string => Boolean(dp));
+
+  return Array.from(new Set([...deliveryPlacesFromLine, ...deliveryPlacesFromAllocations]));
+}
+
+/**
  * 受注明細の計算済み情報を取得
  */
 export function useOrderLineComputed(
@@ -52,30 +88,8 @@ export function useOrderLineComputed(
     const remainingQty = Math.max(0, totalQty - allocatedTotal);
     const progressPct = totalQty > 0 ? Math.round((allocatedTotal / totalQty) * 100) : 0;
 
-    let shippingLeadTime: string | undefined;
-    const shipBase = shipDate ?? plannedShipDate;
-    if (dueDate && shipBase && isValidDate(dueDate) && isValidDate(shipBase)) {
-      const days = diffDays(dueDate, shipBase);
-      shippingLeadTime = days >= 0 ? `${days}日` : `遅延${Math.abs(days)}日`;
-    }
-
-    // 納品先の集計（delivery_place_code/name）
-    const deliveryPlacesFromLine = Array.isArray(line?.delivery_places)
-      ? (line?.delivery_places ?? []).filter((deliveryPlace): deliveryPlace is string =>
-          Boolean(deliveryPlace),
-        )
-      : [];
-    const deliveryPlacesFromAllocations = allocatedLots
-      .map((allocation) =>
-        formatCodeAndName(
-          allocation.delivery_place_code ?? "",
-          allocation.delivery_place_name ?? "",
-        ),
-      )
-      .filter((deliveryPlace): deliveryPlace is string => Boolean(deliveryPlace));
-    const deliveryPlaces = Array.from(
-      new Set([...deliveryPlacesFromLine, ...deliveryPlacesFromAllocations]),
-    );
+    const shippingLeadTime = calculateShippingLeadTime(dueDate, shipDate, plannedShipDate);
+    const deliveryPlaces = aggregateDeliveryPlaces(line, allocatedLots);
 
     return {
       ids: { lineId, orderId },
@@ -98,7 +112,7 @@ export function useOrderLineComputed(
       customerId,
       customerCode,
       customerName,
-      deliveryPlaces, // warehouses → deliveryPlaces に変更
+      deliveryPlaces,
       shippingLeadTime,
     } satisfies OrderLineComputed;
   }, [line, order]);

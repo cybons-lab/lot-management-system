@@ -1,3 +1,5 @@
+import type { OrdersListParams, OrderGetResponse, WarehouseAllocationItem } from "./types";
+
 import { http } from "@/shared/api/http-client";
 import type { OrderLine } from "@/shared/types/aliases";
 import type {
@@ -6,12 +8,8 @@ import type {
   AllocationCommitResponse,
   ManualAllocationSavePayload,
 } from "@/shared/types/schema";
-import type { operations } from "@/types/api";
 
-// api.d.ts から型を抽出
-export type OrdersListParams = operations["list_orders_api_orders_get"]["parameters"]["query"];
-type OrderGetResponse =
-  operations["get_order_api_orders__order_id__get"]["responses"][200]["content"]["application/json"];
+export * from "./types";
 
 /**
  * 受注一覧取得
@@ -117,14 +115,6 @@ export const cancelLotAllocations = (
     `orders/${orderLineId}/allocations/cancel`,
     request,
   );
-
-export interface WarehouseAllocationItem {
-  delivery_place_id: number;
-  delivery_place_code: string;
-  warehouse_name?: string;
-  lot_id: number;
-  quantity: number;
-}
 
 /**
  * 倉庫別引当保存
