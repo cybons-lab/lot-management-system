@@ -17,7 +17,7 @@ interface DataTableRowProps<T> {
 interface DataTableCellProps<T> {
   cell: Cell<T, unknown>;
   row: Row<T>;
-  dense?: boolean;
+  dense?: boolean | undefined;
 }
 
 function getCellClassName(
@@ -33,7 +33,7 @@ function getCellClassName(
     meta?.align === "center" && "text-center",
     meta?.align === "right" && "text-right",
     isSticky &&
-      "sticky z-10 bg-[hsl(var(--surface-1))] group-hover:bg-slate-100/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]",
+    "sticky z-10 bg-[hsl(var(--surface-1))] group-hover:bg-slate-100/60 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]",
     isSticky && isSelected && "bg-blue-100/90 hover:bg-blue-100/90",
     meta?.className,
   );
@@ -72,6 +72,7 @@ export function DataTableRow<T>({
     <React.Fragment>
       <tr
         ref={measureElement}
+        data-index={row.index}
         className={cn(
           "relative transition-all duration-150 border-b border-slate-300 group",
           row.index % 2 === 0
@@ -81,7 +82,7 @@ export function DataTableRow<T>({
               : "bg-[hsl(var(--surface-2))]",
           (onRowClick || renderHoverActions) && "hover:bg-slate-100/60",
           onRowClick &&
-            "cursor-pointer focus-visible:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500",
+          "cursor-pointer focus-visible:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500",
           row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/70",
           customClassName,
         )}

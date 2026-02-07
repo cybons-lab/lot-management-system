@@ -10,7 +10,7 @@ interface SettingSectionProps {
     iconColor?: string;
     settings: SystemSetting[];
     isSaving: string | null;
-    onUpdate: (key: string, value: string) => void;
+    onUpdate: (key: string, value: string) => Promise<void>;
     children?: ReactNode;
 }
 
@@ -34,7 +34,7 @@ export function SettingSection({
                     <SystemSettingItem
                         key={setting.config_key}
                         setting={setting}
-                        config={SETTING_CONFIGS[setting.config_key]}
+                        config={SETTING_CONFIGS[setting.config_key]!}
                         isSaving={isSaving === setting.config_key}
                         onUpdate={onUpdate}
                     />

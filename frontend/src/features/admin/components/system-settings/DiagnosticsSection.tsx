@@ -1,7 +1,7 @@
 import { Database, AlertCircle, CheckCircle2, AlertTriangle, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/base/button";
 import { useNavigate } from "react-router-dom";
-import type { SchemaCheckResult, SchemaEntityStatus } from "../types";
+import type { SchemaCheckResult, SchemaEntityStatus } from "../../types";
 
 interface DiagnosticsSectionProps {
     viewCheckStatus: "idle" | "checking" | "ok" | "error";
@@ -208,12 +208,12 @@ export function DiagnosticsSection({
                                     <div>
                                         <h5 className="font-medium mb-2 text-sm">検出された問題:</h5>
                                         <div className="space-y-2">
-                                            {schemaCheckResult.issues.map((issue, idx) => (
+                                            {schemaCheckResult.issues.map((issue: SchemaCheckIssue, idx: number) => (
                                                 <div
                                                     key={idx}
                                                     className={`p-3 rounded text-sm ${issue.severity === "error"
-                                                            ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
-                                                            : "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300"
+                                                        ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
+                                                        : "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300"
                                                         }`}
                                                 >
                                                     <div className="flex items-start gap-2">
@@ -242,8 +242,8 @@ export function DiagnosticsSection({
                                                 <div
                                                     key={table}
                                                     className={`p-2 rounded text-xs font-mono ${info.status === "ok"
-                                                            ? "bg-green-50 dark:bg-green-900/20"
-                                                            : "bg-red-50 dark:bg-red-900/20"
+                                                        ? "bg-green-50 dark:bg-green-900/20"
+                                                        : "bg-red-50 dark:bg-red-900/20"
                                                         }`}
                                                 >
                                                     <div className="flex items-center gap-2">
@@ -269,8 +269,8 @@ export function DiagnosticsSection({
                                                 <div
                                                     key={view}
                                                     className={`p-2 rounded text-xs font-mono ${info.status === "ok"
-                                                            ? "bg-green-50 dark:bg-green-900/20"
-                                                            : "bg-red-50 dark:bg-red-900/20"
+                                                        ? "bg-green-50 dark:bg-green-900/20"
+                                                        : "bg-red-50 dark:bg-red-900/20"
                                                         }`}
                                                 >
                                                     <div className="flex items-center gap-2">
