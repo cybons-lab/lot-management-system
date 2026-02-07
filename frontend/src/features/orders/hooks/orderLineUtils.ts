@@ -1,10 +1,28 @@
 /* eslint-disable complexity */
-import type { OrderLineSource, OrderSource } from "./useOrderLineComputed";
-
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
 import { formatCodeAndName } from "@/shared/libs/utils";
-import type { AllocatedLot, OrderLineComputed } from "@/shared/types/aliases";
+import type {
+  AllocatedLot,
+  OrderLine,
+  OrderLineComputed,
+  OrderResponse,
+} from "@/shared/types/aliases";
 import { diffDays, isValidDate } from "@/shared/utils/date";
+
+/** 注文明細の入力ソース型 */
+export type OrderLineSource = Partial<OrderLine> & {
+  order_id?: number;
+  product_name?: string | null;
+  customer_code?: string | null;
+  customer_name?: string | null;
+  order_date?: string | null;
+  ship_date?: string | null;
+  planned_ship_date?: string | null;
+  delivery_places?: string[];
+};
+
+/** 注文ヘッダの入力ソース型 */
+export type OrderSource = Partial<OrderResponse>;
 
 export const resolveIdInfo = (line: OrderLineSource | null | undefined, order?: OrderSource) => {
   const lineId = typeof line?.id === "number" ? line.id : undefined;

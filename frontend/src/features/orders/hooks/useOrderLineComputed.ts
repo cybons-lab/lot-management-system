@@ -1,21 +1,11 @@
 import React from "react";
 
+import type { OrderLineSource, OrderSource } from "./orderLineUtils";
 import { buildOrderLineComputed } from "./orderLineUtils";
 
-import type { OrderLine, OrderLineComputed, OrderResponse } from "@/shared/types/aliases";
+import type { OrderLineComputed } from "@/shared/types/aliases";
 
-export type OrderLineSource = Partial<OrderLine> & {
-  order_id?: number;
-  product_name?: string | null;
-  customer_code?: string | null;
-  customer_name?: string | null;
-  order_date?: string | null;
-  ship_date?: string | null;
-  planned_ship_date?: string | null;
-  delivery_places?: string[];
-};
-
-export type OrderSource = Partial<OrderResponse>;
+export type { OrderLineSource, OrderSource } from "./orderLineUtils";
 
 export function useOrderLineComputed(
   line: OrderLineSource | null | undefined,

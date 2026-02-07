@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import type { InboundPlansListParams } from "../api";
 import type { InboundPlan, InboundPlansFilters } from "../types";
 
-import { useDeleteInboundPlan, useInboundPlans, useSyncFromSAP } from "./index";
+// NOTE: index.ts からではなく直接インポート（循環依存回避）
+import { useDeleteInboundPlan, useInboundPlans, useSyncFromSAP } from "./useInboundPlansHooks";
 
 import { ROUTES } from "@/constants/routes";
 
