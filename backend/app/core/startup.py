@@ -1,10 +1,10 @@
 import logging
 
+from alembic.config import Config
+from alembic.runtime import migration
 from sqlalchemy.orm import Session
 
 from alembic import script
-from alembic.config import Config
-from alembic.runtime import migration
 from app.application.services.admin.data_integrity_service import DataIntegrityService
 from app.application.services.notification_service import NotificationService
 from app.core.database import SessionLocal, engine
