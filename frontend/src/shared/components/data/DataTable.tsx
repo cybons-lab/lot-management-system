@@ -59,8 +59,8 @@ export function DataTable<T>({
     ...props,
     data,
     columns,
-    ...(dense !== undefined && { dense }),
-    ...(enableVirtualization !== undefined && { enableVirtualization }),
+    ...(dense != null ? { dense } : {}),
+    ...(enableVirtualization != null ? { enableVirtualization } : {}),
     parentRef,
   });
   const rows = table.getRowModel().rows;
@@ -69,8 +69,8 @@ export function DataTable<T>({
     return (
       <DataTableLoading
         columnCount={columns.length + (props.selectable ? 1 : 0)}
-        {...(dense !== undefined && { dense })}
-        {...(className !== undefined && { className })}
+        {...(dense != null ? { dense } : {})}
+        {...(className != null ? { className } : {})}
       />
     );
   if (data.length === 0) return <DataTableEmpty message={emptyMessage} />;
@@ -103,8 +103,8 @@ export function DataTable<T>({
         <table className="responsive-table w-full" style={{ tableLayout: "fixed" }}>
           <DataTableHeader
             table={table}
-            {...(dense !== undefined && { dense })}
-            {...(enableVirtualization !== undefined && { enableVirtualization })}
+            {...(dense != null ? { dense } : {})}
+            {...(enableVirtualization != null ? { enableVirtualization } : {})}
           />
           <tbody>
             {paddingTop > 0 && (
@@ -121,9 +121,9 @@ export function DataTable<T>({
                 <DataTableRow
                   key={row.id}
                   row={row}
-                  {...(dense !== undefined && { dense })}
-                  {...(props.striped !== undefined && { striped: props.striped })}
-                  {...(props.onRowClick !== undefined && { onRowClick: props.onRowClick })}
+                  {...(dense != null ? { dense } : {})}
+                  {...(props.striped != null ? { striped: props.striped } : {})}
+                  {...(props.onRowClick != null ? { onRowClick: props.onRowClick } : {})}
                   {...(props.renderHoverActions !== undefined && {
                     renderHoverActions: props.renderHoverActions,
                   })}
@@ -133,7 +133,9 @@ export function DataTable<T>({
                   {...(props.getRowClassName !== undefined && {
                     getRowClassName: props.getRowClassName,
                   })}
-                  {...(enableVirtualization && { measureElement: rowVirtualizer.measureElement })}
+                  {...(enableVirtualization
+                    ? { measureElement: rowVirtualizer.measureElement }
+                    : {})}
                 />
               );
             })}

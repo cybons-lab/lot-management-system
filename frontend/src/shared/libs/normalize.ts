@@ -287,18 +287,24 @@ export function normalizeLot(
     expiry_date: S(lot.expiry_date),
     current_quantity: S(lot.current_quantity, "0"),
     allocated_quantity: S(lot.allocated_quantity, "0"),
-    ...((lot as Record<string, unknown>).reserved_quantity_active != null && {
-      reserved_quantity_active: S(
-        (lot as Record<string, unknown>).reserved_quantity_active as string,
-      ),
-    }),
-    ...(lot.locked_quantity !== undefined && { locked_quantity: lot.locked_quantity }),
-    ...((lot as Record<string, unknown>).remaining_quantity != null && {
-      remaining_quantity: S((lot as Record<string, unknown>).remaining_quantity as string),
-    }),
-    ...((lot as Record<string, unknown>).available_quantity != null && {
-      available_quantity: S((lot as Record<string, unknown>).available_quantity as string),
-    }),
+    ...((lot as Record<string, unknown>).reserved_quantity_active != null
+      ? {
+          reserved_quantity_active: S(
+            (lot as Record<string, unknown>).reserved_quantity_active as string,
+          ),
+        }
+      : {}),
+    ...(lot.locked_quantity != null ? { locked_quantity: lot.locked_quantity } : {}),
+    ...((lot as Record<string, unknown>).remaining_quantity != null
+      ? {
+          remaining_quantity: S((lot as Record<string, unknown>).remaining_quantity as string),
+        }
+      : {}),
+    ...((lot as Record<string, unknown>).available_quantity != null
+      ? {
+          available_quantity: S((lot as Record<string, unknown>).available_quantity as string),
+        }
+      : {}),
     unit: S(lot.unit, "EA"),
     status:
       (lot.status as "active" | "depleted" | "expired" | "quarantine" | "locked" | "archived") ??
@@ -332,16 +338,20 @@ export function normalizeLot(
       ((lot as Record<string, unknown>).delivery_place_id as number | null) ?? null,
     delivery_place_code:
       ((lot as Record<string, unknown>).delivery_place_code as string | null) ?? null,
-    ...(lot.product_name !== undefined && { product_name: lot.product_name }),
-    ...(lot.product_code !== undefined && { product_code: lot.product_code }),
-    ...(lot.supplier_name !== undefined && { supplier_name: lot.supplier_name }),
-    ...(lot.supplier_code !== undefined && { supplier_code: lot.supplier_code }),
-    ...((lot as Record<string, unknown>).warehouse_name !== undefined && {
-      warehouse_name: (lot as Record<string, unknown>).warehouse_name as string | null,
-    }),
-    ...((lot as Record<string, unknown>).is_assigned_supplier != null && {
-      is_assigned_supplier: (lot as Record<string, unknown>).is_assigned_supplier as boolean,
-    }),
+    ...(lot.product_name != null ? { product_name: lot.product_name } : {}),
+    ...(lot.product_code != null ? { product_code: lot.product_code } : {}),
+    ...(lot.supplier_name != null ? { supplier_name: lot.supplier_name } : {}),
+    ...(lot.supplier_code != null ? { supplier_code: lot.supplier_code } : {}),
+    ...((lot as Record<string, unknown>).warehouse_name != null
+      ? {
+          warehouse_name: (lot as Record<string, unknown>).warehouse_name as string | null,
+        }
+      : {}),
+    ...((lot as Record<string, unknown>).is_assigned_supplier != null
+      ? {
+          is_assigned_supplier: (lot as Record<string, unknown>).is_assigned_supplier as boolean,
+        }
+      : {}),
   };
 }
 
@@ -360,11 +370,13 @@ export function normalizeProduct(product: ProductResponse): ProductUI {
     created_at: S(product.created_at),
     updated_at: S(product.updated_at),
     // Legacy fields (for backward compatibility)
-    ...(product.maker_part_no !== undefined && { maker_part_code: product.maker_part_no }),
-    ...(product.internal_unit != null && { base_unit: product.internal_unit }),
-    ...(product.consumption_limit_days != null && {
-      consumption_limit_days: product.consumption_limit_days,
-    }),
+    ...(product.maker_part_no != null ? { maker_part_code: product.maker_part_no } : {}),
+    ...(product.internal_unit != null ? { base_unit: product.internal_unit } : {}),
+    ...(product.consumption_limit_days != null
+      ? {
+          consumption_limit_days: product.consumption_limit_days,
+        }
+      : {}),
   };
 }
 

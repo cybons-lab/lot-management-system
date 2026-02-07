@@ -374,9 +374,9 @@ export function useExcelView(productId: number, customerItemId?: number) {
             is_default: false,
             jiku_code: formData.jiku_code,
           });
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- HTTPErrorのresponse.statusアクセスに必要
-        } catch (e: any) {
-          if (e?.response?.status !== 409) {
+        } catch (e: unknown) {
+          const status = (e as { response?: { status?: number } })?.response?.status;
+          if (status !== 409) {
             toast.warning("マスタ同期に失敗しましたが、引当レコードは作成されます");
           }
         }

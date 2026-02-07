@@ -22,10 +22,29 @@ interface MasterDialogContainerProps {
   detailDialog?: ReactNode;
 }
 
+// Helper to safely extract name from unknown item
+const getItemName = (item: unknown): string => {
+  if (!item || typeof item !== "object") return "";
+  const r = item as Record<string, unknown>;
+  return (r.name as string) || (r.supplier_name as string) || (r.warehouse_name as string) || "";
+};
+
+// Helper to safely extract code from unknown item
+const getItemCode = (item: unknown): string => {
+  if (!item || typeof item !== "object") return "";
+  const r = item as Record<string, unknown>;
+  return (
+    (r.code as string) ||
+    (r.supplier_code as string) ||
+    (r.warehouse_code as string) ||
+    String(r.id || "")
+  );
+};
+
 /**
  * マスタ画面の標準的なダイアログ群を集約して管理するコンポーネント
  */
-// eslint-disable-next-line max-lines-per-function, complexity -- マスタ画面のダイアログ群を集約管理するため
+// eslint-disable-next-line max-lines-per-function -- マスタ画面のダイアログ群を集約管理するため
 export function MasterDialogContainer({
   p,
   entityName,
@@ -74,18 +93,12 @@ export function MasterDialogContainer({
         group={importGroup}
       />
 
-      {/* eslint-disable @typescript-eslint/no-explicit-any -- 汎用マスタダイアログのため、各マスタの型に依存しない動的プロパティアクセスに any を使用 */}
-
       {/* ソフト削除（無効化）ダイアログ */}
       <SoftDeleteDialog
         open={dlgs.isSoftDeleteOpen}
         onOpenChange={(o) => !o && handleClose()}
         title={`${entityName}を無効化しますか？`}
-        description={
-          dlgs.deletingItem
-            ? `${(dlgs.deletingItem as any).name || (dlgs.deletingItem as any).supplier_name || (dlgs.deletingItem as any).warehouse_name} を無効化します。`
-            : ""
-        }
+        description={dlgs.deletingItem ? `${getItemName(dlgs.deletingItem)} を無効化します。` : ""}
         onConfirm={p.handleSoftDelete}
         isPending={p.softDel?.isPending}
         {...(dlgs.switchToPermanentDelete
@@ -101,19 +114,9 @@ export function MasterDialogContainer({
         isPending={p.permDel?.isPending}
         title={`${entityName}を完全に削除しますか？`}
         description={
-          dlgs.deletingItem
-            ? `${(dlgs.deletingItem as any).name || (dlgs.deletingItem as any).supplier_name || (dlgs.deletingItem as any).warehouse_name} を完全に削除します。`
-            : ""
+          dlgs.deletingItem ? `${getItemName(dlgs.deletingItem)} を完全に削除します。` : ""
         }
-        confirmationPhrase={
-          dlgs.deletingItem
-            ? String(
-                (dlgs.deletingItem as any).code ||
-                  (dlgs.deletingItem as any).supplier_code ||
-                  (dlgs.deletingItem as any).warehouse_code,
-              )
-            : "delete"
-        }
+        confirmationPhrase={dlgs.deletingItem ? getItemCode(dlgs.deletingItem) : "delete"}
       />
 
       {/* 復元ダイアログ */}
@@ -124,13 +127,9 @@ export function MasterDialogContainer({
         isPending={p.rest?.isPending}
         title={`${entityName}を復元しますか？`}
         description={
-          dlgs.restoringItem
-            ? `${(dlgs.restoringItem as any).name || (dlgs.restoringItem as any).supplier_name || (dlgs.restoringItem as any).warehouse_name} を有効状態に戻します。`
-            : ""
+          dlgs.restoringItem ? `${getItemName(dlgs.restoringItem)} を有効状態に戻します。` : ""
         }
       />
-
-      {/* eslint-enable @typescript-eslint/no-explicit-any */}
 
       {/* 一括操作ダイアログ */}
       {bulkDialog}
