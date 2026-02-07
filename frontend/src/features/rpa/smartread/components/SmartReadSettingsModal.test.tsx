@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- テストファイルのモック定義で any を許容 */
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -52,7 +53,10 @@ vi.mock("@/components/ui", async () => {
         <div data-testid="select-root">
           {React.Children.map(children, (child) => {
             if (React.isValidElement<SelectTriggerProps>(child)) {
-              return React.cloneElement(child, { onValueChange, value });
+              return React.cloneElement(child, {
+                onValueChange,
+                value,
+              } as any);
             }
             return child;
           })}
@@ -157,7 +161,9 @@ describe("SmartReadSettingsModal", () => {
 
     // Second button is Delete
     const deleteButton = row.querySelectorAll("button")[1];
-    fireEvent.click(deleteButton);
+    if (deleteButton) {
+      fireEvent.click(deleteButton);
+    }
 
     // Should open alert dialog
     expect(screen.getByText("設定を削除しますか？")).toBeInTheDocument();

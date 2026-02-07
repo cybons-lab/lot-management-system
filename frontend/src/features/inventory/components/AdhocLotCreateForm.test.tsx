@@ -141,7 +141,7 @@ describe("AdhocLotCreateForm", () => {
     const selects = screen.getAllByTestId("mock-select");
     const warehouseSelect = selects[1];
 
-    fireEvent.change(warehouseSelect, { target: { value: "1" } });
+    fireEvent.change(warehouseSelect!, { target: { value: "1" } });
 
     // 4. Fill Quantity
     await user.type(screen.getByLabelText(/数量/), "100");

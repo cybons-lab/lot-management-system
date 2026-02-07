@@ -233,7 +233,7 @@ export function OcrResultsListPage() {
           )}
           {/* データ件数表示 */}
           <StatsDisplay
-            dataTotal={state.data?.total}
+            {...(state.data?.total !== undefined ? { dataTotal: state.data.total } : {})}
             errorCount={state.errorCount}
             selectedCount={state.selectedIds.length}
           />

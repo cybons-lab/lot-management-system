@@ -154,21 +154,23 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
   const handleSubmit = async (data: ConfigFormData) => {
     if (editingConfig) {
       // APIキーが空の場合は送信データから除外（既存のキーを維持）
-      const updateData = { ...data };
-      if (!updateData.api_key) {
-        delete updateData.api_key;
-      }
-
       await updateMutation.mutateAsync({
         configId: editingConfig.id,
         data: {
-          ...updateData,
-          template_ids: data.template_ids || null,
-          aggregation_type: data.aggregation_type || null,
-          watch_dir: data.watch_dir || null,
-          export_dir: data.export_dir || null,
-          input_exts: data.input_exts || null,
-          description: data.description || null,
+          name: data.name,
+          endpoint: data.endpoint,
+          export_type: data.export_type,
+          is_active: data.is_active,
+          is_default: data.is_default,
+          ...(data.api_key ? { api_key: data.api_key } : {}),
+          ...(data.template_ids ? { template_ids: data.template_ids } : { template_ids: null }),
+          ...(data.aggregation_type
+            ? { aggregation_type: data.aggregation_type }
+            : { aggregation_type: null }),
+          ...(data.watch_dir ? { watch_dir: data.watch_dir } : { watch_dir: null }),
+          ...(data.export_dir ? { export_dir: data.export_dir } : { export_dir: null }),
+          ...(data.input_exts ? { input_exts: data.input_exts } : { input_exts: null }),
+          ...(data.description ? { description: data.description } : { description: null }),
         },
       });
     } else {

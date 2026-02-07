@@ -22,6 +22,7 @@ interface DiagnosticsSectionProps {
   onSchemaCheck: () => void;
 }
 
+// eslint-disable-next-line max-lines-per-function, complexity -- 診断セクションの関連ロジックを1箇所で管理するため
 export function DiagnosticsSection({
   viewCheckStatus,
   isFixing,

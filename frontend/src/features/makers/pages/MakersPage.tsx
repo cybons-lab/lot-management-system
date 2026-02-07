@@ -21,7 +21,7 @@ const makersPageHeader = {
  */
 export default function MakersPage() {
   const model = useMakersPageModel();
-  const { paginated, sorted } = model.processData(model.makers);
+  const { paginated } = model.processData(model.makers);
 
   const columns = useMemo(
     () =>

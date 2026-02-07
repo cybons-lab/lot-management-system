@@ -2,7 +2,6 @@ import { Route, Outlet } from "react-router-dom";
 
 import { FeatureGuard } from "@/components/auth/FeatureGuard";
 import { ROUTES } from "@/constants/routes";
-
 // Pages
 import { MonthlyReportPage } from "@/features/reports/components/MonthlyReportPage";
 

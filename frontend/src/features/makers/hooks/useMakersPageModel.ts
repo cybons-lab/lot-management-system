@@ -9,6 +9,7 @@ import { useMasterListPage } from "@/hooks/ui/useMasterListPage";
  * メーカーマスタ一覧ページ用のモデルフック
  * useMasterListPage を利用して共通ロジックを標準化
  */
+// eslint-disable-next-line max-lines-per-function -- メーカーマスタ一覧ページの状態管理を1箇所で管理するため
 export function useMakersPageModel() {
   const master = useMasterListPage<Maker>({
     featureName: "Makers",

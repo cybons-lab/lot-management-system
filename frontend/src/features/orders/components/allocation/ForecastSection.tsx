@@ -17,8 +17,8 @@ export function ForecastSection({ productGroupId, customerId, fullWidth = false 
     queryKey: ["forecast", productGroupId, customerId],
     queryFn: () =>
       getForecasts({
-        supplier_item_id: productGroupId,
-        customer_id: customerId,
+        ...(productGroupId ? { supplier_item_id: productGroupId } : {}),
+        ...(customerId ? { customer_id: customerId } : {}),
       }),
     enabled: isOpen && productGroupId != null && customerId != null,
     staleTime: 1000 * 60,

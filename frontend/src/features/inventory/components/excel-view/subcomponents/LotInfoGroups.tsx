@@ -36,10 +36,10 @@ export function LotInfoGroups({
       <LabelColumn />
       <ValueColumn
         lotInfo={lotInfo}
-        isEditing={isEditing}
+        {...(isEditing !== undefined ? { isEditing } : {})}
         onChange={handleChange}
-        warehouseName={warehouseName}
-        warehouseCode={warehouseCode}
+        {...(warehouseName ? { warehouseName } : {})}
+        {...(warehouseCode ? { warehouseCode } : {})}
       />
     </div>
   );

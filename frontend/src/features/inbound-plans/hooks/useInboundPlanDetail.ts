@@ -77,7 +77,10 @@ export function useInboundPlanDetail() {
     }
   };
 
-  const handleUpdate = async (data: { planned_arrival_date: string; notes?: string }) => {
+  const handleUpdate = async (data: {
+    planned_arrival_date: string;
+    notes?: string | undefined;
+  }) => {
     try {
       await updateMutation.mutateAsync({
         planned_arrival_date: data.planned_arrival_date,

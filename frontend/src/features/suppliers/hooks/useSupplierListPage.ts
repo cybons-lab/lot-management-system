@@ -10,6 +10,7 @@ import { useMasterListPage } from "@/hooks/ui/useMasterListPage";
  * 仕入先マスタ一覧ページ用のカスタムフック
  * useMasterListPage を利用して共通ロジックを簡素化
  */
+// eslint-disable-next-line max-lines-per-function -- 仕入先マスタ一覧ページの状態管理を1箇所で管理するため
 export function useSupplierListPage() {
   const master = useMasterListPage<Supplier>({
     featureName: "Suppliers",

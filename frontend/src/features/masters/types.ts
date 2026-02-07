@@ -127,6 +127,7 @@ export type TemplateGroup =
   | "order"
   | "delivery_place"
   | "user"
+  | "warehouse"
   | "product_mappings";
 
 export interface MasterImportTemplate {

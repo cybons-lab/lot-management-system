@@ -100,7 +100,7 @@ function createBaseLotColumns(
 
 function createFlatLotColumns(baseColumns: Column<LotUI>[]): Column<LotUI>[] {
   return [
-    baseColumns[0],
+    baseColumns[0]!,
     {
       id: "product_code",
       header: "メーカー品番",

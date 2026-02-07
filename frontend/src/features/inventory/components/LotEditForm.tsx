@@ -49,7 +49,9 @@ export function LotEditForm({ initialData, onSubmit, onCancel, isSubmitting }: L
       // quantity: Removed - quantity changes only through intake/withdrawal operations
       lot_unit: formData.get("lot_unit") as string,
       receipt_date: formData.get("receipt_date") as string,
-      expiry_date: (formData.get("expiry_date") as string) || undefined,
+      ...(formData.get("expiry_date")
+        ? { expiry_date: formData.get("expiry_date") as string }
+        : {}),
     };
 
     await onSubmit(data);

@@ -323,7 +323,7 @@ export function useWithdrawalFormState({
 
       await onSubmit(request);
     },
-    [formData, validate, onSubmit, user?.id],
+    [formData, validate, onSubmit, user?.id, today],
   );
 
   return {

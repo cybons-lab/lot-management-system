@@ -74,7 +74,7 @@ export function createOrderLineColumns(
       cell: (row: OrderLineRow) => {
         let isInactiveCustomer = false;
         if (row.customer_valid_to) {
-          const todayStr = new Date().toISOString().split("T")[0];
+          const todayStr = new Date().toISOString().split("T")[0]!;
           if (row.customer_valid_to < todayStr) {
             isInactiveCustomer = true;
           }
@@ -290,7 +290,7 @@ export function createOrderLineColumns(
       cell: (row: OrderLineRow) => {
         let isInactiveCustomer = false;
         if (row.customer_valid_to) {
-          const todayStr = new Date().toISOString().split("T")[0];
+          const todayStr = new Date().toISOString().split("T")[0]!;
           if (row.customer_valid_to < todayStr) {
             isInactiveCustomer = true;
           }

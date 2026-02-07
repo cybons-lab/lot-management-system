@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- 論理的な画面単位を維持 */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 /**
  * ExcelView ページのビジネスロジックを集約するカスタムフック
  */
+// eslint-disable-next-line max-lines-per-function -- ExcelViewページのビジネスロジックを1箇所で管理するため
 export function useExcelView(productId: number, customerItemId?: number) {
   const queryClient = useQueryClient();
 
@@ -372,6 +374,7 @@ export function useExcelView(productId: number, customerItemId?: number) {
             is_default: false,
             jiku_code: formData.jiku_code,
           });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- HTTPErrorのresponse.statusアクセスに必要
         } catch (e: any) {
           if (e?.response?.status !== 409) {
             toast.warning("マスタ同期に失敗しましたが、引当レコードは作成されます");

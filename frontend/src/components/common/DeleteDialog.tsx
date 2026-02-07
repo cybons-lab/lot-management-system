@@ -101,7 +101,7 @@ export function DeleteDialog({
   onSwitchToPermanent,
 }: DeleteDialogProps) {
   const isSoft = type === "soft";
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0] || "";
 
   // State
   const [endDate, setEndDate] = useState<string>(today);

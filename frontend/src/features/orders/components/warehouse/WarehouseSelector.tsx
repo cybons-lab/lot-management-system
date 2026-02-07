@@ -16,7 +16,7 @@ export function WarehouseSelector({ warehouses, selectedWarehouse, onSelectWareh
   // NOTE: useEffect must be called before any early returns (Rules of Hooks)
   React.useEffect(() => {
     if (warehouses.length === 1 && !selectedWarehouse) {
-      onSelectWarehouse(warehouses[0]);
+      onSelectWarehouse(warehouses[0]!);
     }
   }, [warehouses, selectedWarehouse, onSelectWarehouse]);
 

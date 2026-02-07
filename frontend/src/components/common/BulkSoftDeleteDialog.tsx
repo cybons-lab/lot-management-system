@@ -39,10 +39,10 @@ export function BulkSoftDeleteDialog({
       type="soft"
       bulk={true}
       selectedCount={selectedCount}
-      title={title}
-      description={description}
+      {...(title ? { title } : {})}
+      {...(description ? { description } : {})}
       onConfirm={handleConfirm}
-      isPending={isPending}
+      {...(isPending !== undefined ? { isPending } : {})}
     />
   );
 }

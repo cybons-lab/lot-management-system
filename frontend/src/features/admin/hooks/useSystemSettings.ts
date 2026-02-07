@@ -5,6 +5,7 @@ import type { SystemSetting, SchemaCheckResult } from "../types";
 
 import { http } from "@/shared/api/http-client";
 
+// eslint-disable-next-line max-lines-per-function -- システム設定の状態管理を1箇所で管理するため
 export function useSystemSettings() {
   const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [isLoading, setIsLoading] = useState(true);

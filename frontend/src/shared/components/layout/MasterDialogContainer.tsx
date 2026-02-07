@@ -25,6 +25,7 @@ interface MasterDialogContainerProps {
 /**
  * マスタ画面の標準的なダイアログ群を集約して管理するコンポーネント
  */
+// eslint-disable-next-line max-lines-per-function, complexity -- マスタ画面のダイアログ群を集約管理するため
 export function MasterDialogContainer({
   p,
   entityName,
@@ -72,6 +73,8 @@ export function MasterDialogContainer({
         title={`${entityName}マスタ インポート`}
         group={importGroup}
       />
+
+      {/* eslint-disable @typescript-eslint/no-explicit-any -- 汎用マスタダイアログのため、各マスタの型に依存しない動的プロパティアクセスに any を使用 */}
 
       {/* ソフト削除（無効化）ダイアログ */}
       <SoftDeleteDialog
@@ -126,6 +129,8 @@ export function MasterDialogContainer({
             : ""
         }
       />
+
+      {/* eslint-enable @typescript-eslint/no-explicit-any */}
 
       {/* 一括操作ダイアログ */}
       {bulkDialog}

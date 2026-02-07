@@ -15,6 +15,7 @@ import { MasterPageTemplate } from "@/shared/components/layout/MasterPageTemplat
 /**
  * 倉庫マスタ一覧ページ
  */
+// eslint-disable-next-line max-lines-per-function -- 倉庫マスタ一覧ページの関連ロジックを1箇所で管理するため
 export function WarehousesListPage() {
   const p = useWarehouseListPage();
   const { setSelectedWarehouseCode, table, showInactive, setShowInactive, dlgs } = p;

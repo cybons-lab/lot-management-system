@@ -11,7 +11,6 @@ import { AdminGuard } from "@/components/auth/AdminGuard";
 import { FeatureGuard } from "@/components/auth/FeatureGuard";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
-
 // Pages
 import { CalendarSettingsPage } from "@/features/calendar";
 import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";

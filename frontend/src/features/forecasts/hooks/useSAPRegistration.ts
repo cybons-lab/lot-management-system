@@ -21,10 +21,10 @@ export function useSAPRegistration(orderId: number) {
       });
 
       if (response.status === "success" && response.results.length > 0) {
-        const result = response.results[0];
+        const result = response.results[0]!;
         return {
-          orderId: result.order_id,
-          sapOrderNo: result.sap_order_no,
+          orderId: result.order_id!,
+          sapOrderNo: result.sap_order_no!,
           registeredAt: new Date().toISOString(),
         };
       }

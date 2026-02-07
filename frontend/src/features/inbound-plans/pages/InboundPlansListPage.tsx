@@ -41,12 +41,13 @@ function buildInboundPlanQueryParams(
   filters: InboundPlansFilters,
 ): Parameters<typeof useInboundPlans>[0] {
   return {
-    supplier_id: filters.supplier_id ? Number(filters.supplier_id) : undefined,
-    supplier_item_id: filters.supplier_item_id ? Number(filters.supplier_item_id) : undefined,
-    status: filters.status || undefined,
-    date_from: filters.date_from || undefined,
-    date_to: filters.date_to || undefined,
-    prioritize_assigned: filters.prioritize_assigned || undefined,
+    ...(filters.supplier_id ? { supplier_id: Number(filters.supplier_id) } : {}),
+    ...(filters.supplier_item_id ? { supplier_item_id: Number(filters.supplier_item_id) } : {}),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- InboundPlansFilters.status と API パラメータの型が異なるため
+    ...(filters.status ? { status: filters.status as any } : {}),
+    ...(filters.date_from ? { date_from: filters.date_from } : {}),
+    ...(filters.date_to ? { date_to: filters.date_to } : {}),
+    ...(filters.prioritize_assigned ? { prioritize_assigned: filters.prioritize_assigned } : {}),
   };
 }
 
@@ -162,7 +163,7 @@ export function InboundPlansListPage() {
       <SupplierAssignmentWarning />
 
       <InboundPlansList
-        plans={model.plans}
+        {...(model.plans ? { plans: model.plans } : {})}
         isLoading={model.isLoading}
         isError={model.isError}
         filters={model.filters}

@@ -24,6 +24,7 @@ export interface EditableCellProps {
 /**
  * 汎用的な編集可能テキストセル
  */
+// eslint-disable-next-line max-lines-per-function, complexity -- 編集可能セルのIME・フォーカス制御ロジックを1箇所で管理するため
 export function EditableTextCell({
   value,
   isActive,

@@ -101,8 +101,8 @@ export function InventoryByWarehouseTable({
       data={data}
       columns={INVENTORY_BY_WAREHOUSE_COLUMNS}
       getRowId={(row) => row.warehouse_id}
-      onRowClick={handleRowClick}
-      rowActions={renderRowActions}
+      {...(handleRowClick ? { onRowClick: handleRowClick } : {})}
+      {...(renderRowActions ? { rowActions: renderRowActions } : {})}
       emptyMessage="データがありません"
     />
   );

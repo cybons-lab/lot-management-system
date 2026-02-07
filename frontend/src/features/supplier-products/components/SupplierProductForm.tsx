@@ -107,6 +107,7 @@ export function SupplierProductForm({
 
   return (
     <Form {...form}>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- react-hook-form の handleSubmit 型互換のため */}
       <form onSubmit={form.handleSubmit(handleFormSubmit as any)} className="space-y-4">
         {/* 仕入先 (編集時は変更不可) - Phase1で最初に移動 */}
         <FormField

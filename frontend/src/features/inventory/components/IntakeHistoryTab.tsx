@@ -90,7 +90,7 @@ function IntakeFilters({
   );
 }
 
-// eslint-disable-next-line max-lines-per-function -- 入庫履歴タブのフィルタ・表示切替・データ取得ロジックを1つのコンポーネントで管理
+// eslint-disable-next-line max-lines-per-function, complexity -- 入庫履歴タブのフィルタ・表示切替・データ取得ロジックを1つのコンポーネントで管理
 export function IntakeHistoryTab() {
   const [intakeViewMode, setIntakeViewMode] = useState<IntakeViewMode>("list");
 

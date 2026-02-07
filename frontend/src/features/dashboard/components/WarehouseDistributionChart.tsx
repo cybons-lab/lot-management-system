@@ -89,7 +89,7 @@ export function WarehouseDistributionChart() {
               {chartData.map((_, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]}
+                  fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]!}
                 />
               ))}
             </Pie>

@@ -126,14 +126,15 @@ export function AdhocLotCreateForm({
       supplier_item_id: parseInt(data.supplier_item_id, 10),
       warehouse_id: parseInt(data.warehouse_id, 10),
       origin_type: data.origin_type,
-      origin_reference: data.origin_reference || undefined,
-      supplier_code:
-        data.supplier_code && data.supplier_code !== "none" ? data.supplier_code : undefined,
+      ...(data.origin_reference ? { origin_reference: data.origin_reference } : {}),
+      ...(data.supplier_code && data.supplier_code !== "none"
+        ? { supplier_code: data.supplier_code }
+        : {}),
       current_quantity: Number(data.current_quantity),
       unit: data.unit,
       received_date: data.received_date,
-      expiry_date: data.expiry_date || undefined,
-      shipping_date: data.shipping_date || undefined,
+      ...(data.expiry_date ? { expiry_date: data.expiry_date } : {}),
+      ...(data.shipping_date ? { shipping_date: data.shipping_date } : {}),
     };
 
     await onSubmit(submitData);

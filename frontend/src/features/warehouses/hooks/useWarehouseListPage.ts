@@ -10,6 +10,7 @@ import { useMasterListPage } from "@/hooks/ui/useMasterListPage";
  * 倉庫マスタ一覧ページ用のカスタムフック
  * useMasterListPage を利用して共通ロジックを簡素化
  */
+// eslint-disable-next-line max-lines-per-function -- 倉庫マスタ一覧ページの状態管理を1箇所で管理するため
 export function useWarehouseListPage() {
   const master = useMasterListPage<Warehouse>({
     featureName: "Warehouses",

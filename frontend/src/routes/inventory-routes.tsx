@@ -2,7 +2,6 @@ import { Navigate, Route, Outlet } from "react-router-dom";
 
 import { FeatureGuard } from "@/components/auth/FeatureGuard";
 import { ROUTES } from "@/constants/routes";
-
 // Pages
 import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCreatePage";
 import { AdjustmentsListPage } from "@/features/adjustments/pages/AdjustmentsListPage";

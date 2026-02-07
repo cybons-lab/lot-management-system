@@ -36,6 +36,7 @@ function LoadingOrError({ isLoading }: { isLoading: boolean }) {
  * - Phase 1: PageNotes 統合
  * - Phase 3: ロジックの抽出 (useExcelView), コンポーネント分割 (Header, Dialogs, Utils)
  */
+// eslint-disable-next-line max-lines-per-function -- 在庫引当Excel表示ページのロジックを1箇所で管理するため
 export function ExcelViewPage() {
   const { productId, customerItemId } = useParams<{
     productId: string;

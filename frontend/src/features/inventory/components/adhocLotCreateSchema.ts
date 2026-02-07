@@ -35,8 +35,8 @@ export const adhocLotCreateSchema = z.object({
   origin_type: z.custom<AdhocOriginType>((val) => typeof val === "string", {
     message: "ロット種別を選択してください",
   }),
-  shipping_date: z.string().optional(),
-  origin_reference: z.string().optional(),
+  shipping_date: z.string().optional().nullable(),
+  origin_reference: z.string().optional().nullable(),
 });
 
 export type AdhocLotFormData = z.infer<typeof adhocLotCreateSchema>;
@@ -51,7 +51,7 @@ export const ADHOC_LOT_FORM_DEFAULTS: AdhocLotFormData = {
   supplier_code: "none",
   current_quantity: "",
   unit: "EA",
-  received_date: new Date().toISOString().split("T")[0],
+  received_date: new Date().toISOString().split("T")[0] || "",
   expiry_date: "",
   origin_type: "adhoc",
   origin_reference: "",

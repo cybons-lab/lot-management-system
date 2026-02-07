@@ -64,8 +64,8 @@ export function CompanyCalendarCard() {
     const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const end = new Date(now.getFullYear(), now.getMonth() + 7, 0);
     return {
-      holidayRangeStart: start.toISOString().split("T")[0],
-      holidayRangeEnd: end.toISOString().split("T")[0],
+      holidayRangeStart: start.toISOString().split("T")[0]!,
+      holidayRangeEnd: end.toISOString().split("T")[0]!,
     };
   }, []);
 

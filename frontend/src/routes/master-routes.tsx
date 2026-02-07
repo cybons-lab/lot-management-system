@@ -3,7 +3,6 @@ import { Route, Outlet } from "react-router-dom";
 import { AdminGuard } from "@/components/auth/AdminGuard";
 import { FeatureGuard } from "@/components/auth/FeatureGuard";
 import { ROUTES } from "@/constants/routes";
-
 // Pages
 import { SupplierAssignmentsPage } from "@/features/assignments/pages/SupplierAssignmentsPage";
 import { CustomerItemsListPage } from "@/features/customer-items/pages/CustomerItemsListPage";
@@ -27,6 +26,7 @@ const FeatureGuardLayout = ({ feature }: { feature: string }) => (
   </FeatureGuard>
 );
 
+// eslint-disable-next-line max-lines-per-function -- マスタルート定義を1箇所で管理するため
 export function MasterRoutes() {
   return (
     <Route element={<FeatureGuardLayout feature="masters" />}>

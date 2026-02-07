@@ -148,13 +148,13 @@ export function MonthlyReportPage() {
   );
 
   useEffect(() => {
-    if (!selectedProductId && productOptions.length > 0) {
+    if (!selectedProductId && productOptions.length > 0 && productOptions[0]) {
       setSelectedProductId(productOptions[0].value);
     }
   }, [selectedProductId, productOptions]);
 
   useEffect(() => {
-    if (!selectedWarehouseId && warehouseOptions.length > 0) {
+    if (!selectedWarehouseId && warehouseOptions.length > 0 && warehouseOptions[0]) {
       setSelectedWarehouseId(warehouseOptions[0].value);
     }
   }, [selectedWarehouseId, warehouseOptions]);

@@ -24,7 +24,12 @@ export function Dashboard() {
       <PageHeader
         title="ダッシュボード"
         subtitle="システムの健全性とアクティビティを監視します"
-        actions={<DateRangePicker date={dateRange} onDateChange={setDateRange} />}
+        actions={
+          <DateRangePicker
+            {...(dateRange !== undefined ? { date: dateRange } : {})}
+            onDateChange={setDateRange}
+          />
+        }
       />
       <div className={styles.container}>
         {/* KPI Cards */}

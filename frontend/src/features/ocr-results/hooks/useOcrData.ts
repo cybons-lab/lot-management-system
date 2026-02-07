@@ -13,13 +13,13 @@ export function useOcrData(
     queryFn: () => {
       if (viewMode === "completed") {
         return ocrResultsApi.listCompleted({
-          task_date: taskDate || undefined,
+          ...(taskDate ? { task_date: taskDate } : {}),
         });
       }
       return ocrResultsApi.list({
-        task_date: taskDate || undefined,
-        status: statusFilter || undefined,
-        has_error: showErrorsOnly || undefined,
+        ...(taskDate ? { task_date: taskDate } : {}),
+        ...(statusFilter ? { status: statusFilter } : {}),
+        ...(showErrorsOnly ? { has_error: showErrorsOnly } : {}),
       });
     },
   });

@@ -263,15 +263,15 @@ export function EditableTextCell({
         return;
       }
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveTabTarget(
-        row.id,
-        field,
+      const target = resolveTabTarget({
+        currentRowId: row.id,
+        currentField: field,
         direction,
-        editableFieldOrder,
+        fieldOrder: editableFieldOrder,
         rowIds,
         getRowById,
-        isSkipableRow,
-      );
+        isSkipable: isSkipableRow,
+      });
       if (target) {
         setHasError(false);
         setActiveCell(target);
@@ -287,14 +287,14 @@ export function EditableTextCell({
         return;
       }
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveEnterTarget(
-        row.id,
-        field,
+      const target = resolveEnterTarget({
+        currentRowId: row.id,
+        currentField: field,
         direction,
         rowIds,
         getRowById,
-        isSkipableRow,
-      );
+        isSkipable: isSkipableRow,
+      });
       if (target) {
         setHasError(false);
         setActiveCell(target);
@@ -362,15 +362,15 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         return;
       }
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveTabTarget(
-        row.id,
-        field,
+      const target = resolveTabTarget({
+        currentRowId: row.id,
+        currentField: field,
         direction,
-        editableFieldOrder,
+        fieldOrder: editableFieldOrder,
         rowIds,
         getRowById,
-        isSkipableRow,
-      );
+        isSkipable: isSkipableRow,
+      });
       if (target) {
         setHasError(false);
         setActiveCell(target);
@@ -386,14 +386,14 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         return;
       }
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveEnterTarget(
-        row.id,
-        field,
+      const target = resolveEnterTarget({
+        currentRowId: row.id,
+        currentField: field,
         direction,
         rowIds,
         getRowById,
-        isSkipableRow,
-      );
+        isSkipable: isSkipableRow,
+      });
       if (target) {
         setHasError(false);
         setActiveCell(target);
@@ -498,14 +498,14 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
       event.preventDefault();
       commit();
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveTabTarget<number, EditableFieldKey, OcrResultItem>(
-        row.id,
-        "shippingSlipText",
+      const target = resolveTabTarget<number, EditableFieldKey, OcrResultItem>({
+        currentRowId: row.id,
+        currentField: "shippingSlipText",
         direction,
-        editableFieldOrder,
+        fieldOrder: editableFieldOrder,
         rowIds,
         getRowById,
-      );
+      });
       if (target) {
         setActiveCell(target);
       }
@@ -515,13 +515,13 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
       event.preventDefault();
       commit();
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveEnterTarget<number, EditableFieldKey, OcrResultItem>(
-        row.id,
-        "shippingSlipText",
+      const target = resolveEnterTarget<number, EditableFieldKey, OcrResultItem>({
+        currentRowId: row.id,
+        currentField: "shippingSlipText",
         direction,
         rowIds,
         getRowById,
-      );
+      });
       if (target) {
         setActiveCell(target);
       }

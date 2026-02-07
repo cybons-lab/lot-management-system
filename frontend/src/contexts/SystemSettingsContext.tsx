@@ -67,7 +67,7 @@ export function SystemSettingsProvider({ children }: { children: ReactNode }) {
           // If parent is NOT visible, child is automatically NOT visible.
           // But if parent IS visible, we do NOT return true immediately;
           // we allow the child's own configuration to decide.
-          if (!checkVisibility(parent)) {
+          if (parent && !checkVisibility(parent)) {
             return false;
           }
         }

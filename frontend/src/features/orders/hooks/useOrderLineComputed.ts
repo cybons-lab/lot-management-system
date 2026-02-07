@@ -76,6 +76,7 @@ function calculateShippingLeadTime(
 
 function aggregateDeliveryPlaces(
   line: OrderLineSource | null | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- allocatedLotsの型がOpenAPI生成型と不一致のため暫定
   allocatedLots: any[],
 ): string[] {
   const linePlaces = Array.isArray(line?.delivery_places)
@@ -115,7 +116,8 @@ export function useOrderLineComputed(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       deliveryPlaces: aggregateDeliveryPlaces(line, stats.allocatedLots as any),
       productId: ids.productId,
-    } as any; // Cast as any temporarily to satisfy complex interface spread
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 複雑なインターフェース合成のため暫定キャスト
+    } as any;
 
     if (ids.lineId === undefined) delete result.id;
     if (ids.lineId === undefined) delete result.ids.lineId;

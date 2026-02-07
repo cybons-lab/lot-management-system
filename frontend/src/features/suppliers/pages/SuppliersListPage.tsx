@@ -13,6 +13,7 @@ import { MasterPageTemplate } from "@/shared/components/layout/MasterPageTemplat
 /**
  * 仕入先マスタ一覧ページ
  */
+// eslint-disable-next-line max-lines-per-function -- 仕入先マスタ一覧ページの関連ロジックを1箇所で管理するため
 export function SuppliersListPage() {
   const p = useSupplierListPage();
   const { setSelectedSupplierCode, table, showInactive, setShowInactive, dlgs } = p;

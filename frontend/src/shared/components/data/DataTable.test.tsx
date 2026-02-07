@@ -74,7 +74,7 @@ describe("DataTable", () => {
 
     // Select all checkbox
     const checkboxes = screen.getAllByRole("checkbox");
-    fireEvent.click(checkboxes[0]); // Header checkbox
+    fireEvent.click(checkboxes[0]!); // Header checkbox
     expect(onSelectionChange).toHaveBeenCalledWith(["1", "2"]);
   });
 

@@ -26,7 +26,7 @@ interface IntakeHistoryListProps {
   isCompact?: boolean;
 }
 
-// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
+// eslint-disable-next-line max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため
 export function IntakeHistoryList({
   supplierId,
   warehouseId,
@@ -39,15 +39,24 @@ export function IntakeHistoryList({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
-  const { data, isLoading, isError, error, refetch } = useIntakeHistory({
+  const filters = {
     supplier_id: supplierId,
     warehouse_id: warehouseId,
     supplier_item_id: productId,
     search: searchQuery,
     start_date: startDate,
     end_date: endDate,
-    skip: (page - 1) * pageSize,
-    limit: pageSize,
+  };
+
+  const { data, isLoading, isError, error, refetch } = useIntakeHistory({
+    ...(filters.supplier_id ? { supplier_id: Number(filters.supplier_id) } : {}),
+    ...(filters.warehouse_id ? { warehouse_id: Number(filters.warehouse_id) } : {}),
+    ...(filters.supplier_item_id ? { supplier_item_id: Number(filters.supplier_item_id) } : {}),
+    ...(filters.search ? { search: filters.search } : {}),
+    ...(filters.start_date ? { start_date: filters.start_date } : {}),
+    ...(filters.end_date ? { end_date: filters.end_date } : {}),
+    skip: (page - 1) * 20,
+    limit: 20,
   });
 
   const allColumns: (Column<IntakeHistoryResponse> & { hidden?: boolean })[] = [

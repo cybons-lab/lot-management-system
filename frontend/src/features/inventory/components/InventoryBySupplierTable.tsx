@@ -105,8 +105,8 @@ export function InventoryBySupplierTable({
       data={data}
       columns={INVENTORY_BY_SUPPLIER_COLUMNS}
       getRowId={(row) => row.supplier_id}
-      onRowClick={handleRowClick}
-      rowActions={renderRowActions}
+      {...(handleRowClick ? { onRowClick: handleRowClick } : {})}
+      {...(renderRowActions ? { rowActions: renderRowActions } : {})}
       emptyMessage="データがありません"
     />
   );

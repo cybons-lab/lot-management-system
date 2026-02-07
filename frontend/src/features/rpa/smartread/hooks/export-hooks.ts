@@ -130,8 +130,8 @@ export function useExportCsvData(options: {
         configId,
         taskId,
         exportId,
-        saveToDb,
-        taskDate,
+        ...(saveToDb !== undefined ? { saveToDb } : {}),
+        ...(taskDate ? { taskDate } : {}),
       });
 
       // 3. Transform wide to long on client side
@@ -147,12 +147,15 @@ export function useExportCsvData(options: {
           config_id: configId,
           task_id: taskId,
           export_id: exportId,
-          wide_data: serverData.wide_data,
-          long_data: transformResult.long_data,
-          errors: transformResult.errors,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- IndexedDB キャッシュ用の型変換
+          wide_data: serverData.wide_data as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          long_data: transformResult.long_data as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          errors: transformResult.errors as any,
           filename: serverData.filename,
-          task_date: taskDate,
-          saved_to_db: saveToDb,
+          ...(taskDate ? { task_date: taskDate } : {}),
+          ...(saveToDb !== undefined ? { saved_to_db: saveToDb } : {}),
         });
       } catch {
         // Cache failed, continue without caching

@@ -50,8 +50,8 @@ export function WithdrawalHistoryTab() {
   const { data, isLoading, isError, error } = useList({
     skip: (withdrawalPage - 1) * PAGE_SIZE,
     limit: PAGE_SIZE,
-    withdrawal_type: filterType === "all" ? undefined : filterType,
-    search: searchQuery || undefined,
+    ...(filterType !== "all" ? { withdrawal_type: filterType } : {}),
+    ...(searchQuery ? { search: searchQuery } : {}),
   });
 
   const withdrawals = useMemo(() => data?.withdrawals ?? [], [data]);

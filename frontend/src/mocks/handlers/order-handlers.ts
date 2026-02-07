@@ -84,7 +84,7 @@ export const orderHandlers = [
       ...orders[index],
       status: body.new_status,
       updated_at: new Date().toISOString(),
-    };
+    } as OrderWithLinesResponse;
 
     return HttpResponse.json({
       success: true,

@@ -58,6 +58,7 @@ interface MasterPageTemplateProps<T> {
 /**
  * マスタ一覧ページの共通テンプレートコンポーネント
  */
+// eslint-disable-next-line max-lines-per-function, complexity -- マスタ一覧ページの共通テンプレートロジックを1箇所で管理するため
 export function MasterPageTemplate<T>({
   header,
   headerActions,

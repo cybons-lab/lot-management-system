@@ -52,7 +52,12 @@ interface DeliveryPlaceFormProps {
     jiku_match_pattern?: string | null;
   };
   customers: { id: number; customer_name: string; customer_code: string }[];
-  onSubmit: (data: FormValues & { jiku_code: string; jiku_match_pattern?: string }) => void;
+  onSubmit: (
+    data: Omit<FormValues, "jiku_match_pattern"> & {
+      jiku_code: string;
+      jiku_match_pattern?: string | null;
+    },
+  ) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
   isEdit?: boolean;
@@ -83,7 +88,7 @@ export function DeliveryPlaceForm({
     onSubmit({
       ...data,
       jiku_code: data.jiku_code ?? "",
-      jiku_match_pattern: data.jiku_match_pattern || undefined,
+      jiku_match_pattern: data.jiku_match_pattern || null,
     });
   };
 

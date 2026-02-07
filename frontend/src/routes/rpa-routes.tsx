@@ -2,7 +2,6 @@ import { Navigate, Route, Outlet } from "react-router-dom";
 
 import { FeatureGuard } from "@/components/auth/FeatureGuard";
 import { ROUTES } from "@/constants/routes";
-
 // Pages
 import { RPAPage } from "@/features/rpa";
 import {

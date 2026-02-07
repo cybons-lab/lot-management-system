@@ -60,6 +60,7 @@ interface ExcelViewDialogsProps {
 /**
  * ExcelView ページで使用されるすべてのダイアログを集約して管理するコンポーネント
  */
+// eslint-disable-next-line max-lines-per-function -- ExcelViewの全ダイアログを集約管理するため
 export function ExcelViewDialogs({
   productId,
   supplierId,

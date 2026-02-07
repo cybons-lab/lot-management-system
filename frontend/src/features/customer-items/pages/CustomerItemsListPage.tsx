@@ -283,12 +283,11 @@ export function CustomerItemsListPage() {
       <CustomerItemsTable
         items={filteredItems}
         isLoading={isLoading}
-        onEdit={handleEdit}
-        onSoftDelete={openSoftDelete}
-        onPermanentDelete={openPermanentDelete}
-        onRestore={openRestore}
-        onRowClick={handleRowClick}
-        // onRowClick removed here to avoid duplicate
+        {...(handleEdit !== undefined ? { onEdit: handleEdit } : {})}
+        {...(openSoftDelete !== undefined ? { onSoftDelete: openSoftDelete } : {})}
+        {...(openPermanentDelete !== undefined ? { onPermanentDelete: openPermanentDelete } : {})}
+        {...(openRestore !== undefined ? { onRestore: openRestore } : {})}
+        {...(handleRowClick !== undefined ? { onRowClick: handleRowClick } : {})}
         {...(showCheckboxes ? { selectedIds } : {})}
         {...(showCheckboxes ? { onToggleSelect: handleToggleSelect } : {})}
         {...(showCheckboxes ? { onToggleSelectAll: handleToggleSelectAll } : {})}
@@ -315,7 +314,7 @@ export function CustomerItemsListPage() {
         item={selectedItem}
         open={isDetailDialogOpen}
         onOpenChange={setIsDetailDialogOpen}
-        onEdit={handleEdit}
+        {...(handleEdit !== undefined ? { onEdit: handleEdit } : {})}
       />
 
       {/* 編集ダイアログ */}

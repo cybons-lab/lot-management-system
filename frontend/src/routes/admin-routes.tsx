@@ -2,7 +2,6 @@ import { Navigate, Route } from "react-router-dom";
 
 import { AdminGuard } from "@/components/auth/AdminGuard";
 import { ROUTES } from "@/constants/routes";
-
 // Pages
 import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { BulkExportPage } from "@/features/admin/pages/BulkExportPage";
@@ -20,6 +19,7 @@ import { DbBrowserPage } from "@/features/debug-db/pages/DbBrowserPage";
 import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { LogViewer } from "@/pages/LogViewer";
 
+// eslint-disable-next-line max-lines-per-function -- 管理者ルート定義を1箇所で管理するため
 export function AdminRoutes() {
   return (
     <>
