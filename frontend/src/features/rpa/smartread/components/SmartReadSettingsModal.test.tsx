@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- テストファイルのモック定義で any を許容 */
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -56,7 +55,7 @@ vi.mock("@/components/ui", async () => {
               return React.cloneElement(child, {
                 onValueChange,
                 value,
-              } as any);
+              } as Partial<SelectTriggerProps>);
             }
             return child;
           })}

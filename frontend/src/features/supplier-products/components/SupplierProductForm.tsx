@@ -41,14 +41,7 @@ const schema = z.object({
   notes: z.string().nullable().optional(),
 });
 
-interface FormValues {
-  supplier_id: number;
-  maker_part_no: string;
-  display_name: string;
-  base_unit: string;
-  lead_time_days: number | null;
-  notes: string | null;
-}
+type FormValues = z.infer<typeof schema>;
 type SupplierProductEditInput = Omit<SupplierProductUpdate, "version">;
 
 interface SupplierProductFormProps {
@@ -83,13 +76,14 @@ export function SupplierProductForm({
   });
 
   const handleFormSubmit = (values: FormValues) => {
+    const notes = values.notes ?? null;
     if (isEdit) {
       const updateData: SupplierProductEditInput = {
         maker_part_no: values.maker_part_no,
         display_name: values.display_name,
         base_unit: values.base_unit,
         lead_time_days: values.lead_time_days,
-        notes: values.notes,
+        notes,
       };
       onSubmit(updateData);
     } else {
@@ -99,7 +93,7 @@ export function SupplierProductForm({
         display_name: values.display_name,
         base_unit: values.base_unit,
         lead_time_days: values.lead_time_days,
-        notes: values.notes,
+        notes,
       };
       onSubmit(createData);
     }
@@ -107,8 +101,8 @@ export function SupplierProductForm({
 
   return (
     <Form {...form}>
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- react-hook-form の handleSubmit 型互換のため */}
-      <form onSubmit={form.handleSubmit(handleFormSubmit as any)} className="space-y-4">
+      {/* @ts-expect-error -- react-hook-form と zod のバージョン間の型不整合 */}
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
         {/* 仕入先 (編集時は変更不可) - Phase1で最初に移動 */}
         <FormField
           control={form.control}

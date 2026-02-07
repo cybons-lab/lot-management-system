@@ -7,19 +7,37 @@ import {
   type TemplateGroup,
 } from "@/features/masters/components/MasterImportDialog";
 
+/** useMasterListPage系フックの戻り値のうち、MasterDialogContainerが使用する部分 */
+export interface MasterPageHookResult {
+  dlgs: {
+    isCreateOpen: boolean;
+    isEditOpen: boolean;
+    isImportOpen: boolean;
+    isSoftDeleteOpen: boolean;
+    isPermanentDeleteOpen: boolean;
+    isRestoreOpen: boolean;
+    deletingItem: unknown;
+    restoringItem: unknown;
+    close: () => void;
+    switchToPermanentDelete?: (() => void) | undefined;
+  };
+  log: (msg: string, context?: Record<string, unknown>) => void;
+  handleSoftDelete: (endDate: string | null) => void;
+  handlePermanentDelete: () => void;
+  handleRestore: () => void;
+  softDel?: { isPending: boolean } | undefined;
+  permDel?: { isPending: boolean } | undefined;
+  rest?: { isPending: boolean } | undefined;
+}
+
 interface MasterDialogContainerProps {
-  // 共通状態フックの戻り値 (p)
-  // 柔軟性のため any を許容（各マスタフックの戻り値を型定義するのは複雑すぎるため）
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  p: any;
-  // 固有の表示名・設定
+  p: MasterPageHookResult;
   entityName: string;
   importGroup: TemplateGroup;
-  // 各種フォーム・ダイアログのスロット
   createForm: ReactNode;
-  editForm?: ReactNode;
+  editForm?: ReactNode | undefined;
   bulkDialog: ReactNode;
-  detailDialog?: ReactNode;
+  detailDialog?: ReactNode | undefined;
 }
 
 // Helper to safely extract name from unknown item
@@ -44,7 +62,7 @@ const getItemCode = (item: unknown): string => {
 /**
  * マスタ画面の標準的なダイアログ群を集約して管理するコンポーネント
  */
-// eslint-disable-next-line max-lines-per-function -- マスタ画面のダイアログ群を集約管理するため
+// eslint-disable-next-line max-lines-per-function, complexity -- マスタ画面のダイアログ群を集約管理するため
 export function MasterDialogContainer({
   p,
   entityName,
@@ -57,7 +75,7 @@ export function MasterDialogContainer({
   const { dlgs, log } = p;
 
   const handleClose = useCallback(() => {
-    log("Dialog closed", { activeType: dlgs.type });
+    log("Dialog closed");
     dlgs.close();
   }, [dlgs, log]);
 
@@ -100,7 +118,7 @@ export function MasterDialogContainer({
         title={`${entityName}を無効化しますか？`}
         description={dlgs.deletingItem ? `${getItemName(dlgs.deletingItem)} を無効化します。` : ""}
         onConfirm={p.handleSoftDelete}
-        isPending={p.softDel?.isPending}
+        isPending={p.softDel?.isPending ?? false}
         {...(dlgs.switchToPermanentDelete
           ? { onSwitchToPermanent: dlgs.switchToPermanentDelete }
           : {})}
@@ -111,7 +129,7 @@ export function MasterDialogContainer({
         open={dlgs.isPermanentDeleteOpen}
         onOpenChange={(o) => !o && handleClose()}
         onConfirm={p.handlePermanentDelete}
-        isPending={p.permDel?.isPending}
+        isPending={p.permDel?.isPending ?? false}
         title={`${entityName}を完全に削除しますか？`}
         description={
           dlgs.deletingItem ? `${getItemName(dlgs.deletingItem)} を完全に削除します。` : ""
@@ -124,7 +142,7 @@ export function MasterDialogContainer({
         open={dlgs.isRestoreOpen}
         onOpenChange={(o) => !o && handleClose()}
         onConfirm={p.handleRestore}
-        isPending={p.rest?.isPending}
+        isPending={p.rest?.isPending ?? false}
         title={`${entityName}を復元しますか？`}
         description={
           dlgs.restoringItem ? `${getItemName(dlgs.restoringItem)} を有効状態に戻します。` : ""
