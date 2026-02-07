@@ -78,9 +78,7 @@ function buildQueryParams(params: Record<string, any>): string {
  */
 export const getOperationLogs = (params?: OperationLogsListParams) => {
   const queryString = buildQueryParams(params ?? {});
-  return http.get<OperationLogListResponse>(
-    `operation-logs${queryString}`,
-  );
+  return http.get<OperationLogListResponse>(`operation-logs${queryString}`);
 };
 
 /**

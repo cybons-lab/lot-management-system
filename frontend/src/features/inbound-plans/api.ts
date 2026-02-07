@@ -152,9 +152,7 @@ function buildQueryParams(params: Record<string, any>): string {
  */
 export const getInboundPlans = async (params?: InboundPlansListParams) => {
   const queryString = buildQueryParams(params ?? {});
-  const response = await http.get<InboundPlanListResponse>(
-    `inbound-plans${queryString}`,
-  );
+  const response = await http.get<InboundPlanListResponse>(`inbound-plans${queryString}`);
   // Return items array for compatibility with existing hooks
   return response.items;
 };
