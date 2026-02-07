@@ -312,7 +312,6 @@ export default [
 
       // Warehouses
       "src/features/warehouses/components/WarehouseForm.tsx",
-      "src/features/warehouses/pages/WarehousesListPage.tsx",
       "src/features/warehouses/utils/warehouse-csv.ts",
       // RPA
       // Shared
