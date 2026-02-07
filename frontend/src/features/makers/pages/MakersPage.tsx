@@ -7,10 +7,9 @@ import { MakerDialogs } from "../components/MakerDialogs";
 import { MakerStats } from "../components/MakerStats";
 import { useCreateMaker, useDeleteMaker, useMakers, useUpdateMaker } from "../hooks/useMakers";
 
-import { Button, Input } from "@/components/ui";
-import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
-import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
-import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { Button } from "@/components/ui";
+import { type SortConfig } from "@/shared/components/data/DataTable";
+import { MasterPageTemplate } from "@/shared/components/layout/MasterPageTemplate";
 
 const makersPageHeader = {
   title: "メーカーマスタ",
@@ -112,104 +111,47 @@ function useMakersPageModel() {
   };
 }
 
-function MakersErrorView({ error, refetch }: { error: unknown; refetch: () => unknown }) {
-  const errorObj = error instanceof Error ? error : null;
-  return (
-    <div className="space-y-6 px-6 py-6 md:px-8">
-      <PageHeader {...makersPageHeader} />
-      <QueryErrorFallback error={errorObj} resetError={refetch} />
-    </div>
-  );
-}
-
-interface MakersTableCardProps {
-  searchQuery: string;
-  onSearchQueryChange: (value: string) => void;
-  sortedMakers: Maker[];
-  columns: ReturnType<typeof createMakerColumns>;
-  sort: SortConfig;
-  onSortChange: (sort: SortConfig) => void;
-  isLoading: boolean;
-}
-
-function MakersTableCard({
-  searchQuery,
-  onSearchQueryChange,
-  sortedMakers,
-  columns,
-  sort,
-  onSortChange,
-  isLoading,
-}: MakersTableCardProps) {
-  return (
-    <div className="rounded-lg border bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <h3 className="text-lg font-semibold text-gray-900">メーカー一覧</h3>
-        <Input
-          type="search"
-          placeholder="検索..."
-          value={searchQuery}
-          onChange={(e) => onSearchQueryChange(e.target.value)}
-          className="w-64"
-        />
-      </div>
-      <DataTable
-        data={sortedMakers}
-        columns={columns}
-        sort={sort}
-        onSortChange={onSortChange}
-        getRowId={(row) => row.id.toString()}
-        isLoading={isLoading}
-        emptyMessage="メーカーが登録されていません"
-      />
-    </div>
-  );
-}
-
 export default function MakersPage() {
   const model = useMakersPageModel();
 
-  if (model.isError) {
-    return <MakersErrorView error={model.error} refetch={model.refetch} />;
-  }
-
   return (
-    <div className="space-y-6 px-6 py-6 md:px-8">
-      <PageHeader
-        {...makersPageHeader}
-        actions={
-          <Button onClick={() => model.setIsCreateOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            新規登録
-          </Button>
-        }
-      />
-
-      <MakerStats count={model.makers.length} />
-
-      <MakersTableCard
-        searchQuery={model.searchQuery}
-        onSearchQueryChange={model.setSearchQuery}
-        sortedMakers={model.sortedMakers}
-        columns={model.columns}
-        sort={model.sort}
-        onSortChange={model.setSort}
-        isLoading={model.isLoading}
-      />
-
-      <MakerDialogs
-        isCreateOpen={model.isCreateOpen}
-        setIsCreateOpen={model.setIsCreateOpen}
-        editingMaker={model.editingMaker}
-        setEditingMaker={model.setEditingMaker}
-        deletingMaker={model.deletingMaker}
-        setDeletingMaker={model.setDeletingMaker}
-        onCreate={model.handleCreate}
-        onUpdate={model.handleUpdate}
-        onDelete={model.handleDelete}
-        isCreatePending={model.isCreatePending}
-        isUpdatePending={model.isUpdatePending}
-      />
-    </div>
+    <MasterPageTemplate
+      header={makersPageHeader}
+      headerActions={
+        <Button onClick={() => model.setIsCreateOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          新規登録
+        </Button>
+      }
+      stats={<MakerStats count={model.makers.length} />}
+      tableTitle="メーカー一覧"
+      searchQuery={model.searchQuery}
+      onSearchQueryChange={model.setSearchQuery}
+      data={model.sortedMakers}
+      columns={model.columns}
+      sort={model.sort}
+      onSortChange={model.setSort}
+      getRowId={(row) => row.id.toString()}
+      isLoading={model.isLoading}
+      isError={model.isError}
+      error={model.error instanceof Error ? model.error : null}
+      onRetry={model.refetch}
+      emptyMessage="メーカーが登録されていません"
+      dialogContext={
+        <MakerDialogs
+          isCreateOpen={model.isCreateOpen}
+          setIsCreateOpen={model.setIsCreateOpen}
+          editingMaker={model.editingMaker}
+          setEditingMaker={model.setEditingMaker}
+          deletingMaker={model.deletingMaker}
+          setDeletingMaker={model.setDeletingMaker}
+          onCreate={model.handleCreate}
+          onUpdate={model.handleUpdate}
+          onDelete={model.handleDelete}
+          isCreatePending={model.isCreatePending}
+          isUpdatePending={model.isUpdatePending}
+        />
+      }
+    />
   );
 }
