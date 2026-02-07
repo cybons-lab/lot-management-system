@@ -145,7 +145,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum as PyEnum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -174,7 +174,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type checkers only
 
 
 # Valid transaction types
-class StockTransactionType(str, PyEnum):
+class StockTransactionType(StrEnum):
     """Enumerates valid stock transaction types."""
 
     INBOUND = "inbound"
@@ -188,7 +188,7 @@ class StockTransactionType(str, PyEnum):
 
 
 # Valid lot origin types
-class LotOriginType(str, PyEnum):
+class LotOriginType(StrEnum):
     """Enumerates valid lot origin types."""
 
     ORDER = "order"
@@ -244,7 +244,7 @@ class StockMovement(Base):
     lot: Mapped[LotReceipt] = relationship("LotReceipt", back_populates="stock_history")
 
 
-class AdjustmentType(str, PyEnum):
+class AdjustmentType(StrEnum):
     """Enumerates allowed adjustment reasons."""
 
     PHYSICAL_COUNT = "physical_count"

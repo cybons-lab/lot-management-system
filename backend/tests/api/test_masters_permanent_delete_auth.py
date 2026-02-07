@@ -23,9 +23,9 @@ def _setup_customer(db: Session):
     db.flush()
     return (
         f"/api/masters/customers/{customer.customer_code}/permanent",
-        lambda session: session.query(Customer)
-        .filter(Customer.customer_code == customer.customer_code)
-        .first(),
+        lambda session: (
+            session.query(Customer).filter(Customer.customer_code == customer.customer_code).first()
+        ),
     )
 
 
@@ -35,9 +35,9 @@ def _setup_supplier(db: Session):
     db.flush()
     return (
         f"/api/masters/suppliers/{supplier.supplier_code}/permanent",
-        lambda session: session.query(Supplier)
-        .filter(Supplier.supplier_code == supplier.supplier_code)
-        .first(),
+        lambda session: (
+            session.query(Supplier).filter(Supplier.supplier_code == supplier.supplier_code).first()
+        ),
     )
 
 
@@ -51,9 +51,11 @@ def _setup_warehouse(db: Session):
     db.flush()
     return (
         f"/api/masters/warehouses/{warehouse.warehouse_code}/permanent",
-        lambda session: session.query(Warehouse)
-        .filter(Warehouse.warehouse_code == warehouse.warehouse_code)
-        .first(),
+        lambda session: (
+            session.query(Warehouse)
+            .filter(Warehouse.warehouse_code == warehouse.warehouse_code)
+            .first()
+        ),
     )
 
 
@@ -117,12 +119,14 @@ def _setup_customer_item(db: Session):
     db.flush()
     return (
         f"/api/masters/customer-items/{item.id}/permanent",
-        lambda session: session.query(CustomerItem)
-        .filter(
-            CustomerItem.customer_id == item.customer_id,
-            CustomerItem.customer_part_no == item.customer_part_no,
-        )
-        .first(),
+        lambda session: (
+            session.query(CustomerItem)
+            .filter(
+                CustomerItem.customer_id == item.customer_id,
+                CustomerItem.customer_part_no == item.customer_part_no,
+            )
+            .first()
+        ),
     )
 
 
@@ -148,9 +152,11 @@ def _setup_uom_conversion(db: Session):
     db.flush()
     return (
         f"/api/masters/uom-conversions/{conversion.conversion_id}/permanent",
-        lambda session: session.query(ProductUomConversion)
-        .filter(ProductUomConversion.conversion_id == conversion.conversion_id)
-        .first(),
+        lambda session: (
+            session.query(ProductUomConversion)
+            .filter(ProductUomConversion.conversion_id == conversion.conversion_id)
+            .first()
+        ),
     )
 
 

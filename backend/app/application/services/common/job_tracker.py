@@ -4,14 +4,14 @@
 from __future__ import annotations
 
 import uuid
-from enum import Enum
+from enum import StrEnum
 from threading import Lock
 from typing import Any
 
 from app.core.time_utils import utcnow
 
 
-class JobStatus(str, Enum):
+class JobStatus(StrEnum):
     """ジョブステータス."""
 
     PENDING = "pending"
@@ -20,7 +20,7 @@ class JobStatus(str, Enum):
     FAILED = "failed"
 
 
-class JobPhase(str, Enum):
+class JobPhase(StrEnum):
     """ジョブフェーズ（進捗段階）."""
 
     RESET = "reset"

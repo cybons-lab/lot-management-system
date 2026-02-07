@@ -124,7 +124,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum as PyEnum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -151,7 +151,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from .withdrawal_line_model import WithdrawalLine
 
 
-class WithdrawalType(str, PyEnum):
+class WithdrawalType(StrEnum):
     """出庫タイプ."""
 
     ORDER_MANUAL = "order_manual"  # 受注（手動）
@@ -162,7 +162,7 @@ class WithdrawalType(str, PyEnum):
     OTHER = "other"  # その他
 
 
-class WithdrawalCancelReason(str, PyEnum):
+class WithdrawalCancelReason(StrEnum):
     """出庫取消理由."""
 
     INPUT_ERROR = "input_error"  # 入力ミス

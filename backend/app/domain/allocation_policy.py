@@ -4,10 +4,10 @@
 これらはAllocationCandidateServiceによって引当候補のSSoT（信頼できる唯一の情報源）として使用されます。
 """
 
-from enum import Enum
+from enum import StrEnum
 
 
-class AllocationPolicy(str, Enum):
+class AllocationPolicy(StrEnum):
     """引当時のロット並び順を決定するポリシー.
 
     在庫引当時にどのロットを優先的に使用するかを制御します。
@@ -32,7 +32,7 @@ class AllocationPolicy(str, Enum):
     FIFO = "fifo"  # 入荷日優先 - 金属部品・電装品等の製造番号管理品
 
 
-class LockMode(str, Enum):
+class LockMode(StrEnum):
     """引当候補クエリ時のデータベースロックモード.
 
     並行処理時の在庫の整合性を保つためのロック制御戦略を定義します。

@@ -39,7 +39,7 @@ dependencies = [
     "packaging>=25.0",
     "pathspec>=0.12.1",
     "pyasn1>=0.6.1",
-    "ruff<0.15.0",
+    "ruff>=0.15.0",
     "tzdata>=2025.2",
     "websockets>=16.0.0",
 ]
