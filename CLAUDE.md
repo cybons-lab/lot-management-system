@@ -391,6 +391,18 @@ gh pr create
 5. Use `any` types in TypeScript
 6. Hardcode configuration values
 7. Write code without logging critical operations
+8. **DIRECTLY MODIFY PROTECTED FILES** (See below)
+
+### 🔒 PROTECTED FILES (NEVER MODIFY DIRECTLY)
+以下のファイルはシステムの基盤であり、いかなる理由があっても直接編集してはいけません。
+1. **`backend/alembic/baseline_*.sql`**: リリース済みのスキーマベースライン。
+2. **`backend/alembic/versions/*.py`**: 既存のマイグレーション履歴。
+3. **`backend/alembic/sql_utils.py`**: マイグレーションユーティリティ。
+4. **`frontend/src/types/generated/`**: 自動生成される型定義ファイル。
+
+**変更が必要な場合の正攻法:**
+- スキーマ変更は常に `alembic revision` で新しいファイルを作成すること。
+- テスト環境のみの調整が必要な場合は `scripts/setup_test_db.py` 等のスクリプト側で対応すること。
 
 ### Logging Guidelines
 

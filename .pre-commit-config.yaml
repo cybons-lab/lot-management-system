@@ -19,7 +19,7 @@ repos:
 
   # Backend - Ruff (lint + format)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.2
+    rev: v0.14.14
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -47,4 +47,3 @@ repos:
         language: system
         files: ^backend/app/(presentation/(schemas|api/routes)|schemas)/.*\.py$
         pass_filenames: false
-

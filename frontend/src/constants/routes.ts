@@ -107,6 +107,7 @@ export const ROUTES = {
     USERS_MANAGEMENT: "/admin/users",
     NOTIFICATION_SETTINGS: "/admin/notifications",
     DEPLOY: "/admin/deploy",
+    DATA_MAINTENANCE: "/admin/data-maintenance",
   },
 
   RPA: {

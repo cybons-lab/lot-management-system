@@ -68,9 +68,7 @@ def client(db_session):
     # Add user role to mock user
     user_role = db_session.query(Role).filter(Role.role_code == "user").first()
     if not user_role:
-        user_role = Role(role_code="user", role_name="一般ユーザー", description="一般ユーザー")
-        db_session.add(user_role)
-        db_session.flush()
+        raise RuntimeError("User role 'user' not found in baseline data")
 
     # Create mock user_roles relationship - using objects ensures session consistency
     ur = UserRole(user=mock_user, role=user_role)
@@ -196,7 +194,7 @@ class TestOrderAPI:
         db_session.expire_all()
         updated_order = db_session.query(Order).filter(Order.id == order_id).first()
         assert updated_order is not None
-        assert updated_order.status == "cancelled"
+        assert updated_order.status == "closed"
 
 
 class TestOrderStateMachine:

@@ -12,6 +12,11 @@ from app.infrastructure.persistence.models.logs_models import OperationLog
 @pytest.fixture
 def sample_user(db: Session):
     """Create sample user for logs."""
+    existing_user = db.query(User).filter(User.username == "testuser").first()
+    if existing_user:
+        db.refresh(existing_user)
+        return existing_user
+
     user = User(
         username="testuser",
         email="test@example.com",

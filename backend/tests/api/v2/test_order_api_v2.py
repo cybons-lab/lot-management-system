@@ -187,4 +187,4 @@ def test_cancel_order(client, setup_order_data):
     response = client.get(f"/api/v2/order/{order.id}")
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "cancelled"
+    assert data["status"] == "closed"

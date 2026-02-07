@@ -174,14 +174,14 @@ def validate_preview_eligibility(order: Order) -> None:
     Raises:
         ValueError: If order status does not allow preview
     """
-    if order.status not in {"draft", "open", "part_allocated", "allocated"}:
+    if order.status not in {"open", "part_allocated", "allocated"}:
         logger.warning(
             "Order status not eligible for preview",
             extra={"order_id": order.id, "status": order.status},
         )
         raise ValueError(
             f"Order status '{order.status}' does not allow preview. "
-            f"Allowed: draft, open, part_allocated, allocated"
+            f"Allowed: open, part_allocated, allocated"
         )
     logger.debug(
         "Order validated for preview",

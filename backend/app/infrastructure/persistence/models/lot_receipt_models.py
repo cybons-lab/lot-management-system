@@ -145,12 +145,14 @@ class LotReceipt(Base):
     received_quantity: Mapped[Decimal] = mapped_column(
         Numeric(15, 3),
         nullable=False,
+        default=Decimal("0"),
         server_default=text("0"),
         comment="入荷数量（初期入荷時の数量）",
     )
     consumed_quantity: Mapped[Decimal] = mapped_column(
         Numeric(15, 3),
         nullable=False,
+        default=Decimal("0"),
         server_default=text("0"),
         comment="消費済み数量（出庫確定分の累積）",
     )
@@ -159,12 +161,12 @@ class LotReceipt(Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'active'"))
     lock_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     locked_quantity: Mapped[Decimal] = mapped_column(
-        Numeric(15, 3), nullable=False, server_default=text("0")
+        Numeric(15, 3), nullable=False, default=Decimal("0"), server_default=text("0")
     )
 
     # Inspection certificate fields
     inspection_status: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default=text("'not_required'")
+        String(20), nullable=False, default="not_required", server_default=text("'not_required'")
     )
     inspection_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     inspection_cert_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -194,7 +196,7 @@ class LotReceipt(Base):
 
     # Origin tracking fields for non-order receipts
     origin_type: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default=text("'adhoc'")
+        String(20), nullable=False, default="adhoc", server_default=text("'adhoc'")
     )
     origin_reference: Mapped[str | None] = mapped_column(String(255), nullable=True)
 

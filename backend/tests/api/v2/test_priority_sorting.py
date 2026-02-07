@@ -33,9 +33,7 @@ def priority_test_data(db_session):
     # Add user role
     role = db_session.query(Role).filter(Role.role_code == "user").first()
     if not role:
-        role = Role(role_code="user", role_name="一般ユーザー", description="一般ユーザー")
-        db_session.add(role)
-        db_session.flush()
+        raise RuntimeError("User role 'user' not found in baseline data")
 
     user_role = UserRole(user=user, role=role)
     db_session.add(user_role)

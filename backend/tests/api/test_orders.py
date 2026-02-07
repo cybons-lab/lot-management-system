@@ -377,9 +377,9 @@ def test_cancel_order_success(db: Session, client: TestClient, master_data: dict
     response = client.delete(f"/api/orders/{order.id}/cancel")
     assert response.status_code == 204
 
-    # Verify order status changed to cancelled
+    # Verify order status changed to closed
     db.refresh(order)
-    assert order.status == "cancelled"
+    assert order.status == "closed"
 
 
 def test_cancel_order_not_found(db: Session, client: TestClient):

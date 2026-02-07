@@ -5724,6 +5724,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/admin/data-integrity": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Scan Violations
+     * @description 全テーブルの NOT NULL 違反をスキャンする.
+     */
+    get: operations["scan_violations_api_admin_data_integrity_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/data-integrity/fix": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Fix Violations
+     * @description REPAIR_RULES に基づき NULL 違反を修正する.
+     */
+    post: operations["fix_violations_api_admin_data_integrity_fix_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/admin/system-settings": {
     parameters: {
       query?: never;
@@ -10950,6 +10990,82 @@ export interface components {
       unallocated_orders: number;
       /** Allocation Rate */
       allocation_rate: number;
+    };
+    /**
+     * DataIntegrityFixRequest
+     * @description 修正リクエスト（省略時は全ルール実行）.
+     */
+    DataIntegrityFixRequest: {
+      /** Table Name */
+      table_name?: string | null;
+      /** Column Name */
+      column_name?: string | null;
+    };
+    /**
+     * DataIntegrityFixResponse
+     * @description 修正レスポンス.
+     */
+    DataIntegrityFixResponse: {
+      /** Fixed */
+      fixed: components["schemas"]["DataIntegrityFixResult"][];
+      /** Skipped */
+      skipped?: {
+        [key: string]: string;
+      }[];
+      /** Total Rows Fixed */
+      total_rows_fixed: number;
+    };
+    /**
+     * DataIntegrityFixResult
+     * @description 修正された1件の結果.
+     */
+    DataIntegrityFixResult: {
+      /** Table */
+      table: string;
+      /** Column */
+      column: string;
+      /** Rows Fixed */
+      rows_fixed: number;
+      /** Value Applied */
+      value_applied: string;
+    };
+    /**
+     * DataIntegrityScanResponse
+     * @description スキャン結果レスポンス.
+     */
+    DataIntegrityScanResponse: {
+      /** Violations */
+      violations: components["schemas"]["DataIntegrityViolation"][];
+      /** Total Violations */
+      total_violations: number;
+      /** Total Affected Rows */
+      total_affected_rows: number;
+    };
+    /**
+     * DataIntegrityViolation
+     * @description スキャンで検出された1件の違反.
+     */
+    DataIntegrityViolation: {
+      /** Table Name */
+      table_name: string;
+      /** Column Name */
+      column_name: string;
+      /** Column Type */
+      column_type: string;
+      /** Violation Count */
+      violation_count: number;
+      /** Sample Ids */
+      sample_ids?: (number | string)[];
+      /** Fixable */
+      fixable: boolean;
+      /** Default Value */
+      default_value?: string | null;
+      /**
+       * Source
+       * @description auto or rule
+       * @default auto
+       */
+      source: string;
     };
     /**
      * DefaultDestinationResponse
@@ -27295,6 +27411,59 @@ export interface operations {
           "application/json": {
             [key: string]: unknown;
           };
+        };
+      };
+    };
+  };
+  scan_violations_api_admin_data_integrity_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DataIntegrityScanResponse"];
+        };
+      };
+    };
+  };
+  fix_violations_api_admin_data_integrity_fix_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DataIntegrityFixRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DataIntegrityFixResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

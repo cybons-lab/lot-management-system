@@ -826,6 +826,30 @@ READY_FOR_STEP4_REVIEW = "step4_review"
 
 ---
 
+### 2-16. 本番環境の不足インデックス追加 (idx_lot_receipts_fefo_allocation)
+
+**優先度:** 中
+**作成:** 2026-02-07
+**カテゴリ:** パフォーマンス・データベース
+**工数:** 0.5日
+
+**背景:**
+- `LotReceipt` モデルには `idx_lot_receipts_fefo_allocation` が定義されているが、マイグレーションファイルが存在しない。
+- テスト環境では `scripts/setup_test_db.py` で手動作成しているが、本番環境には適用されていない。
+- FEFO引き当て処理のパフォーマンスに影響する可能性がある。
+
+**タスク内容:**
+1. Alembicマイグレーションファイルを生成 (`uv run alembic revision --autogenerate`)
+2. 生成されたファイルを確認し、インデックス作成が含まれていることを検証
+3. PR作成とマージ
+4. (オプション) `scripts/setup_test_db.py` の手動作成処理を削除（マイグレーション適用に任せる）
+
+**関連ファイル:**
+- `backend/app/infrastructure/persistence/models/lot_receipt_models.py`
+- `backend/alembic/baseline_2026_02_06.sql`
+
+---
+
 ## 3. DB/UI整合性・データ表示改善
 
 ---
@@ -978,6 +1002,32 @@ def get_product_name(product: Optional[HasProductName], default: str = "") -> st
 **📚 参考資料:**
 - [Testing Strategy](./TESTING_STRATEGY.md) - 詳細なテスト戦略とテストピラミッド
 - [Testing Quick Start Guide](./TESTING_QUICKSTART.md) - 今すぐ使えるテスト実行ガイド
+
+### 5-0. テスト用DBコンテナのネットワーク接続問題
+
+**優先度**: 高
+**作成**: 2026-02-06
+**カテゴリ**: テスト基盤・インフラ
+
+**現象:**
+`npm run be:test` で `backend` コンテナ内からテストを実行すると、テスト用DBホスト名 `db-postgres-test` が名前解決できず全テストが失敗する。
+
+```
+psycopg2.OperationalError: could not translate host name "db-postgres-test" to address: Name or service not known
+```
+
+**原因:**
+`backend` コンテナと `test-db` コンテナが同一Dockerネットワーク上にあるが、テスト設定が `db-postgres-test` というホスト名を参照している。`backend-test` コンテナからは接続できるが、`backend` コンテナからは解決できない。
+
+**対応:**
+1. `docker-compose.yml` でサービス名を `db`, `db-test` に簡略化・統一。
+2. `docker-compose.test.yml` を廃止し、メインの構成ファイルに統合。
+3. `scripts/setup_test_db.py` を導入し、クロスプラットフォーム対応。
+4. `backend` から `db-test` への接続を確認。
+
+✅ 完了: 2026-02-06
+
+---
 
 ### 5-1. 統合テスト・E2Eテストの拡充
 

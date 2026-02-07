@@ -222,6 +222,12 @@ async def lifespan(_app: FastAPI):
     except Exception as e:
         logger.error(f"❌ Error during system config loading: {e}")
 
+    # --- データ整合性 & Alembic チェック（起動時） ---
+    from app.core.startup import check_alembic_revision_on_startup, check_data_integrity_on_startup
+
+    check_alembic_revision_on_startup()
+    check_data_integrity_on_startup()
+
     auto_sync_runner = None
     if settings.SMARTREAD_AUTO_SYNC_ENABLED:
         auto_sync_runner = SmartReadAutoSyncRunner()

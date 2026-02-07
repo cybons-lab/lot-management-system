@@ -133,13 +133,13 @@ class TestSmartReadCsvTransformer:
             {
                 "材質コード1": "ABC-001",
                 "納入量1": "100",
-                "次区1": "123",  # アルファベットで始まらない
+                "次区1": "A-1",  # アルファベット・数字以外が含まれる
             }
         ]
 
         result = transformer.transform_to_long(wide_data)
 
-        assert result.long_data[0]["次区"] == "123"
+        assert result.long_data[0]["次区"] == "A-1"
         assert result.long_data[0]["エラー_次区形式"] == 1
         assert len(result.errors) == 1
         assert "次区" in result.errors[0].field

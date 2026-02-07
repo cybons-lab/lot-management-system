@@ -7,14 +7,18 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 
-# Set dummy DATABASE_URL if not set, to pass Pydantic validation during imports
-# This will be overridden later with the actual test database URL
+# Set database URL before any app imports to ensure settings use the correct URL
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql+psycopg2://testuser:testpass@db-test:5432/lot_management_test",
+)
+os.environ["DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
 os.environ.setdefault("ENABLE_DB_BROWSER", "true")
 
-from app.infrastructure.persistence.models.base_model import Base
-from app.main import application
+from app.infrastructure.persistence.models.base_model import Base  # noqa: E402
+from app.main import application  # noqa: E402
 
-from .db_utils import (
+from .db_utils import (  # noqa: E402
     apply_views_sql,
     create_core_tables,
     drop_known_view_relations,
@@ -86,17 +90,13 @@ except ImportError:
     pass
 
 
-# Use PostgreSQL test database (docker-compose.test.yml)
-# Can be overridden with TEST_DATABASE_URL environment variable
-SQLALCHEMY_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL",
-    "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test",
-)
+# Already set at the top
+from app.core.config import settings  # noqa: E402
 
-# CRITICAL: Force DATABASE_URL to be the same as test database URL
-# This ensures that the application (which uses settings.DATABASE_URL)
-# connects to the same database as the test fixtures.
-os.environ["DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
+
+# Force update settings if it was somehow already initialized
+if settings.DATABASE_URL != SQLALCHEMY_DATABASE_URL:
+    settings.DATABASE_URL = SQLALCHEMY_DATABASE_URL
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
@@ -104,6 +104,27 @@ engine = create_engine(
     echo=True,  # Set to True for SQL query debugging
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+def _seed_baseline_roles() -> None:
+    """Seed required auth roles for tests.
+
+    Tests and dependency overrides assume admin/user/guest roles exist.
+    The test DB is built from ORM metadata only, so baseline INSERTs are not applied.
+    """
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                INSERT INTO roles (role_code, role_name, description)
+                VALUES
+                    ('admin', '管理者', NULL),
+                    ('user', '一般ユーザー', NULL),
+                    ('guest', 'Guest', 'Guest user with read-only access')
+                ON CONFLICT (role_code) DO NOTHING
+                """
+            )
+        )
 
 
 @pytest.fixture(scope="session")
@@ -129,6 +150,7 @@ def db_engine():
         conn.commit()
 
     create_core_tables(engine)
+    _seed_baseline_roles()
 
     # Create views using the same SQL file as production
     # This ensures test DB views are in sync with production
@@ -215,16 +237,21 @@ def client(db) -> Generator[TestClient]:
         from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
 
         # Check if admin user already exists
-        existing_user = db.query(User).filter(User.username == "test_admin").first()
+        existing_user = db.query(User).filter(User.email == "test_admin@example.com").first()
         if existing_user:
+            # Check if role is assigned
+            if not existing_user.user_roles:
+                admin_role = db.query(Role).filter(Role.role_code == "admin").first()
+                if admin_role:
+                    user_role = UserRole(user=existing_user, role=admin_role)
+                    db.add(user_role)
+                    db.flush()
             return existing_user
 
-        # Create or get admin role
+        # Get admin role from baseline
         admin_role = db.query(Role).filter(Role.role_code == "admin").first()
         if not admin_role:
-            admin_role = Role(role_code="admin", role_name="Administrator")
-            db.add(admin_role)
-            db.flush()
+            raise RuntimeError("Admin role not found in baseline data")
 
         # Create admin user (email, display_name are required NOT NULL)
         user = User(
@@ -406,16 +433,12 @@ def master_data(db, supplier):
     )
     db.add(delivery_place)
 
-    # Create Roles if not exist
+    # Get roles from baseline
     admin_role = db.query(Role).filter(Role.role_code == "admin").first()
-    if not admin_role:
-        admin_role = Role(role_code="admin", role_name="Administrator")
-        db.add(admin_role)
-
     user_role = db.query(Role).filter(Role.role_code == "user").first()
-    if not user_role:
-        user_role = Role(role_code="user", role_name="User")
-        db.add(user_role)
+
+    if not admin_role or not user_role:
+        raise RuntimeError("Required roles ('admin' or 'user') not found in baseline data")
 
     db.flush()
 
@@ -461,12 +484,17 @@ def normal_user(db):
     """Create a normal test user."""
     from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
 
-    # Ensure user role exists
+    # Check if user already exists
+    user = db.query(User).filter(User.email == "normal@example.com").first()
+    if user:
+        db.refresh(user)
+        yield user
+        return
+
+    # Ensure user role exists in baseline
     user_role = db.query(Role).filter(Role.role_code == "user").first()
     if not user_role:
-        user_role = Role(role_code="user", role_name="User")
-        db.add(user_role)
-        db.flush()
+        raise RuntimeError("User role 'user' not found in baseline data")
 
     user = User(
         username="test_user_normal",
@@ -492,12 +520,17 @@ def superuser(db):
     """Create a superuser for testing."""
     from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
 
-    # Ensure admin role exists
+    # Check if user already exists
+    user = db.query(User).filter(User.email == "super@example.com").first()
+    if user:
+        db.refresh(user)
+        yield user
+        return
+
+    # Ensure admin role exists in baseline
     admin_role = db.query(Role).filter(Role.role_code == "admin").first()
     if not admin_role:
-        admin_role = Role(role_code="admin", role_name="Administrator")
-        db.add(admin_role)
-        db.flush()
+        raise RuntimeError("Admin role 'admin' not found in baseline data")
 
     user = User(
         username="test_superuser",
@@ -516,8 +549,8 @@ def superuser(db):
     db.refresh(user)
     yield user
     # Cleanup
-    db.delete(user)
-    db.commit()
+    # db.delete(user) # Don't delete if we want to reuse or if it persists from baseline
+    # db.commit()
 
 
 @pytest.fixture

@@ -53,20 +53,20 @@ def test_sap_data():
 
             if material_code in expected_mapping:
                 expected = expected_mapping[material_code]
-                assert (
-                    sap_supplier_code == expected[0]
-                ), f"Expected {expected[0]}, got {sap_supplier_code}"
-                assert (
-                    sap_supplier_name == expected[1]
-                ), f"Expected {expected[1]}, got {sap_supplier_name}"
+                assert sap_supplier_code == expected[0], (
+                    f"Expected {expected[0]}, got {sap_supplier_code}"
+                )
+                assert sap_supplier_name == expected[1], (
+                    f"Expected {expected[1]}, got {sap_supplier_name}"
+                )
                 assert sap_qty_unit == expected[2], f"Expected {expected[2]}, got {sap_qty_unit}"
                 print("  ✓ SAP data verified!")
             else:
                 # Unknown material codes should use default
                 assert sap_supplier_code == "S999", f"Expected S999, got {sap_supplier_code}"
-                assert (
-                    sap_supplier_name == "その他仕入先"
-                ), f"Expected 'その他仕入先', got {sap_supplier_name}"
+                assert sap_supplier_name == "その他仕入先", (
+                    f"Expected 'その他仕入先', got {sap_supplier_name}"
+                )
                 assert sap_qty_unit == "EA", f"Expected EA, got {sap_qty_unit}"
                 print("  ✓ Default SAP data verified!")
 

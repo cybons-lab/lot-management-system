@@ -486,7 +486,7 @@ class OrderService:
                 raise InvalidOrderStatusError(line.status, "cancel")
             line.status = "cancelled"
 
-        order.status = "cancelled"
+        order.status = "closed"
 
         self.db.flush()
 

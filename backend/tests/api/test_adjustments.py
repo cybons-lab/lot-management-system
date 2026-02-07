@@ -22,12 +22,12 @@ from app.infrastructure.persistence.models.lot_master_model import LotMaster
 def sample_lot(db: Session, supplier):
     """Create sample data for testing."""
     # Create user first (for adjusted_by foreign key)
-    role = Role(role_code="admin", role_name="Administrator")
-    db.add(role)
-    db.flush()
+    role = db.query(Role).filter(Role.role_code == "admin").first()
+    if not role:
+        raise RuntimeError("Admin role 'admin' not found in baseline data")
 
     user = User(
-        username="testuser",
+        username="adj_test_user",
         email="test@example.com",
         password_hash="fake_hash",
         display_name="Test User",
