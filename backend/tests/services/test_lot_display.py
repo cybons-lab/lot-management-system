@@ -85,12 +85,12 @@ def test_list_lots_maps_computed_fields():
     lot = results[0]
 
     # 重要なフィールドのアサーション
-    assert lot.available_quantity == Decimal(
-        "65.00"
-    ), "available_quantity がViewから正しくマッピングされていません"
-    assert lot.reserved_quantity_active == Decimal(
-        "5.00"
-    ), "reserved_quantity_active がViewから正しくマッピングされていません"
+    assert lot.available_quantity == Decimal("65.00"), (
+        "available_quantity がViewから正しくマッピングされていません"
+    )
+    assert lot.reserved_quantity_active == Decimal("5.00"), (
+        "reserved_quantity_active がViewから正しくマッピングされていません"
+    )
 
     # Standard fields
     assert lot.current_quantity == Decimal("80.00")
