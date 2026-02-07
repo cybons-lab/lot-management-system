@@ -1,8 +1,9 @@
 import { AlertTriangle, Settings2, Shield } from "lucide-react";
-import { useSystemSettings } from "../hooks/useSystemSettings";
-import { SETTING_CONFIGS } from "../constants/settings";
-import { SettingSection } from "../components/system-settings/SettingSection";
+
 import { DiagnosticsSection } from "../components/system-settings/DiagnosticsSection";
+import { SettingSection } from "../components/system-settings/SettingSection";
+import { SETTING_CONFIGS } from "../constants/settings";
+import { useSystemSettings } from "../hooks/useSystemSettings";
 
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 

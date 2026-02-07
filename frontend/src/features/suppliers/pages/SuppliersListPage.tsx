@@ -6,16 +6,16 @@ import { createColumns } from "../components/SupplierTableColumns";
 import { useSupplierListPage } from "../hooks/useSupplierListPage";
 
 import { Button, Checkbox, Label, RefreshButton } from "@/components/ui";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { MasterPageTemplate } from "@/shared/components/layout/MasterPageTemplate";
-import { TablePagination } from "@/shared/components/data/TablePagination";
 
 /**
  * 仕入先マスタ一覧ページ
  */
 export function SuppliersListPage() {
   const p = useSupplierListPage();
-  const { dlgs, setSelectedSupplierCode, table, sorted, showInactive, setShowInactive } = p;
+  const { setSelectedSupplierCode, table, showInactive, setShowInactive, dlgs } = p;
 
   const columns = useMemo(
     () =>
@@ -28,8 +28,7 @@ export function SuppliersListPage() {
     [dlgs, setSelectedSupplierCode],
   );
 
-  const paginated = table.paginateData(sorted);
-  const pageInfo = table.calculatePagination(sorted.length);
+  const { paginated, sorted, pageInfo } = p.processData(p.list.data);
 
   return (
     <MasterPageTemplate
@@ -74,7 +73,10 @@ export function SuppliersListPage() {
             checked={showInactive}
             onCheckedChange={(c) => setShowInactive(c as boolean)}
           />
-          <Label htmlFor="show-inactive" className="cursor-pointer text-sm font-normal text-slate-600">
+          <Label
+            htmlFor="show-inactive"
+            className="cursor-pointer text-sm font-normal text-slate-600"
+          >
             削除済みを表示
           </Label>
         </div>
@@ -84,7 +86,9 @@ export function SuppliersListPage() {
           <div
             className={`flex items-center justify-between rounded-lg border p-3 ${p.isAdmin ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}
           >
-            <span className={`text-sm font-medium ${p.isAdmin ? "text-red-800" : "text-amber-800"}`}>
+            <span
+              className={`text-sm font-medium ${p.isAdmin ? "text-red-800" : "text-amber-800"}`}
+            >
               {p.selectedIds.length} 件選択中
             </span>
             <Button

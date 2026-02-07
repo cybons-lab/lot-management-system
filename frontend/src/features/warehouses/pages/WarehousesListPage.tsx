@@ -3,10 +3,12 @@ import { useMemo } from "react";
 
 import { WarehouseDialogContainer } from "../components/WarehouseDialogContainer";
 import { useWarehouseListPage } from "../hooks/useWarehouseListPage";
+
 import { createWarehouseColumns } from "./columns";
 import * as styles from "./styles";
 
 import { Button, Checkbox, Label } from "@/components/ui";
+import { TablePagination } from "@/shared/components/data";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { MasterPageTemplate } from "@/shared/components/layout/MasterPageTemplate";
 
@@ -15,7 +17,7 @@ import { MasterPageTemplate } from "@/shared/components/layout/MasterPageTemplat
  */
 export function WarehousesListPage() {
   const p = useWarehouseListPage();
-  const { dlgs, setSelectedWarehouseCode, showInactive, setShowInactive, sorted } = p;
+  const { setSelectedWarehouseCode, table, showInactive, setShowInactive, dlgs } = p;
 
   const columns = useMemo(
     () =>
@@ -27,6 +29,8 @@ export function WarehousesListPage() {
       }),
     [dlgs, setSelectedWarehouseCode],
   );
+
+  const { paginated, sorted, pageInfo } = p.processData(p.list.data);
 
   return (
     <MasterPageTemplate
@@ -65,7 +69,10 @@ export function WarehousesListPage() {
             checked={showInactive}
             onCheckedChange={(c) => setShowInactive(c as boolean)}
           />
-          <Label htmlFor="show-inactive" className="cursor-pointer text-sm font-normal text-slate-600">
+          <Label
+            htmlFor="show-inactive"
+            className="cursor-pointer text-sm font-normal text-slate-600"
+          >
             削除済みを表示
           </Label>
         </div>
@@ -75,7 +82,9 @@ export function WarehousesListPage() {
           <div
             className={`flex items-center justify-between rounded-lg border p-3 ${p.isAdmin ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}
           >
-            <span className={`text-sm font-medium ${p.isAdmin ? "text-red-800" : "text-amber-800"}`}>
+            <span
+              className={`text-sm font-medium ${p.isAdmin ? "text-red-800" : "text-amber-800"}`}
+            >
               {p.selectedIds.length} 件選択中
             </span>
             <Button
@@ -90,7 +99,7 @@ export function WarehousesListPage() {
           </div>
         )
       }
-      data={sorted}
+      data={paginated}
       columns={columns}
       sort={p.sort}
       onSortChange={p.setSort}
@@ -101,6 +110,18 @@ export function WarehousesListPage() {
       selectable
       selectedIds={p.selectedIds}
       onSelectionChange={p.setSelectedIds}
+      afterTable={
+        sorted.length > 0 && (
+          <TablePagination
+            currentPage={pageInfo.page || 1}
+            pageSize={pageInfo.pageSize || 25}
+            totalCount={sorted.length}
+            onPageChange={table.setPage}
+            onPageSizeChange={table.setPageSize}
+            pageSizeOptions={[25, 50, 75, 100]}
+          />
+        )
+      }
       dialogContext={<WarehouseDialogContainer p={p} />}
     />
   );

@@ -1,5 +1,10 @@
-/* eslint-disable max-lines -- 画面全体の構成を分割せず把握できるよう統合しているが、中身は機能別に分割済み */
 import { Navigate, Route, Routes, Outlet } from "react-router-dom";
+
+import { AdminRoutes } from "./routes/admin-routes";
+import { InventoryRoutes } from "./routes/inventory-routes";
+import { MasterRoutes } from "./routes/master-routes";
+import { ReportRoutes } from "./routes/report-routes";
+import { RpaRoutes } from "./routes/rpa-routes";
 
 import { AccessGuard } from "@/components/auth/AccessGuard";
 import { AdminGuard } from "@/components/auth/AdminGuard";
@@ -8,12 +13,15 @@ import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
 
 // Pages
+import { CalendarSettingsPage } from "@/features/calendar";
 import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
 import { ForecastCreatePage } from "@/features/forecasts/pages/ForecastCreatePage";
 import { ForecastDetailPage } from "@/features/forecasts/pages/ForecastDetailPage";
 import { ForecastEditPage } from "@/features/forecasts/pages/ForecastEditPage";
 import { ForecastImportPage } from "@/features/forecasts/pages/ForecastImportPage";
 import { ForecastListPage } from "@/features/forecasts/pages/ForecastListPage";
+import { DatabaseSchemaPage } from "@/features/help/pages/DatabaseSchemaPage";
+import { FlowMapHelpPage } from "@/features/help/pages/FlowMapHelpPage";
 import { InboundPlanCreatePage } from "@/features/inbound-plans/pages/InboundPlanCreatePage";
 import { InboundPlanDetailPage } from "@/features/inbound-plans/pages/InboundPlanDetailPage";
 import { InboundPlanEditPage } from "@/features/inbound-plans/pages/InboundPlanEditPage";
@@ -23,17 +31,9 @@ import { OcrResultsListPage } from "@/features/ocr-results/pages/OcrResultsListP
 import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
-import { CalendarSettingsPage } from "@/features/calendar";
 import { SapIntegrationPage } from "@/features/sap-integration";
-import { FlowMapHelpPage } from "@/features/help/pages/FlowMapHelpPage";
-import { DatabaseSchemaPage } from "@/features/help/pages/DatabaseSchemaPage";
 
 // Route Groups
-import { InventoryRoutes } from "./routes/inventory-routes";
-import { MasterRoutes } from "./routes/master-routes";
-import { AdminRoutes } from "./routes/admin-routes";
-import { ReportRoutes } from "./routes/report-routes";
-import { RpaRoutes } from "./routes/rpa-routes";
 
 const FeatureGuardLayout = ({ feature }: { feature: string }) => (
   <FeatureGuard feature={feature}>

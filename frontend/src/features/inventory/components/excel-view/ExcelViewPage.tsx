@@ -1,15 +1,16 @@
+import { Plus } from "lucide-react";
 import { useParams } from "react-router-dom";
+
 import { ExcelViewDialogs } from "./components/ExcelViewDialogs";
 import { ExcelViewHeader } from "./components/ExcelViewHeader";
+import { useExcelView } from "./hooks/useExcelView";
 import { LotSection } from "./LotSection";
 import { ProductHeader } from "./ProductHeader";
-import { useExcelView } from "./hooks/useExcelView";
 
+import { Button } from "@/components/ui/button";
 import { SupplierFilterSet } from "@/features/assignments/components";
 import { PageNotes } from "@/shared/components/data/PageNotes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 
 /**
  * データの読み込み中またはエラー時の表示用コンポーネント
@@ -17,7 +18,11 @@ import { Plus } from "lucide-react";
 function LoadingOrError({ isLoading }: { isLoading: boolean }) {
   return (
     <div className="flex h-screen items-center justify-center bg-slate-50">
-      <div className={isLoading ? "text-slate-500 animate-pulse font-medium" : "text-red-500 font-medium"}>
+      <div
+        className={
+          isLoading ? "text-slate-500 animate-pulse font-medium" : "text-red-500 font-medium"
+        }
+      >
         {isLoading ? "データを読み込み中..." : "品目情報の取得に失敗しました。"}
       </div>
     </div>
@@ -26,7 +31,7 @@ function LoadingOrError({ isLoading }: { isLoading: boolean }) {
 
 /**
  * 在庫引当Excel表示ページ
- * 
+ *
  * リファクタリング履歴:
  * - Phase 1: PageNotes 統合
  * - Phase 3: ロジックの抽出 (useExcelView), コンポーネント分割 (Header, Dialogs, Utils)
@@ -37,10 +42,7 @@ export function ExcelViewPage() {
     customerItemId?: string;
   }>();
 
-  const p = useExcelView(
-    Number(productId),
-    customerItemId ? Number(customerItemId) : undefined
-  );
+  const p = useExcelView(Number(productId), customerItemId ? Number(customerItemId) : undefined);
 
   if (p.isLoading || !p.data) {
     return <LoadingOrError isLoading={p.isLoading} />;
@@ -57,10 +59,7 @@ export function ExcelViewPage() {
       <SupplierFilterSet warningOnly warningClassName="mb-4" />
 
       <div className="space-y-4">
-        <ProductHeader
-          data={p.data.header}
-          involvedDestinations={p.orderedInvolvedDestinations}
-        />
+        <ProductHeader data={p.data.header} involvedDestinations={p.orderedInvolvedDestinations} />
 
         {customerItemId && p.data && (
           <PageNotes
