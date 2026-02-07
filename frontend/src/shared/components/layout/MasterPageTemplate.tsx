@@ -109,7 +109,7 @@ export function MasterPageTemplate<T>({
             />
 
             {/* Stats Section */}
-            {stats && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{stats}</div>}
+            {stats && <div className="flex flex-wrap gap-4">{stats}</div>}
 
             {/* Main Table Content */}
             <div className="space-y-4">

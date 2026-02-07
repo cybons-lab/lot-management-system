@@ -53,12 +53,12 @@ export function SuppliersListPage() {
         </div>
       }
       stats={
-        <div className="rounded-lg border bg-blue-50 p-4">
-          <div className="flex items-center gap-3">
-            <Truck className="h-8 w-8 text-blue-600" />
+        <div className="group rounded-xl border border-blue-200 border-l-4 border-l-blue-500 bg-blue-50/50 p-5 shadow-sm transition-all duration-200 hover:shadow-md min-w-[240px]">
+          <div className="flex items-center gap-4">
+            <Truck className="h-8 w-8 text-blue-600 flex-shrink-0" />
             <div>
-              <p className="text-sm text-blue-600">登録仕入先数</p>
-              <p className="text-2xl font-bold text-blue-700">{p.list.data?.length ?? 0}</p>
+              <p className="text-sm font-medium text-blue-600 whitespace-nowrap">登録仕入先数</p>
+              <p className="mt-1 text-3xl font-bold text-blue-700">{p.list.data?.length ?? 0}</p>
             </div>
           </div>
         </div>
