@@ -92,7 +92,7 @@ jobs:
 
       - name: Install Backend Dependencies
         working-directory: backend
-        run: uv sync --extra seed --no-dev
+        run: uv sync --all-extras --no-dev
 
       - name: Export OpenAPI Schema
         working-directory: backend
