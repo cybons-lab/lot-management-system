@@ -37,11 +37,11 @@ interface QuickLotIntakeDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   /** Pre-selected product ID for new lot mode */
-  initialProductId?: number;
+  initialProductId?: number | undefined;
   /** Pre-selected warehouse ID for new lot mode */
-  initialWarehouseId?: number;
+  initialWarehouseId?: number | undefined;
   /** Pre-selected supplier ID for new lot mode */
-  initialSupplierId?: number;
+  initialSupplierId?: number | undefined;
 }
 
 const DEFAULT_UNIT = "EA";
@@ -55,7 +55,7 @@ export function QuickLotIntakeDialog({
   initialSupplierId,
 }: QuickLotIntakeDialogProps) {
   const queryClient = useQueryClient();
-  const today = new Date().toISOString().split("T")[0];
+  const today = useMemo(() => new Date().toISOString().split("T")[0] ?? "", []);
 
   // If initial values are provided, default to "new" mode
   const hasInitialValues = initialProductId !== undefined || initialWarehouseId !== undefined;
@@ -109,9 +109,8 @@ export function QuickLotIntakeDialog({
     () =>
       lots.map((lot) => ({
         value: String(lot.id),
-        label: `${lot.lot_number} / ${lot.product_code ?? "-"} ${
-          lot.product_name ?? ""
-        } / ${lot.warehouse_name ?? lot.warehouse_code ?? "-"}`,
+        label: `${lot.lot_number} / ${lot.product_code ?? "-"} ${lot.product_name ?? ""
+          } / ${lot.warehouse_name ?? lot.warehouse_code ?? "-"}`,
       })),
     [lots],
   );
@@ -237,9 +236,9 @@ export function QuickLotIntakeDialog({
       lot_number: lotNumber,
       supplier_item_id: Number(productId),
       warehouse_id: Number(warehouseId),
-      supplier_id: supplierId ? Number(supplierId) : undefined,
+      supplier_id: supplierId ? Number(supplierId) : null,
       received_date: receivedDate,
-      expiry_date: expiryDate || undefined,
+      expiry_date: expiryDate || null,
       received_quantity: Number(newQuantity),
       remaining_quantity: Number(newQuantity),
       current_quantity: Number(newQuantity),
