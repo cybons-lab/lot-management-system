@@ -133,30 +133,26 @@ export interface InboundPlansListParams {
 // ===== API Functions =====
 
 /**
+ * クエリパラメータを構築するヘルパー
+ */
+function buildQueryParams(params: Record<string, any>): string {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.append(key, value.toString());
+    }
+  });
+  const queryString = searchParams.toString();
+  return queryString ? "?" + queryString : "";
+}
+
+/**
  * Get inbound plans list
  * @endpoint GET /inbound-plans
  */
 export const getInboundPlans = async (params?: InboundPlansListParams) => {
-  const searchParams = new URLSearchParams();
-  if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
-  if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
-  if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
-  if (params?.supplier_item_id)
-    searchParams.append("supplier_item_id", params.supplier_item_id.toString());
-  if (params?.status) searchParams.append("status", params.status);
-  if (params?.date_from) searchParams.append("date_from", params.date_from);
-  if (params?.date_to) searchParams.append("date_to", params.date_to);
-  if (params?.prioritize_primary !== undefined) {
-    searchParams.append("prioritize_primary", params.prioritize_primary.toString());
-  }
-  if (params?.prioritize_assigned !== undefined) {
-    searchParams.append("prioritize_assigned", params.prioritize_assigned.toString());
-  }
-
-  const queryString = searchParams.toString();
-  const response = await http.get<InboundPlanListResponse>(
-    `inbound-plans${queryString ? "?" + queryString : ""}`,
-  );
+  const queryString = buildQueryParams(params ?? {});
+  const response = await http.get<InboundPlanListResponse>(`inbound-plans${queryString}`);
   // Return items array for compatibility with existing hooks
   return response.items;
 };

@@ -2,9 +2,224 @@
  * Type definitions for lot allocation feature
  */
 
-import type { CandidateLotItem } from "../api";
-
 import type { OrderLine as SharedOrderLine } from "@/shared/types/aliases";
+import type { paths } from "@/types/api";
+
+// ===== API Types (v2 compatible) =====
+
+export type ManualAllocationRequest =
+  paths["/api/v2/allocation/manual"]["post"]["requestBody"]["content"]["application/json"];
+export type ManualAllocationResponse =
+  paths["/api/v2/allocation/manual"]["post"]["responses"][200]["content"]["application/json"];
+
+export interface ManualAllocationBatchResponse {
+  success: boolean;
+  created_count: number;
+  message: string;
+}
+
+export type FefoPreviewRequest =
+  paths["/api/v2/allocation/preview"]["post"]["requestBody"]["content"]["application/json"];
+export type FefoPreviewResponse =
+  paths["/api/v2/allocation/preview"]["post"]["responses"][200]["content"]["application/json"];
+
+export type AllocationCommitRequest =
+  paths["/api/v2/allocation/commit"]["post"]["requestBody"]["content"]["application/json"];
+export type AllocationCommitResponse =
+  paths["/api/v2/allocation/commit"]["post"]["responses"][200]["content"]["application/json"];
+
+// Alias for compatibility
+export interface CandidateLotsResponse {
+  items: {
+    lot_id: number;
+    lot_number: string;
+    available_quantity: number;
+    expiry_date?: string;
+    product_code?: string;
+    warehouse_code?: string;
+  }[];
+}
+
+export interface CandidateLotItem {
+  lot_id: number;
+  lot_number: string;
+  free_qty: number;
+  current_quantity: number;
+  allocated_quantity: number | string;
+  allocated_qty?: number;
+  supplier_item_id?: number | null;
+  product_code?: string | null;
+  delivery_place_id?: number | null;
+  delivery_place_code?: string | null;
+  delivery_place_name?: string | null;
+  expiry_date?: string | null;
+  last_updated?: string | null;
+
+  // Added for compatibility
+  available_quantity: number;
+  status?: string;
+  warehouse_name?: string | null;
+  warehouse_code?: string | null;
+  lock_reason?: string | null;
+  internal_unit?: string | null;
+  qty_per_internal_unit?: number | null;
+  external_unit?: string | null;
+}
+
+// Legacy types for createAllocations
+export interface AllocationInputItem {
+  lotId: number;
+  lot?: unknown; // For UI logic compatibility
+  quantity: number;
+  delivery_place_id?: number | null;
+}
+
+export interface CreateAllocationPayload {
+  order_line_id: number;
+  allocations: AllocationInputItem[];
+  product_code?: string; // Compatibility
+}
+
+export interface AllocationResult {
+  order_id: number;
+}
+
+// ===== Group Planning Summary (計画引当サマリ) =====
+
+export interface PlanningAllocationLotBreakdown {
+  lot_id: number;
+  lot_number: string | null;
+  expiry_date: string | null;
+  planned_quantity: number;
+  other_group_allocated: number;
+}
+
+export interface PlanningAllocationPeriod {
+  forecast_period: string;
+  planned_quantity: number;
+}
+
+export interface PlanningAllocationSummary {
+  has_data: boolean;
+  total_planned_quantity: number;
+  total_demand_quantity: number;
+  shortage_quantity: number;
+  lot_breakdown: PlanningAllocationLotBreakdown[];
+  by_period: PlanningAllocationPeriod[];
+}
+
+// ===== Bulk Auto-Allocate (グループ一括引当) =====
+
+export interface BulkAutoAllocateRequest {
+  supplier_item_id?: number | null;
+  customer_id?: number | null;
+  delivery_place_id?: number | null;
+  order_type?: "FORECAST_LINKED" | "KANBAN" | "SPOT" | "ORDER" | null;
+  skip_already_allocated?: boolean;
+}
+
+export interface BulkAutoAllocateFailedLine {
+  line_id: number;
+  error: string;
+}
+
+export interface BulkAutoAllocateResponse {
+  processed_lines: number;
+  allocated_lines: number;
+  total_allocations: number;
+  skipped_lines: number;
+  failed_lines: BulkAutoAllocateFailedLine[];
+  message: string;
+}
+
+// ===== Order Auto-Allocate (Batch) =====
+
+export interface BatchAutoOrderRequest {
+  order_ids: number[];
+  dry_run?: boolean;
+}
+
+export interface BatchAutoOrderResult {
+  order_id: number;
+  success: boolean;
+  message?: string;
+  created_allocation_ids: number[];
+}
+
+export interface BatchAutoOrderResponse {
+  results: BatchAutoOrderResult[];
+  total_orders: number;
+  success_count: number;
+  failure_count: number;
+  message: string;
+}
+
+// ===== Allocation Suggestions API (v1) =====
+
+export interface AllocationSuggestionRequest {
+  mode: "forecast" | "order";
+  forecast_scope?: {
+    forecast_periods: string[];
+    customer_ids?: number[];
+    delivery_place_ids?: number[];
+    supplier_item_ids?: number[];
+  };
+  order_scope?: {
+    order_line_id: number;
+  };
+  options?: {
+    allocation_type?: "soft" | "hard";
+    fefo?: boolean;
+    allow_cross_warehouse?: boolean;
+    ignore_existing_suggestions?: boolean;
+  };
+}
+
+export interface AllocationSuggestionResponse {
+  id: number;
+  forecast_period: string;
+  customer_id: number;
+  delivery_place_id: number;
+  supplier_item_id: number;
+  lot_id: number;
+  quantity: number;
+  allocation_type: "soft" | "hard";
+  source: string;
+  order_line_id?: number | null;
+  created_at: string;
+  updated_at: string;
+  lot_number?: string;
+  lot_expiry_date?: string;
+  warehouse_name?: string;
+  coa_issue_date?: string | null;
+  comment?: string | null;
+  manual_shipment_date?: string | null;
+}
+
+export interface AllocationSuggestionPreviewResponse {
+  suggestions: AllocationSuggestionResponse[];
+  stats: Record<string, unknown>;
+  gaps: unknown[];
+}
+
+export interface AllocationSuggestionListResponse {
+  suggestions: AllocationSuggestionResponse[];
+  total: number;
+}
+
+export interface AllocationSuggestionBatchUpdateItem {
+  customer_id: number;
+  delivery_place_id: number;
+  supplier_item_id: number;
+  lot_id: number;
+  forecast_period: string;
+  quantity: number;
+  coa_issue_date?: string | null;
+  comment?: string | null;
+  manual_shipment_date?: string | null;
+}
+
+// ===== UI Types =====
 
 export type OrderLine = SharedOrderLine;
 
@@ -169,4 +384,35 @@ export interface ReservationInfo {
   product_code?: string | null;
   order_number?: string | null;
   status?: string;
+}
+
+// ===== Reservation Cancel (予約取消) =====
+
+export type ReservationCancelReason =
+  | "input_error"
+  | "wrong_quantity"
+  | "wrong_lot"
+  | "wrong_product"
+  | "customer_request"
+  | "duplicate"
+  | "other";
+
+export interface ReservationCancelRequest {
+  reason: ReservationCancelReason;
+  note?: string | null;
+  cancelled_by?: string | null;
+}
+
+export interface ReservationCancelResponse {
+  id: number;
+  lot_id: number | null;
+  lot_number: string | null;
+  reserved_quantity: string;
+  status: string;
+  cancel_reason: string | null;
+  cancel_reason_label: string | null;
+  cancel_note: string | null;
+  cancelled_by: string | null;
+  released_at: string | null;
+  message: string;
 }
