@@ -150,6 +150,8 @@ backend/dumps/
 # ============================================
 backups/
 mypy_*.txt
+tsc_errors*.txt
+tsc_output*.txt
 
 # ============================================
 # Test artifacts / Mock output
