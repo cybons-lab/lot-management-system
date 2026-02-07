@@ -5,7 +5,7 @@
 import { useEffect, useRef } from "react";
 import type { SetURLSearchParams } from "react-router-dom";
 
-import type { Order, OrderCardData } from "../../types";
+import type { Order, OrderCardData, OrderLine } from "../../types";
 
 interface UseAutoSelectionParams {
   orderCards: OrderCardData[];
@@ -18,8 +18,7 @@ interface UseAutoSelectionParams {
 /**
  * 適切なフォールバック明細を取得する
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getFallbackLine(lines: any[]): any | undefined {
+function getFallbackLine(lines: OrderLine[]): OrderLine | undefined {
   if (lines.length === 0) return undefined;
 
   // 有効な明細を選択: 製品コードがあり、数量が0より大きい明細を優先

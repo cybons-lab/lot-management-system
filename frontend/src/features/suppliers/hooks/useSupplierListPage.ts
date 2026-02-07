@@ -99,7 +99,7 @@ export function useSupplierListPage() {
   );
 
   const handleBulkAction = useCallback(
-    async (fn: any, msg: string) => {
+    async (fn: (p: { id: string | number; version: number }) => Promise<unknown>, msg: string) => {
       await master.executeBulkWithStatus(list.list.data ?? [], fn, msg);
     },
     [list.list.data, master],

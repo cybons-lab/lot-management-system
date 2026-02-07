@@ -1,3 +1,5 @@
+import type { useSupplierListPage } from "../hooks/useSupplierListPage";
+
 import { SupplierDetailDialog } from "./SupplierDetailDialog";
 import { SupplierForm } from "./SupplierForm";
 
@@ -5,7 +7,7 @@ import { MasterBulkDialog } from "@/shared/components/layout/MasterBulkDialog";
 import { MasterDialogContainer } from "@/shared/components/layout/MasterDialogContainer";
 
 interface SupplierDialogContainerProps {
-  p: any;
+  p: ReturnType<typeof useSupplierListPage>;
 }
 
 /**
@@ -22,7 +24,12 @@ export function SupplierDialogContainer({ p }: SupplierDialogContainerProps) {
       importGroup="supply"
       createForm={
         <SupplierForm
-          onSubmit={p.handleCreate}
+          onSubmit={(data) =>
+            p.handleCreate({
+              ...data,
+              short_name: data.short_name ?? null,
+            })
+          }
           onCancel={dlgs.close}
           isSubmitting={p.create.isPending}
         />
@@ -38,7 +45,7 @@ export function SupplierDialogContainer({ p }: SupplierDialogContainerProps) {
           onConfirmPermanent={() => p.handleBulkAction(p.permDel.mutateAsync, "完全削除")}
           onConfirmSoft={(e) =>
             p.handleBulkAction(
-              (d: any) => p.softDel.mutateAsync({ ...d, endDate: e || undefined }),
+              (d) => p.softDel.mutateAsync({ ...d, ...(e ? { endDate: e } : {}) }),
               "無効化",
             )
           }
