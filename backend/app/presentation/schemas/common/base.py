@@ -101,6 +101,7 @@
    # タイムスタンプあり
    class LotResponse(BaseSchema, TimestampMixin): ...
 
+
    # タイムスタンプなし
    class LotCreateRequest(BaseSchema): ...
    ```

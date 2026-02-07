@@ -302,9 +302,7 @@ def _generate_stockout_scenarios(
             # Just create a pending order. The system (if logic runs) would partial allocate.
             # Here we just leave it pending to signify shortage.
             pass
-        elif scenario_id == "stockout_complete":
-            pass
-        elif scenario_id == "stockout_backorder":
+        elif scenario_id == "stockout_complete" or scenario_id == "stockout_backorder":
             pass
 
         ol = OrderLine(

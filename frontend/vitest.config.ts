@@ -12,12 +12,19 @@ export default mergeConfig(
       environment: "jsdom",
       setupFiles: "./src/test/setup.ts",
       css: true,
+      clearMocks: true,
+      restoreMocks: true,
       exclude: [
         "**/node_modules/**",
         "**/dist/**",
         "**/e2e/**",
         "**/.{idea,git,cache,output,temp}/**",
       ],
+      coverage: {
+        provider: "v8",
+        reporter: ["text", "html"],
+        exclude: ["node_modules/", "src/test/", "**/*.d.ts", "**/*.config.*", "e2e/"],
+      },
     },
   }),
 );

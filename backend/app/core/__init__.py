@@ -6,10 +6,10 @@ from .database import SessionLocal, drop_db, engine, get_db, init_db
 
 
 __all__ = [
-    "settings",
-    "get_db",
-    "init_db",
+    "SessionLocal",
     "drop_db",
     "engine",
-    "SessionLocal",
+    "get_db",
+    "init_db",
+    "settings",
 ]

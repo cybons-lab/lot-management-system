@@ -227,5 +227,5 @@ async def import_shipping_masters_file(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"ファイル処理エラー: {str(e)}",
+            detail=f"ファイル処理エラー: {e!s}",
         ) from e

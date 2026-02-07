@@ -17,44 +17,26 @@
 **優先度:** 高
 **作成:** 2026-02-06
 **カテゴリ:** コード品質・堅牢性
-**工数:** 2-3日
+**状態:** 進行中（設定ファイル厳密化PRで大部分対応済み）
 
-**背景:**
-業務システムとして堅牢性が重要。現在の設定ファイル（ESLint, TypeScript, Ruff, Mypy等）が本番運用に耐えうるレベルか包括的にレビューする必要がある。
+**完了済み:**
+- [x] `backend/pyproject.toml` - 依存整理、Ruffルール強化（SIM/RET/C4/PERF/TRY/RUF/S/LOG/T20/ERA/ARG/C90/PL追加）、Mypy strict化、pytest統合
+- [x] `frontend/tsconfig.json` - `noUncheckedIndexedAccess`, `forceConsistentCasingInFileNames` 追加
+- [x] `frontend/vite.config.ts` - optimizeDeps整理、sourcemap: "hidden" 追加
+- [x] `frontend/vitest.config.ts` - clearMocks/restoreMocks/coverage設定追加
+- [x] `frontend/package.json` - 依存整理（重複削除、dev移動、knip/coverage-v8追加）
+- [x] `.pre-commit-config.yaml` - TypeScriptチェック追加、パス処理改善、make→npm統一
+- [x] `backend/pytest.ini` → `pyproject.toml` に統合
+- [x] `frontend/knip.json` - デッドコード検出設定追加
 
-**レビュー対象:**
-1. **フロントエンド**
-   - `frontend/eslint.config.js` - 現在116ファイルがTemporary overrides（要削減）
-   - `frontend/tsconfig.json` - strict mode設定の確認
-   - `frontend/vite.config.ts` - ビルド最適化設定
-   - `frontend/.prettierrc` - コードフォーマット統一
-
-2. **バックエンド**
-   - `backend/pyproject.toml` (Ruff設定) - Lintルールの厳格性
-   - `backend/mypy.ini` - 型チェックの厳格性
-   - `backend/pytest.ini` - テストカバレッジ目標
-   - `backend/alembic.ini` - マイグレーション設定
-
-3. **CI/CD**
-   - `.github/workflows/*.yml` - CI設定の網羅性
-   - `.pre-commit-config.yaml` - コミット前チェック
-   - `docker-compose.yml` - 本番環境との差異
-
-**実施内容:**
-1. 各設定ファイルの現状調査
-2. 業界ベストプラクティスとの比較
-3. 堅牢性を高めるための推奨変更案作成
-4. 段階的な改善ロードマップ策定
-
-**期待される成果:**
-- 型安全性の向上
-- バグの早期発見
-- コード品質の標準化
-- メンテナンス性の向上
+**残タスク:**
+- [ ] CI/CDワークフローの最適化
+- [ ] ESLint Temporary overrides削減（116 → 60ファイル以下、2026-Q1目標）
+- [ ] 後続タスク: BACKLOG 3-0 参照
 
 **関連タスク:**
 - `docs/project/SUPPRESSION_RESOLUTION_ROUND3.md` - 警告抑制の解消
-- ESLint Temporary overrides削減（116 → 60ファイル以下、2026-Q1目標）
+- `docs/project/plans/strictness-robustness-plan.md` - 詳細計画
 
 ### 1-B. 納入先マスタ `次区コード` 必須化の最終仕上げ（後方互換解消）
 
@@ -2006,6 +1988,20 @@ Phase 4で SmartRead/OCR系と主要マスタ系に楽観的ロック (`version`
 ---
 
 ## 3. 優先度: 低 (Maintenance/Major Updates)
+
+### 3-0. 厳密化・堅牢性の後続タスク
+
+**優先度:** 低
+**作成:** 2026-02-07
+**カテゴリ:** コード品質・堅牢性
+
+**後続タスク:**
+1. **asyncpg移行** - psycopg2-binary → asyncpg（非同期DB接続）
+2. **eslint-plugin-import → eslint-plugin-import-x 移行** - ESM対応・パフォーマンス改善
+3. **ESLint `no-explicit-any` の段階的有効化** - 現在off → warn → error
+4. **Vite manual chunks 最適化** - バンドルサイズ削減
+5. **`exactOptionalPropertyTypes: true`** - tsconfig.json（エラー量次第で段階的対応）
+6. **requests → httpx 統一** - SmartReadサービスで使用中のrequestsをhttpxに統一
 
 ### 3-1. Major Dependency Updates (2026-02-07)
 

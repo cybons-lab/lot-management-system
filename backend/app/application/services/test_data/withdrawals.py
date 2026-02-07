@@ -71,8 +71,7 @@ def generate_withdrawals(
         # Base count: 0.5 to 2.0 per month
         avg_per_month = random.uniform(0.5, 2.0)
         num_records = int(avg_per_month * history_months)
-        if num_records < 1:
-            num_records = 1
+        num_records = max(num_records, 1)
 
         # Max cap to avoid too many DB records in huge tests unless stressed
         if num_records > 50 and (not options or getattr(options, "scale", "small") != "large"):
@@ -106,8 +105,7 @@ def generate_withdrawals(
 
             qty = Decimal(str(round(random.uniform(min_qty, max_w_qty), 2)))
 
-            if qty > lot.current_quantity:
-                qty = lot.current_quantity
+            qty = min(qty, lot.current_quantity)
 
             if qty <= 0:
                 continue

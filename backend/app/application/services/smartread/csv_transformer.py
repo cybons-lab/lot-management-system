@@ -233,8 +233,7 @@ class SmartReadCsvTransformer:
         decimal_part = detail.get("納入量小数点", "").strip()
 
         # 納入量小数点フィールドを削除（縦持ちには含めない）
-        if "納入量小数点" in detail:
-            del detail["納入量小数点"]
+        detail.pop("納入量小数点", None)
 
         # 小数点がある場合は結合
         if decimal_part:

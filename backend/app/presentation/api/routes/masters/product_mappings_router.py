@@ -168,17 +168,17 @@ def update_product_mapping(
     update_data = data.model_dump(exclude_unset=True, exclude={"version"})
 
     # Validate foreign keys if being updated
-    if "customer_id" in update_data and update_data["customer_id"]:
+    if update_data.get("customer_id"):
         customer = db.query(Customer).filter(Customer.id == update_data["customer_id"]).first()
         if not customer:
             raise HTTPException(status_code=400, detail="Customer not found")
 
-    if "supplier_id" in update_data and update_data["supplier_id"]:
+    if update_data.get("supplier_id"):
         supplier = db.query(Supplier).filter(Supplier.id == update_data["supplier_id"]).first()
         if not supplier:
             raise HTTPException(status_code=400, detail="Supplier not found")
 
-    if "supplier_item_id" in update_data and update_data["supplier_item_id"]:
+    if update_data.get("supplier_item_id"):
         product = (
             db.query(SupplierItem)
             .filter(SupplierItem.id == update_data["supplier_item_id"])

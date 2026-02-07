@@ -23,7 +23,7 @@ import { useEffect, useState, useCallback } from "react";
 
 import httpClient from "@/shared/api/http-client";
 
-interface TableData {
+interface TableData extends Record<string, unknown> {
   name: string;
   comment: string;
   columns: {
@@ -105,7 +105,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = "TB") => 
 
   nodes.forEach((node) => {
     // カスタムノードのサイズを指定（概算）
-    const tableData = node.data as TableData;
+    const tableData = node.data as unknown as TableData;
     const height = 60 + (tableData.columns?.length || 0) * 25;
     dagreGraph.setNode(node.id, { width: nodeWidth, height });
   });

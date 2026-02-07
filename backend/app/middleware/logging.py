@@ -353,7 +353,6 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         """
         if status_code >= 500:
             return logging.ERROR
-        elif status_code >= 400:
+        if status_code >= 400:
             return logging.WARNING
-        else:
-            return logging.INFO
+        return logging.INFO

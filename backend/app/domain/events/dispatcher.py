@@ -94,6 +94,7 @@
    async def handler(event: StockChangedEvent):  # 型一致
        ...
 
+
    @EventDispatcher.subscribe(StockChangedEvent)
    async def handler(event: OrderCreatedEvent):  # 型不一致 → エラー
        ...

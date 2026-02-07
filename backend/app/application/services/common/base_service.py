@@ -112,6 +112,7 @@ Soft Delete Support:
            self.db.flush()
            # ...
            return result
+
        return self._execute_in_transaction(_logic)
    ```
    メリット:
@@ -156,12 +157,11 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
     Example:
         ```python
         # For integer ID
-        class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
-            ...
+        class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]): ...
+
 
         # For string ID
-        class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, str]):
-            ...
+        class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, str]): ...
         ```
     """
 

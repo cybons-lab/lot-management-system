@@ -178,7 +178,7 @@ class DataIntegrityService:
         for (tbl, col), default_value in targets.items():
             try:
                 result = self.db.execute(
-                    text(f"UPDATE {tbl} SET {col} = :val WHERE {col} IS NULL"),  # noqa: S608
+                    text(f"UPDATE {tbl} SET {col} = :val WHERE {col} IS NULL"),
                     {"val": default_value},
                 )
                 rows_affected: int = result.rowcount  # type: ignore[attr-defined]
@@ -227,16 +227,14 @@ class DataIntegrityService:
         """単一カラムの NULL 違反をチェックする."""
         try:
             count_result = self.db.execute(
-                text(f"SELECT COUNT(*) FROM {table_name} WHERE {column_name} IS NULL")  # noqa: S608
+                text(f"SELECT COUNT(*) FROM {table_name} WHERE {column_name} IS NULL")
             )
             count = count_result.scalar() or 0
             if count == 0:
                 return None
 
             sample_result = self.db.execute(
-                text(  # noqa: S608
-                    f"SELECT {pk_col} FROM {table_name} WHERE {column_name} IS NULL LIMIT 5"
-                )
+                text(f"SELECT {pk_col} FROM {table_name} WHERE {column_name} IS NULL LIMIT 5")
             )
             sample_ids = [row[0] for row in sample_result]
 

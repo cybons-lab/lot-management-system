@@ -199,7 +199,7 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, int]
 
             except Exception as e:
                 summary["failed"] += 1
-                errors.append(f"{row.supplier_code}: {str(e)}")
+                errors.append(f"{row.supplier_code}: {e!s}")
                 self.db.rollback()
                 continue
 
@@ -209,7 +209,7 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, int]
                 self.db.commit()
             except Exception as e:
                 self.db.rollback()
-                errors.append(f"Commit failed: {str(e)}")
+                errors.append(f"Commit failed: {e!s}")
                 summary["failed"] = summary["total"]
                 summary["created"] = 0
                 summary["updated"] = 0

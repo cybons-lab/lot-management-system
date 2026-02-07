@@ -296,17 +296,17 @@ class SmartReadRequestService(SmartReadBaseService):
             抽出された値
         """
         # correction があればそれを使用
-        if "correction" in field and field["correction"]:
+        if field.get("correction"):
             return str(field["correction"])
 
         # フィールドタイプに応じて値を抽出
         if "checkbox" in field:
             return str(field["checkbox"]["isChecked"]["result"])
-        elif "boxedCharacters" in field:
+        if "boxedCharacters" in field:
             return str(field["boxedCharacters"].get("text", ""))
-        elif "singleLine" in field:
+        if "singleLine" in field:
             return str(field["singleLine"].get("text", ""))
-        elif "multiLine" in field:
+        if "multiLine" in field:
             lines = field["multiLine"].get("lines", [])
             return "\n".join(str(line.get("text", "")) for line in lines)
 
@@ -324,13 +324,13 @@ class SmartReadRequestService(SmartReadBaseService):
         if "checkbox" in field:
             conf = field["checkbox"]["isChecked"].get("confidence")
             return float(conf) if conf is not None else None
-        elif "boxedCharacters" in field:
+        if "boxedCharacters" in field:
             conf = field["boxedCharacters"].get("confidence")
             return float(conf) if conf is not None else None
-        elif "singleLine" in field:
+        if "singleLine" in field:
             conf = field["singleLine"].get("confidence")
             return float(conf) if conf is not None else None
-        elif "multiLine" in field:
+        if "multiLine" in field:
             lines = field["multiLine"].get("lines", [])
             if lines:
                 confidences = [

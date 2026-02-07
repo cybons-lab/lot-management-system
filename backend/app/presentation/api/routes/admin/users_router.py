@@ -72,7 +72,7 @@ def bulk_create_users(
             created_count += 1
         except Exception as e:
             skipped_count += 1
-            errors.append(f"Failed to create user '{user_data.username}': {str(e)}")
+            errors.append(f"Failed to create user '{user_data.username}': {e!s}")
 
     return {
         "created": created_count,

@@ -10,8 +10,8 @@ from .routes import (
 
 
 __all__ = [
+    "admin_router",
     "lots_router",
     "orders_router",
-    "admin_router",
     # "orders_validate_router",  # Disabled: requires OrderValidation* schemas not in DDL v2.2
 ]

@@ -320,7 +320,7 @@ def generate_customer_items(
             )
 
             # Create default delivery setting if customer has delivery places
-            if customer.id in customer_delivery_map and customer_delivery_map[customer.id]:
+            if customer_delivery_map.get(customer.id):
                 default_dp = random.choice(customer_delivery_map[customer.id])
                 delivery_setting = CustomerItemDeliverySetting(
                     customer_item_id=ci.id,

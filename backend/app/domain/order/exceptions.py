@@ -89,10 +89,7 @@
    使用例:
    ```python
    if quantity <= 0:
-       raise OrderValidationError(
-           "Quantity must be positive",
-           details={"quantity": quantity}
-       )
+       raise OrderValidationError("Quantity must be positive", details={"quantity": quantity})
    ```
 
 8. ProductNotFoundError の設計（L103-117）

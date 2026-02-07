@@ -112,7 +112,7 @@ def download_template(group: str = "supply") -> dict:
                 ]
             }
         }
-    elif group == "customer":
+    if group == "customer":
         return {
             "customer_data": {
                 "customers": [
@@ -136,11 +136,10 @@ def download_template(group: str = "supply") -> dict:
                 ]
             }
         }
-    else:
-        return {
-            "supply_data": {"suppliers": []},
-            "customer_data": {"customers": []},
-        }
+    return {
+        "supply_data": {"suppliers": []},
+        "customer_data": {"customers": []},
+    }
 
 
 @router.get("/template/order")

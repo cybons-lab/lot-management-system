@@ -48,7 +48,7 @@
        quantity_before=Decimal("100"),
        quantity_after=Decimal("50"),
        quantity_change=Decimal("-50"),
-       reason="出荷"
+       reason="出荷",
    )
    await EventDispatcher.dispatch(event)
    ```
@@ -89,7 +89,7 @@
        order_line_id=789,
        lot_id=123,
        quantity=Decimal("50"),
-       allocation_type="soft"
+       allocation_type="soft",
    )
    ```
 

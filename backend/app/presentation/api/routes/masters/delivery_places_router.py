@@ -188,7 +188,7 @@ def update_delivery_place(
     update_data = data.model_dump(exclude_unset=True, exclude={"version"})
 
     # If updating customer_id, verify customer exists
-    if "customer_id" in update_data and update_data["customer_id"]:
+    if update_data.get("customer_id"):
         customer = db.query(Customer).filter(Customer.id == update_data["customer_id"]).first()
         if not customer:
             raise HTTPException(status_code=400, detail="Customer not found")

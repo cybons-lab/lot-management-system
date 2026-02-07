@@ -1,23 +1,44 @@
 # リポジトリ直下の .pre-commit-config.yaml
+#
+# 設計方針:
+#   - pass_filenames: false でプロジェクト全体チェック（パス操作の罠を回避）
+#   - npm run / uv run 経由でツール実行（環境依存を最小化）
+#   - TypeScript型チェックをフロントエンドに追加（最重要）
+
 repos:
-  # Frontend - Prettier
+  # --------------------------------------------------------------------------
+  # Frontend Checks
+  # --------------------------------------------------------------------------
   - repo: local
     hooks:
-      - id: prettier
-        name: Prettier (Frontend)
-        entry: bash -c 'cd frontend && npx prettier --write "${@#frontend/}"' --
+      # 1. TypeScript 型チェック（最重要: 論理的な型整合性）
+      - id: frontend-tsc
+        name: TypeScript Check (Frontend)
+        entry: bash -c 'cd frontend && npm run typecheck'
         language: system
-        files: ^frontend/.*\.(ts|tsx|js|jsx|json|css|md)$
-        pass_filenames: true
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false
 
-      - id: eslint
+      # 2. ESLint（コード品質・行儀作法）
+      - id: frontend-eslint
         name: ESLint (Frontend)
-        entry: bash -c 'cd frontend && npx eslint --fix "${@#frontend/}"' --
+        entry: bash -c 'cd frontend && npm run lint -- --fix'
         language: system
         files: ^frontend/.*\.(ts|tsx|js|jsx)$
-        pass_filenames: true
+        types: [file]
+        pass_filenames: false
 
-  # Backend - Ruff (lint + format)
+      # 3. Prettier（フォーマット・見た目）
+      - id: frontend-prettier
+        name: Prettier (Frontend)
+        entry: bash -c 'cd frontend && npm run format'
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js|jsx|json|css|md)$
+        pass_filenames: false
+
+  # --------------------------------------------------------------------------
+  # Backend Checks
+  # --------------------------------------------------------------------------
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.0
     hooks:
@@ -27,23 +48,27 @@ repos:
       - id: ruff-format
         files: ^backend/
 
-  # Backend - Mypy (Type Check)
   - repo: local
     hooks:
-      - id: mypy
+      # 4. Mypy（型チェック）
+      - id: backend-mypy
         name: Mypy (Backend)
-        entry: bash -c 'cd backend && uv run mypy app/' --
+        entry: bash -c 'cd backend && uv run mypy app/'
         language: system
         types: [python]
         files: ^backend/
         pass_filenames: false
 
-  # OpenAPI Schema Sync - regenerate when backend schemas or routes change
+  # --------------------------------------------------------------------------
+  # Automation & Sync
+  # --------------------------------------------------------------------------
   - repo: local
     hooks:
+      # 5. OpenAPI Schema Sync
+      # npm run fe:typegen 相当（frontend/package.json の typegen:full を使用）
       - id: openapi-sync
         name: OpenAPI Schema Sync
-        entry: bash -c 'make typegen >/dev/null 2>&1 && git add backend/openapi.json frontend/src/types/api.d.ts'
+        entry: bash -c 'cd frontend && npm run typegen:full >/dev/null 2>&1 && git add ../backend/openapi.json src/types/api.d.ts'
         language: system
         files: ^backend/app/(presentation/(schemas|api/routes)|schemas)/.*\.py$
         pass_filenames: false
