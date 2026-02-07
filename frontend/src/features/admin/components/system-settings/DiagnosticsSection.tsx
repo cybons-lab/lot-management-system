@@ -1,7 +1,7 @@
 import { Database, AlertCircle, CheckCircle2, AlertTriangle, Wrench } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import type { SchemaCheckResult, SchemaEntityStatus } from "../../types";
+import type { SchemaCheckResult, SchemaEntityStatus, SchemaCheckIssue } from "../../types";
 
 import { Button } from "@/components/ui/base/button";
 

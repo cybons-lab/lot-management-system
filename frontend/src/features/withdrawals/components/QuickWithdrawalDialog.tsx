@@ -430,9 +430,8 @@ export function QuickWithdrawalDialog({
             </Label>
             <DatePicker
               value={formState.due_date}
-              onChange={(v) =>
-                updateField("ship_date", (v ? v.split("T")[0] : "")!)
-              } disabled={isSubmitting}
+              onChange={(v) => updateField("ship_date", (v ? v.split("T")[0] : "")!)}
+              disabled={isSubmitting}
               placeholder="納期を選択"
             />
           </div>

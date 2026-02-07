@@ -35,9 +35,9 @@ interface LotAllocationPanelProps {
   isSaving?: boolean;
 
   // Props for internal calculations (can be overridden)
-  customerName?: string;
-  productName?: string;
-  deliveryPlaceName?: string;
+  customerName?: string | undefined;
+  productName?: string | undefined;
+  deliveryPlaceName?: string | undefined;
 
   // Active state management
   isActive?: boolean;
@@ -80,7 +80,7 @@ export function LotAllocationPanel({
   softAllocated,
   hasUnsavedChanges = false,
   allocationState = "none",
-}: LotAllocationPanelProps & { deliveryPlaceName?: string }) {
+}: LotAllocationPanelProps) {
   // Set current line context for ForecastTooltip (Phase 2)
   const setCurrentLineContext = useSetCurrentLineContext();
   useEffect(() => {

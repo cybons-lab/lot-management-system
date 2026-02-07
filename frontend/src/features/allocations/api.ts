@@ -43,15 +43,15 @@ export const getAllocationCandidates = async (params: {
   // Call Inventory API v2
   const lots = await getAvailableLots({
     supplier_item_id: params.supplier_item_id,
-    warehouse_id: params.warehouse_id,
+    ...(params.warehouse_id !== undefined ? { warehouse_id: params.warehouse_id } : {}),
   });
 
   // Convert to CandidateLotsResponse format
   const items = lots.map((lot) => ({
     lot_id: lot.lot_id,
-    lot_number: lot.lot_number || lot.lot_code, // fallback
+    lot_number: lot.lot_number || lot.lot_code || "Unknown", // fallback
     available_quantity: lot.available_qty,
-    expiry_date: lot.expiry_date,
+    expiry_date: lot.expiry_date ?? null,
     product_code: lot.product_code,
     warehouse_code: lot.warehouse_code,
     // Compatibility fields

@@ -69,7 +69,6 @@ export function DataTable<T>({
     return (
       <DataTableLoading
         columnCount={columns.length + (props.selectable ? 1 : 0)}
-
         {...(dense !== undefined && { dense })}
         {...(className !== undefined && { className })}
       />
@@ -83,7 +82,7 @@ export function DataTable<T>({
   const paddingBottom =
     enableVirtualization && rowVirtualizer.getVirtualItems().length > 0
       ? rowVirtualizer.getTotalSize() -
-      rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1]!.end
+        rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1]!.end
       : 0;
 
   return (
@@ -104,7 +103,6 @@ export function DataTable<T>({
         <table className="responsive-table w-full" style={{ tableLayout: "fixed" }}>
           <DataTableHeader
             table={table}
-
             {...(dense !== undefined && { dense })}
             {...(enableVirtualization !== undefined && { enableVirtualization })}
           />
@@ -123,13 +121,18 @@ export function DataTable<T>({
                 <DataTableRow
                   key={row.id}
                   row={row}
-
                   {...(dense !== undefined && { dense })}
                   {...(props.striped !== undefined && { striped: props.striped })}
                   {...(props.onRowClick !== undefined && { onRowClick: props.onRowClick })}
-                  {...(props.renderHoverActions !== undefined && { renderHoverActions: props.renderHoverActions })}
-                  {...(props.renderExpandedRow !== undefined && { renderExpandedRow: props.renderExpandedRow })}
-                  {...(props.getRowClassName !== undefined && { getRowClassName: props.getRowClassName })}
+                  {...(props.renderHoverActions !== undefined && {
+                    renderHoverActions: props.renderHoverActions,
+                  })}
+                  {...(props.renderExpandedRow !== undefined && {
+                    renderExpandedRow: props.renderExpandedRow,
+                  })}
+                  {...(props.getRowClassName !== undefined && {
+                    getRowClassName: props.getRowClassName,
+                  })}
                   {...(enableVirtualization && { measureElement: rowVirtualizer.measureElement })}
                 />
               );

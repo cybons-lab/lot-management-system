@@ -148,7 +148,9 @@ describe("allocationCalculations", () => {
     });
 
     it("returns 0 when available_quantity is missing", () => {
-      const lot = createMockCandidateLot({ available_quantity: undefined } as unknown as Partial<CandidateLotItem>);
+      const lot = createMockCandidateLot({
+        available_quantity: undefined,
+      } as unknown as Partial<CandidateLotItem>);
       expect(getFreeQuantity(lot)).toBe(0);
     });
   });

@@ -142,8 +142,8 @@ function OrderSummaryRowWrapper({
       targetProductGroupId={targetProductGroupId}
       targetDeliveryPlaceId={targetDeliveryPlaceId}
       logic={logic}
-      hoveredDate={hoveredDate}
-      onDateHover={onDateHover}
+      {...(hoveredDate !== undefined ? { hoveredDate } : {})}
+      {...(onDateHover !== undefined ? { onDateHover } : {})}
     />
   );
 }
@@ -194,8 +194,8 @@ export function RelatedOrdersSection({
               order={order}
               targetProductGroupId={group_key.supplier_item_id}
               targetDeliveryPlaceId={group_key.delivery_place_id}
-              hoveredDate={hoveredDate}
-              onDateHover={onDateHover}
+              {...(hoveredDate !== undefined ? { hoveredDate } : {})}
+              {...(onDateHover !== undefined ? { onDateHover } : {})}
             />
           ))}
         </div>

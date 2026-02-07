@@ -70,7 +70,7 @@ describe("useSimulationForm", () => {
       const profileKeys = Object.keys(PROFILE_WAREHOUSE_MAP);
 
       if (profileKeys.length > 0) {
-        const testProfile = profileKeys[0];
+        const testProfile = profileKeys[0]!;
         const expectedWarehouses = PROFILE_WAREHOUSE_MAP[testProfile];
 
         act(() => {

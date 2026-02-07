@@ -13,16 +13,13 @@ export function getCustomerName(
 export function getProductName(line: OrderLine, productMap: Record<number, string>): string {
   if (line.product_name) return line.product_name;
   if (line.supplier_item_id && productMap[line.supplier_item_id])
-    return productMap[line.supplier_item_id];
+    return productMap[line.supplier_item_id] || "商品名不明";
   return "商品名不明";
 }
 
-export function getDeliveryPlaceName(
-  order: OrderWithLinesResponse,
-  line: OrderLine,
-): string | undefined {
+export function getDeliveryPlaceName(order: OrderWithLinesResponse, line: OrderLine): string {
   // 明細の納入先 > オーダーの納入先 > 未設定
   if (line.delivery_place_name) return line.delivery_place_name;
   if (order.delivery_place_name) return order.delivery_place_name;
-  return undefined;
+  return "納入先未設定";
 }

@@ -31,7 +31,7 @@ export function getDeliveryPlaceName(
   candidateLots: CandidateLotItem[],
 ): string {
   if (orderLine?.delivery_place_name) return orderLine.delivery_place_name;
-  if (candidateLots.length > 0 && candidateLots[0].delivery_place_name) {
+  if (candidateLots.length > 0 && candidateLots[0]?.delivery_place_name) {
     return candidateLots[0].delivery_place_name;
   }
   return "納入先未設定";

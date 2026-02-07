@@ -255,8 +255,9 @@ function WeekdayHeader() {
       {WEEK_DAYS.map((day, i) => (
         <div
           key={day}
-          className={`py-3 text-center text-xs font-semibold tracking-wider uppercase ${i === 0 ? "text-red-400" : i === 6 ? "text-blue-400" : "text-slate-500"
-            }`}
+          className={`py-3 text-center text-xs font-semibold tracking-wider uppercase ${
+            i === 0 ? "text-red-400" : i === 6 ? "text-blue-400" : "text-slate-500"
+          }`}
         >
           {day}
         </div>

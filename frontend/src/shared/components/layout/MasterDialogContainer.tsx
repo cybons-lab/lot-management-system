@@ -85,7 +85,9 @@ export function MasterDialogContainer({
         }
         onConfirm={p.handleSoftDelete}
         isPending={p.softDel?.isPending}
-        {...(dlgs.switchToPermanentDelete ? { onSwitchToPermanent: dlgs.switchToPermanentDelete } : {})}
+        {...(dlgs.switchToPermanentDelete
+          ? { onSwitchToPermanent: dlgs.switchToPermanentDelete }
+          : {})}
       />
 
       {/* 完全削除ダイアログ */}
@@ -103,10 +105,10 @@ export function MasterDialogContainer({
         confirmationPhrase={
           dlgs.deletingItem
             ? String(
-              (dlgs.deletingItem as any).code ||
-              (dlgs.deletingItem as any).supplier_code ||
-              (dlgs.deletingItem as any).warehouse_code,
-            )
+                (dlgs.deletingItem as any).code ||
+                  (dlgs.deletingItem as any).supplier_code ||
+                  (dlgs.deletingItem as any).warehouse_code,
+              )
             : "delete"
         }
       />

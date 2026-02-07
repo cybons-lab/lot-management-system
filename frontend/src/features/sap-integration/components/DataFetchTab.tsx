@@ -286,11 +286,12 @@ export function DataFetchTab() {
                         cacheData.items.map((item, idx) => (
                           <TableRow
                             key={`${item.zkdmat_b}-${item.kunnr}-${idx}`}
-                            className={`cursor-pointer hover:bg-muted/50 ${selectedItem?.zkdmat_b === item.zkdmat_b &&
+                            className={`cursor-pointer hover:bg-muted/50 ${
+                              selectedItem?.zkdmat_b === item.zkdmat_b &&
                               selectedItem?.kunnr === item.kunnr
-                              ? "bg-muted"
-                              : ""
-                              }`}
+                                ? "bg-muted"
+                                : ""
+                            }`}
                             onClick={() => setSelectedItem(item)}
                           >
                             {visibleColumnsData.map((col) => (

@@ -12,9 +12,9 @@ export function useForecastData(
     queryKey: ["forecasts", customerId, deliveryPlaceId, productGroupId],
     queryFn: () =>
       getForecasts({
-        customer_id: customerId ?? undefined,
-        delivery_place_id: deliveryPlaceId ?? undefined,
-        supplier_item_id: productGroupId ?? undefined,
+        ...(customerId ? { customer_id: customerId } : {}),
+        ...(deliveryPlaceId ? { delivery_place_id: deliveryPlaceId } : {}),
+        ...(productGroupId ? { supplier_item_id: productGroupId } : {}),
         limit: 100, // 十分な数を取得
       }),
     enabled: !!customerId && !!productGroupId,

@@ -149,9 +149,9 @@ export function WithdrawalsListPage() {
             {searchQuery.trim()
               ? `検索結果 ${withdrawals.length} 件`
               : `${total} 件中 ${(page - 1) * PAGE_SIZE + 1} - ${Math.min(
-                page * PAGE_SIZE,
-                total,
-              )} 件を表示`}
+                  page * PAGE_SIZE,
+                  total,
+                )} 件を表示`}
           </CardDescription>
         </CardHeader>
         <CardContent>

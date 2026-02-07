@@ -47,7 +47,7 @@ function VisibilityRow({ id, label, isSub, config, onToggle, disabled }: Visibil
 
   if (isSub) {
     const parentId = id.split(":")[0];
-    const parentConf = normalizeVisibilityEntry(config[parentId]);
+    const parentConf = parentId ? normalizeVisibilityEntry(config[parentId]) : { user: true };
     // New Logic: If parent is FALSE, child is forced FALSE.
     // If parent is TRUE, child is configurable.
     userParentDisabled = !parentConf.user;

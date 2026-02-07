@@ -59,14 +59,20 @@ export function WarehouseAllocationModal({
 
   const handleWarehouseChange = (index: number, deliveryPlaceCode: string) => {
     const newAllocations = [...allocations];
-    newAllocations[index].delivery_place_code = deliveryPlaceCode;
-    setAllocations(newAllocations);
+    const allocation = newAllocations[index];
+    if (allocation) {
+      allocation.delivery_place_code = deliveryPlaceCode;
+      setAllocations(newAllocations);
+    }
   };
 
   const handleQuantityChange = (index: number, quantity: string) => {
     const newAllocations = [...allocations];
-    newAllocations[index].quantity = parseFloat(quantity) || 0;
-    setAllocations(newAllocations);
+    const allocation = newAllocations[index];
+    if (allocation) {
+      allocation.quantity = parseFloat(quantity) || 0;
+      setAllocations(newAllocations);
+    }
   };
 
   const allocatedTotal = allocations.reduce(

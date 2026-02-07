@@ -23,7 +23,7 @@ interface OrderLinesPaneViewProps {
   displayLines: OrderLineDisplay[];
   orderLinesCount: number;
   renderInlineLots: boolean;
-  inlineLotContent?: (line: OrderLine) => React.ReactNode;
+  inlineLotContent?: ((line: OrderLine) => React.ReactNode) | undefined;
   onLineClick: (line: OrderLine) => void;
   isLoading?: boolean;
   error?: Error | null;

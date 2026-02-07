@@ -238,8 +238,8 @@ export function useWithdrawalFormState({
   // Available quantity
   const availableQuantity = selectedLot
     ? Number(selectedLot.current_quantity) -
-    Number(selectedLot.allocated_quantity) -
-    Number(selectedLot.locked_quantity || 0)
+      Number(selectedLot.allocated_quantity) -
+      Number(selectedLot.locked_quantity || 0)
     : 0;
 
   // Update filter

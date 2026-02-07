@@ -180,8 +180,9 @@ export function InventoryItemDetailPage() {
         const supplierDisplay: string = (lot.supplier_name || lot.supplier_code || "-") as string;
         return (
           <span
-            className={`text-sm ${lot.status === "archived" ? "line-through text-gray-400" : "text-gray-700"
-              }`}
+            className={`text-sm ${
+              lot.status === "archived" ? "line-through text-gray-400" : "text-gray-700"
+            }`}
           >
             {supplierDisplay}
           </span>
@@ -574,7 +575,11 @@ export function InventoryItemDetailPage() {
           open={lockDialog.isOpen}
           onClose={handleCloseLock}
           onConfirm={async (reason, quantity) => {
-            await lockLotMutation.mutateAsync({ id: selectedLot.id, reason, ...(quantity !== undefined && { quantity }) });
+            await lockLotMutation.mutateAsync({
+              id: selectedLot.id,
+              reason,
+              ...(quantity !== undefined && { quantity }),
+            });
           }}
           isSubmitting={lockLotMutation.isPending}
           {...(selectedLot.lot_number && { lotNumber: selectedLot.lot_number })}

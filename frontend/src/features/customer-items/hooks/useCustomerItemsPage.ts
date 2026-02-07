@@ -174,7 +174,13 @@ export function useCustomerItemsPage() {
       setIsBulkDeleting(true);
       try {
         const results = await Promise.allSettled(
-          items.map((item) => softDeleteAsync({ id: item.id, version: item.version, ...(endDate ? { endDate } : {}) })),
+          items.map((item) =>
+            softDeleteAsync({
+              id: item.id,
+              version: item.version,
+              ...(endDate ? { endDate } : {}),
+            }),
+          ),
         );
 
         const succeeded = results.filter((r) => r.status === "fulfilled").length;

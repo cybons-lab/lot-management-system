@@ -3,8 +3,6 @@
  * 受注関連のテストデータ生成ファクトリー
  */
 
-
-
 import { faker } from "@faker-js/faker/locale/ja";
 
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
@@ -60,8 +58,12 @@ export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
     updated_at: faker.date.recent().toISOString(),
     // Legacy fields for backward compatibility
     // order_no: overrides?.order_no ?? `ORD-${faker.string.alphanumeric(6).toUpperCase()}`,
-    ...(overrides?.customer_code ? { customer_code: overrides.customer_code } : { customer_code: `CUST-${faker.string.alphanumeric(4).toUpperCase()}` }),
-    ...(overrides?.customer_name ? { customer_name: overrides.customer_name } : { customer_name: faker.company.name() }),
+    ...(overrides?.customer_code
+      ? { customer_code: overrides.customer_code }
+      : { customer_code: `CUST-${faker.string.alphanumeric(4).toUpperCase()}` }),
+    ...(overrides?.customer_name
+      ? { customer_name: overrides.customer_name }
+      : { customer_name: faker.company.name() }),
     ...overrides,
   };
 }
@@ -152,12 +154,20 @@ export function createOrderWithLines(
         index + 1,
       id: "id" in line ? (line.id as number) : index + 1,
       ...line,
-      ...(("customer_code" in line && line.customer_code !== undefined) ? { customer_code: line.customer_code } :
-        (overrides?.customer_code !== undefined ? { customer_code: overrides.customer_code } :
-          (order.customer_code !== undefined ? { customer_code: order.customer_code } : {}))),
-      ...(("customer_name" in line && line.customer_name !== undefined) ? { customer_name: line.customer_name } :
-        (overrides?.customer_name !== undefined ? { customer_name: overrides.customer_name } :
-          (order.customer_name !== undefined ? { customer_name: order.customer_name } : {}))),
+      ...("customer_code" in line && line.customer_code !== undefined
+        ? { customer_code: line.customer_code }
+        : overrides?.customer_code !== undefined
+          ? { customer_code: overrides.customer_code }
+          : order.customer_code !== undefined
+            ? { customer_code: order.customer_code }
+            : {}),
+      ...("customer_name" in line && line.customer_name !== undefined
+        ? { customer_name: line.customer_name }
+        : overrides?.customer_name !== undefined
+          ? { customer_name: overrides.customer_name }
+          : order.customer_name !== undefined
+            ? { customer_name: order.customer_name }
+            : {}),
     }),
   );
 

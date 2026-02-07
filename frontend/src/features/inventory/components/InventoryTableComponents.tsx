@@ -58,8 +58,8 @@ export function LotTableRow({
     lot.available_quantity !== undefined
       ? Number(lot.available_quantity)
       : Number(lot.current_quantity) -
-      Number(lot.allocated_quantity) -
-      Number(lot.locked_quantity || 0);
+        Number(lot.allocated_quantity) -
+        Number(lot.locked_quantity || 0);
 
   return (
     <tr className={`border-b border-gray-100 hover:bg-gray-100 ${isLocked ? "opacity-60" : ""}`}>
@@ -346,19 +346,22 @@ export function InventoryRow({
           onEditLot={(lot) =>
             onEditLot({
               ...lot,
-              warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code || null,
+              warehouse_name:
+                lot.warehouse_name || item.warehouse_name || item.warehouse_code || null,
             })
           }
           onLockLot={(lot) =>
             onLockLot({
               ...lot,
-              warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code || null,
+              warehouse_name:
+                lot.warehouse_name || item.warehouse_name || item.warehouse_code || null,
             })
           }
           onUnlockLot={(lot) =>
             onUnlockLot({
               ...lot,
-              warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code || null,
+              warehouse_name:
+                lot.warehouse_name || item.warehouse_name || item.warehouse_code || null,
             })
           }
           {...(onWithdrawLot && {

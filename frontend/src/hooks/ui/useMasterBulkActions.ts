@@ -19,10 +19,7 @@ export function useMasterBulkActions<T extends { version: number }>(
   /**
    * 指定した変異関数を選択された全アイテムに対して実行する
    */
-  const executeBulk = async (
-    fn: (p: BulkActionParams) => Promise<unknown>,
-    actionName: string,
-  ) => {
+  const executeBulk = async (fn: (p: BulkActionParams) => Promise<unknown>, actionName: string) => {
     logInfo("BulkAction", `Start "${actionName}" for ${selectedIds.length} items`, {
       selectedIds,
     });

@@ -22,7 +22,8 @@ function parseTimeValue(timeValue: string) {
   if (parts.length < 2) return null;
   const hours = parts[0];
   const minutes = parts[1];
-  if (hours === undefined || minutes === undefined || Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  if (hours === undefined || minutes === undefined || Number.isNaN(hours) || Number.isNaN(minutes))
+    return null;
   return { hours, minutes };
 }
 

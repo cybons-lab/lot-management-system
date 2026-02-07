@@ -52,7 +52,7 @@ export function AllocationRowContainer({
 
   // ユーザー要望: 期限切れロットは候補として表示しない
   const candidateLots = (data?.items ?? []).filter(
-    (lot: { is_expired?: boolean; expiry_date?: string | null }) => {
+    (lot: { is_expired?: boolean; expiry_date?: string | null | undefined }) => {
       // is_expiredフラグがあればそれを使用、なければ日付比較
       if ("is_expired" in lot) return !lot.is_expired;
       // expiry_dateが文字列で来る場合を想定

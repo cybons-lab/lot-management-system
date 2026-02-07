@@ -88,6 +88,7 @@ export function AllocationListContent({ logic }: AllocationListContentProps) {
       >
         {virtualizer.getVirtualItems().map((virtualItem: VirtualItem) => {
           const item = data[virtualItem.index];
+          if (!item) return null;
 
           return (
             <AllocationListRow

@@ -107,9 +107,9 @@ export function useNotifications() {
         description: notification.message,
         action: notification.link
           ? {
-            label: "開く",
-            onClick: () => (window.location.href = notification.link!),
-          }
+              label: "開く",
+              onClick: () => (window.location.href = notification.link!),
+            }
           : undefined,
         duration: notification.display_strategy === "persistent" ? 8000 : 5000,
       });

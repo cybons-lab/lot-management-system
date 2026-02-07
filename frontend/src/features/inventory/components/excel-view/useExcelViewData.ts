@@ -191,9 +191,9 @@ export function useExcelViewData(
   const { data: inventoryData, isLoading: itemLoading } = useInventoryItems(
     isEnabled
       ? {
-        supplier_item_id: productId,
-        limit: 100,
-      }
+          supplier_item_id: productId,
+          limit: 100,
+        }
       : undefined,
   );
 
@@ -214,19 +214,19 @@ export function useExcelViewData(
   const { data: lots = [], isLoading: lotsLoading } = useLotsQuery(
     isEnabled
       ? {
-        supplier_item_id: productId,
-        status: "active",
-        with_stock: true,
-      }
+          supplier_item_id: productId,
+          status: "active",
+          with_stock: true,
+        }
       : undefined,
   );
 
   const { data: suggestionResponse, isLoading: suggestionsLoading } = useAllocationSuggestions(
     isEnabled && (!customerItemId || !!customerItem)
       ? {
-        supplier_item_id: productId,
-        ...(customerItem?.customer_id ? { customer_id: customerItem.customer_id } : {}),
-      }
+          supplier_item_id: productId,
+          ...(customerItem?.customer_id ? { customer_id: customerItem.customer_id } : {}),
+        }
       : undefined,
   );
 
@@ -262,8 +262,8 @@ export function useExcelViewData(
       // If we are filtering by one customer item, just fetch that
       const targetItems = customerItemId
         ? (allCustomerItems as CustomerItem[]).filter(
-          (ci: CustomerItem) => ci.id === customerItemId,
-        )
+            (ci: CustomerItem) => ci.id === customerItemId,
+          )
         : (allCustomerItems as CustomerItem[]);
 
       const results = await Promise.all(
@@ -382,7 +382,9 @@ export function useExcelViewData(
         // Customer item info (when filtering by customer_item)
         ...(customerItem?.customer_name ? { customerName: customerItem.customer_name } : {}),
         ...(customerItem?.customer_code ? { customerCode: customerItem.customer_code } : {}),
-        ...(customerItem?.customer_part_no ? { customerPartNo: customerItem.customer_part_no } : {}),
+        ...(customerItem?.customer_part_no
+          ? { customerPartNo: customerItem.customer_part_no }
+          : {}),
       },
       involvedDestinations,
       dateColumns,

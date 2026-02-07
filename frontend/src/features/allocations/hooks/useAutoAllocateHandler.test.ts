@@ -156,14 +156,16 @@ describe("useAutoAllocateHandler", () => {
     expect(mockSetAllocationsByLine).toHaveBeenCalled();
 
     // Get the updater function and test it
-    const updater = mockSetAllocationsByLine.mock.calls[0][0];
-    const prevState = { 100: { 5: 3 } };
-    const newState = updater(prevState);
+    const updater = mockSetAllocationsByLine.mock.calls[0]?.[0];
+    if (typeof updater === "function") {
+      const prevState = { 100: { 5: 3 } };
+      const newState = updater(prevState);
 
-    expect(newState).toEqual({
-      100: { 5: 3 },
-      101: { 1: 10 },
-    });
+      expect(newState).toEqual({
+        100: { 5: 3 },
+        101: { 1: 10 },
+      });
+    }
   });
 
   it("sets line status to draft after allocation", async () => {

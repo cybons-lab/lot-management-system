@@ -165,8 +165,9 @@ export function CustomerItemsListPage() {
     const selectableItems = isAdmin
       ? filteredItems
       : filteredItems.filter(
-        (item) => !item.valid_to || item.valid_to > (new Date().toISOString().split("T")[0] ?? ""),
-      );
+          (item) =>
+            !item.valid_to || item.valid_to > (new Date().toISOString().split("T")[0] ?? ""),
+        );
     const allKeys = selectableItems.map((item) => getItemKey(item));
     const allSelected = allKeys.length > 0 && allKeys.every((key) => selectedIds.has(key));
 
@@ -260,8 +261,9 @@ export function CustomerItemsListPage() {
       {/* 一括操作バー */}
       {showCheckboxes && selectedCount > 0 && (
         <div
-          className={`flex items-center justify-between rounded-lg border p-3 ${isAdmin ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"
-            }`}
+          className={`flex items-center justify-between rounded-lg border p-3 ${
+            isAdmin ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"
+          }`}
         >
           <span className={`text-sm font-medium ${isAdmin ? "text-red-800" : "text-amber-800"}`}>
             {selectedCount} 件選択中

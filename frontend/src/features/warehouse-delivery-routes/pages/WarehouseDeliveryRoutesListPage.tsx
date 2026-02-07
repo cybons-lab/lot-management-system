@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import type { WarehouseDeliveryRoute, WarehouseDeliveryRouteCreate } from "../api";
 import { WarehouseDeliveryRouteForm } from "../components";
 import { useWarehouseDeliveryRoutes } from "../hooks";
-import type { DeliveryPlace } from "@/features/delivery-places/api";
 
 import { createColumns } from "./columns";
 import * as styles from "./styles";
@@ -12,6 +11,7 @@ import * as styles from "./styles";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
+import type { DeliveryPlace } from "@/features/delivery-places/api";
 import { useDeliveryPlaces } from "@/features/delivery-places/hooks";
 import { useSupplierProducts } from "@/features/supplier-products/hooks";
 import { useWarehouses } from "@/features/warehouses/hooks";
