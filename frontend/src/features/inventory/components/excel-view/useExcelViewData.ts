@@ -236,10 +236,10 @@ export function useExcelViewData(
   );
   const { data: deliveryPlacesResponse } = deliveryPlaceApi.useList();
   const deliveryPlaces = useMemo(() => {
-    const items =
+    return (
       (deliveryPlacesResponse as { items?: DeliveryPlace[] })?.items ||
-      (Array.isArray(deliveryPlacesResponse) ? deliveryPlacesResponse : []);
-    return items;
+      (Array.isArray(deliveryPlacesResponse) ? deliveryPlacesResponse : [])
+    );
   }, [deliveryPlacesResponse]);
   const customerApi = useMasterApi<Customer>("masters/customers", "customers");
   const { data: customers = [] } = customerApi.useList();

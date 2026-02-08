@@ -169,26 +169,21 @@ export const ocrResultsApi = {
       }
     }
 
-    const response = await httpAuth.get<OcrResultListResponse>(
-      `ocr-results?${searchParams.toString()}`,
-    );
-    return response;
+    return await httpAuth.get<OcrResultListResponse>(`ocr-results?${searchParams.toString()}`);
   },
 
   /**
    * OCR結果詳細取得
    */
   get: async (id: number): Promise<OcrResultItem> => {
-    const response = await httpAuth.get<OcrResultItem>(`ocr-results/${id}`);
-    return response;
+    return await httpAuth.get<OcrResultItem>(`ocr-results/${id}`);
   },
 
   /**
    * OCR結果の手入力内容を保存
    */
   saveEdit: async (id: number, payload: OcrResultEditPayload): Promise<OcrResultEditResponse> => {
-    const response = await httpAuth.post<OcrResultEditResponse>(`ocr-results/${id}/edit`, payload);
-    return response;
+    return await httpAuth.post<OcrResultEditResponse>(`ocr-results/${id}/edit`, payload);
   },
 
   /**
@@ -244,10 +239,9 @@ export const ocrResultsApi = {
       }
     }
 
-    const response = await httpAuth.get<OcrResultListResponse>(
+    return await httpAuth.get<OcrResultListResponse>(
       `ocr-results/completed?${searchParams.toString()}`,
     );
-    return response;
   },
 
   /**
@@ -257,9 +251,8 @@ export const ocrResultsApi = {
    * エラーのない項目は自動的にスキップされる。
    */
   delete: async (request: OcrDeletionRequest): Promise<OcrDeletionResponse> => {
-    const response = await httpAuth.delete<OcrDeletionResponse>("ocr-results", {
+    return await httpAuth.delete<OcrDeletionResponse>("ocr-results", {
       json: request,
     });
-    return response;
   },
 };
