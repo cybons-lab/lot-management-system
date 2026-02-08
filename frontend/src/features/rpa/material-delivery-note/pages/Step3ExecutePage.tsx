@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 import { useExecuteStep2, useRun } from "../hooks";
 
+import { ExecutionQueueBanner } from "@/components/features/ExecutionQueueBanner";
 import { Button, Input } from "@/components/ui";
 import { Textarea } from "@/components/ui/form/textarea";
 import { ROUTES } from "@/constants/routes";
@@ -86,6 +87,7 @@ export function Step3ExecutePage() {
       />
 
       <div className="mx-auto max-w-2xl space-y-6">
+        <ExecutionQueueBanner resourceType="rpa_material_delivery" resourceId="global" />
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
             <FileText className="mr-2 inline-block h-5 w-5" />

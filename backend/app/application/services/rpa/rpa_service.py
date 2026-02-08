@@ -125,7 +125,11 @@ from datetime import datetime, timedelta
 
 import httpx
 
+from app.application.services.common.uow_service import UnitOfWork
+from app.application.services.execution_queue_service import ExecutionQueueService
+from app.core.database import SessionLocal
 from app.core.time_utils import utcnow
+from app.infrastructure.persistence.models.execution_queue_model import ExecutionQueue
 
 
 logger = logging.getLogger(__name__)
@@ -303,3 +307,90 @@ class RPAService:
             "message": "素材納品書の発行を開始しました。処理には約1分かかります。",
             "execution_time_seconds": 60,
         }
+
+    async def process_rpa_queue_task(self, queue_id: int):
+        """RPAキュータスクを処理（バックグラウンド実行）."""
+        logger.info(f"Processing RPA queue task: {queue_id}")
+
+        # 1. タスク取得
+        with UnitOfWork(SessionLocal) as uow:
+            task = uow.session.get(ExecutionQueue, queue_id)
+            if not task:
+                logger.warning(f"Queue task not found: {queue_id}")
+                return
+
+            params = task.parameters
+            flow_url = params.get("flow_url")
+            json_payload = params.get("json_payload", {})
+
+            # Start heartbeat
+            await self._run_with_heartbeat(queue_id, flow_url, json_payload)
+
+    async def _run_with_heartbeat(self, queue_id: int, flow_url: str, json_payload: dict):
+        """ハートビート付きでRPAフローを実行."""
+        import asyncio
+
+        # Heartbeat loop
+        stop_heartbeat = asyncio.Event()
+
+        async def heartbeat_loop():
+            while not stop_heartbeat.is_set():
+                try:
+                    with UnitOfWork(SessionLocal) as uow:
+                        qs = ExecutionQueueService(uow.session)
+                        qs.update_heartbeat(queue_id)
+                    await asyncio.sleep(60)
+                except Exception as e:
+                    logger.error(f"Heartbeat failed: {e}")
+                    await asyncio.sleep(60)
+
+        heartbeat_task = asyncio.create_task(heartbeat_loop())
+
+        try:
+            # Execute Flow
+            if not flow_url:
+                raise ValueError("Flow URL is not specified")
+
+            # Call Flow
+            # Note: call_power_automate_flow is async
+            from app.application.services.rpa.flow_client import call_power_automate_flow
+
+            # Check if json_payload is string or dict
+            payload = json_payload
+            if isinstance(payload, str):
+                try:
+                    payload = json.loads(payload)
+                except json.JSONDecodeError:
+                    pass
+
+            await call_power_automate_flow(flow_url, payload)
+
+            # Complete task
+            with UnitOfWork(SessionLocal) as uow:
+                queue_service = ExecutionQueueService(uow.session)
+                # Check if next task needs to be processed
+                next_task = queue_service.complete_task(
+                    queue_id, result_message="Flow execution completed"
+                )
+
+                if next_task:
+                    # Recursive call or spawn new task
+                    # Spawning new task is safer to avoid deeper recursion stack
+                    # But we are in async, so just await?
+                    # Ideally we want to release resources of current function.
+                    # Scheduling new task on event loop.
+                    asyncio.create_task(self.process_rpa_queue_task(next_task.id))
+
+        except Exception as e:
+            logger.error(f"RPA task execution failed: {e}")
+            with UnitOfWork(SessionLocal) as uow:
+                queue_service = ExecutionQueueService(uow.session)
+                next_task = queue_service.fail_task(queue_id, error_message=str(e))
+                if next_task:
+                    asyncio.create_task(self.process_rpa_queue_task(next_task.id))
+        finally:
+            stop_heartbeat.set()
+            try:
+                await heartbeat_task
+            except Exception:
+                pass

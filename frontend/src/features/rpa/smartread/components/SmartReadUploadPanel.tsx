@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { useAnalyzeFile } from "../hooks";
 
+import { ExecutionQueueBanner } from "@/components/features/ExecutionQueueBanner";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 
 interface SmartReadUploadPanelProps {
@@ -199,6 +200,9 @@ export function SmartReadUploadPanel({ configId, onAnalyzeSuccess }: SmartReadUp
         <CardDescription>解析するPDFまたは画像ファイルを選択してください</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {configId > 0 && (
+          <ExecutionQueueBanner resourceType="smartread_ocr" resourceId={configId.toString()} />
+        )}
         <UploadDropzone
           fileInputRef={state.fileInputRef}
           onDragOver={state.handleDragOver}

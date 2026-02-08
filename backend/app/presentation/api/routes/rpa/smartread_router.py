@@ -1,6 +1,9 @@
 """SmartRead OCR router - PDFインポートAPI."""
 
+import asyncio
 import logging
+import os
+import uuid
 from datetime import date
 from typing import Annotated
 
@@ -18,8 +21,10 @@ from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 
 from app.application.services.common.uow_service import UnitOfWork
+from app.application.services.execution_queue_service import ExecutionQueueService
 from app.application.services.smartread import SmartReadService
 from app.infrastructure.persistence.models import User
+from app.infrastructure.persistence.models.execution_queue_model import ExecutionQueue
 from app.presentation.api.deps import get_db, get_uow
 from app.presentation.api.routes.auth.auth_router import get_current_user
 from app.presentation.schemas.smartread_schema import (
@@ -293,23 +298,188 @@ async def analyze_file_simple(
         extra={"config_id": config_id, "file_name": filename, "size_bytes": len(file_content)},
     )
 
-    # バックグラウンドで処理を開始
-    background_tasks.add_task(
-        _run_simple_sync_background,
-        config_id=config_id,
-        file_content=file_content,
-        filename=filename,
+    # ファイルを一時保存
+    try:
+        file_path = _save_temp_file(file_content, filename)
+    except Exception as e:
+        logger.error(f"Failed to save temp file: {e}")
+        raise HTTPException(status_code=500, detail="ファイルの一時保存に失敗しました")
+
+    # ExecutionQueueに登録
+    queue_service = ExecutionQueueService(db)
+    enqueue_result = queue_service.enqueue(
+        resource_type="smartread_ocr",
+        resource_id=str(config_id),
         user_id=_current_user.id,
+        parameters={
+            "config_id": config_id,
+            "filename": filename,
+            "file_path": file_path,
+        },
+        timeout_seconds=600,  # 10 minutes timeout
     )
+
+    # 実行可能な場合はバックグラウンドで開始
+    if enqueue_result.status == "running":
+        logger.info(
+            "Task started immediately",
+            extra={"queue_id": enqueue_result.queue_entry.id, "filename": filename},
+        )
+        background_tasks.add_task(
+            _process_smartread_queue_task,
+            queue_id=enqueue_result.queue_entry.id,
+        )
+        message = f"処理を開始しました: {filename}"
+        status_msg = "running"
+    else:
+        logger.info(
+            "Task queued",
+            extra={
+                "queue_id": enqueue_result.queue_entry.id,
+                "position": enqueue_result.position,
+                "filename": filename,
+            },
+        )
+        message = f"処理待ちキューに追加しました ({enqueue_result.position}番目): {filename}"
+        status_msg = "queued"
 
     return JSONResponse(
         status_code=202,
         content={
-            "message": f"処理を開始しました: {filename}",
+            "message": message,
             "filename": filename,
-            "status": "processing",
+            "status": status_msg,
+            "queue_id": enqueue_result.queue_entry.id,
+            "position": enqueue_result.position,
         },
     )
+
+
+def _save_temp_file(content: bytes, filename: str) -> str:
+    """ファイルを一時ディレクトリに保存."""
+    upload_dir = "uploads/smartread_queue"
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, f"{uuid.uuid4()}_{filename}")
+    with open(file_path, "wb") as f:
+        f.write(content)
+    return file_path
+
+
+async def _process_smartread_queue_task(queue_id: int):
+    """SmartReadキュータスクを処理（連鎖実行）."""
+    from app.core.database import SessionLocal
+
+    current_queue_id: int | None = queue_id
+
+    while current_queue_id is not None:
+        task_id = current_queue_id
+        logger.info(f"Processing queue task: {task_id}")
+
+        # 1. セッション作成 & タスク取得
+        with UnitOfWork(SessionLocal) as uow:
+            queue_service = ExecutionQueueService(uow.session)
+            task = uow.session.get(ExecutionQueue, task_id)
+
+            if not task:
+                logger.warning(f"Queue task not found: {task_id}")
+                return
+
+            params = task.parameters
+            config_id = params.get("config_id")
+            filename = params.get("filename")
+            file_path = params.get("file_path")
+            user_id = task.requested_by_user_id
+
+        # 2. ファイル読み込み
+        try:
+            if not file_path or not os.path.exists(file_path):
+                raise FileNotFoundError(f"Temp file not found: {file_path}")
+
+            with open(file_path, "rb") as f:
+                file_content = f.read()
+        except Exception as e:
+            logger.error(f"Failed to read temp file: {e}")
+            with UnitOfWork(SessionLocal) as uow:
+                queue_service = ExecutionQueueService(uow.session)
+                next_task = queue_service.fail_task(task_id, error_message=str(e))
+                current_queue_id = next_task.id if next_task else None
+            continue
+
+        # 3. ハートビートタスク開始
+        stop_heartbeat = asyncio.Event()
+
+        async def heartbeat_loop(tid: int, stop_event: asyncio.Event):
+            while not stop_event.is_set():
+                try:
+                    with UnitOfWork(SessionLocal) as uow:
+                        qs = ExecutionQueueService(uow.session)
+                        qs.update_heartbeat(tid)
+                    await asyncio.sleep(60)
+                except Exception as he:
+                    logger.error(f"Heartbeat failed: {he}")
+                    await asyncio.sleep(60)
+
+        heartbeat_task = asyncio.create_task(heartbeat_loop(task_id, stop_heartbeat))
+
+        # 4. 処理開始通知
+        try:
+            from app.application.services.notification_service import NotificationService
+            from app.presentation.schemas.notification_schema import NotificationCreate
+
+            with UnitOfWork(SessionLocal) as notif_uow:
+                notif_service = NotificationService(notif_uow.session)
+                notif_service.create_notification(
+                    NotificationCreate(
+                        user_id=user_id,
+                        title="SmartRead処理開始",
+                        message=f"ファイルの解析を開始しました: {filename}",
+                        type="info",
+                        link="/rpa/smartread/tasks",
+                    )
+                )
+                notif_uow.session.commit()
+        except Exception as ne:
+            logger.warning(f"Failed to create start notification: {ne}")
+
+        # 5. 処理実行
+        try:
+            # 既存の _run_simple_sync_background ロジックを再利用
+            # ただし、通知等は内部で行われている
+            await _run_simple_sync_background(
+                config_id=config_id,
+                file_content=file_content,
+                filename=filename,
+                user_id=user_id,
+            )
+
+            # 完了処理
+            with UnitOfWork(SessionLocal) as uow:
+                queue_service = ExecutionQueueService(uow.session)
+                next_task = queue_service.complete_task(
+                    task_id, result_message="Completed successfully"
+                )
+                current_queue_id = next_task.id if next_task else None
+
+        except Exception as e:
+            logger.error(f"Task processing failed: {e}")
+            with UnitOfWork(SessionLocal) as uow:
+                queue_service = ExecutionQueueService(uow.session)
+                next_task = queue_service.fail_task(task_id, error_message=str(e))
+                current_queue_id = next_task.id if next_task else None
+        finally:
+            # ハートビート停止
+            stop_heartbeat.set()
+            try:
+                await heartbeat_task
+            except Exception:
+                pass
+
+            # 一時ファイル削除
+            try:
+                if file_path and os.path.exists(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                logger.warning(f"Failed to remove temp file: {e}")
 
 
 async def _run_simple_sync_background(

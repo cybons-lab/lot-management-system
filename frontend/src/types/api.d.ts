@@ -6854,6 +6854,7 @@ export interface paths {
      *
      *     既存の「素材納品書発行」ボタンの機能を拡張し、
      *     URL/JSONを指定してFlowをトリガーする。
+     *     ExecutionQueueを使用して排他制御・予約実行を行う。
      */
     post: operations["execute_material_delivery_note_api_rpa_material_delivery_note_execute_post"];
     delete?: never;
@@ -8818,6 +8819,66 @@ export interface paths {
     put?: never;
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/execution-queue/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Queue Status
+     * @description Get current queue status for a resource.
+     */
+    get: operations["get_queue_status_api_execution_queue_status_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/execution-queue/my-tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get My Tasks
+     * @description Get all my active tasks (running/pending).
+     */
+    get: operations["get_my_tasks_api_execution_queue_my_tasks_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/execution-queue/{queue_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Cancel Task
+     * @description Cancel a pending task.
+     */
+    delete: operations["cancel_task_api_execution_queue__queue_id__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -14878,6 +14939,64 @@ export interface components {
       } | null;
       /** Maintenance Mode */
       maintenance_mode: boolean;
+    };
+    /**
+     * QueueEntryResponse
+     * @description Execution Queue API Response Schema.
+     */
+    QueueEntryResponse: {
+      /** Id */
+      id: number;
+      /** Resource Type */
+      resource_type: string;
+      /** Resource Id */
+      resource_id: string;
+      /** Status */
+      status: string;
+      /** Requested By User Id */
+      requested_by_user_id: number;
+      /** Parameters */
+      parameters: {
+        [key: string]: unknown;
+      };
+      /** Priority */
+      priority: number;
+      /** Position */
+      position: number | null;
+      /** Started At */
+      started_at: string | null;
+      /** Completed At */
+      completed_at: string | null;
+      /** Heartbeat At */
+      heartbeat_at: string | null;
+      /** Timeout Seconds */
+      timeout_seconds: number;
+      /** Result Message */
+      result_message: string | null;
+      /** Error Message */
+      error_message: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
+     * QueueStatusResponse
+     * @description Queue Status Response.
+     */
+    QueueStatusResponse: {
+      /** Resource Type */
+      resource_type: string;
+      /** Resource Id */
+      resource_id: string;
+      current_running_task: components["schemas"]["QueueEntryResponse"] | null;
+      /** Queue Length */
+      queue_length: number;
+      /** My Position */
+      my_position: number | null;
+      /** My Tasks */
+      my_tasks: components["schemas"]["QueueEntryResponse"][];
     };
     /** ReplenishmentRecommendation */
     ReplenishmentRecommendation: {
@@ -32468,6 +32587,100 @@ export interface operations {
           "application/json": {
             [key: string]: string;
           };
+        };
+      };
+    };
+  };
+  get_queue_status_api_execution_queue_status_get: {
+    parameters: {
+      query: {
+        /** @description Resource Type (e.g. smartread_ocr) */
+        resource_type: string;
+        /** @description Resource ID (e.g. config_id or 'global') */
+        resource_id: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QueueStatusResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_my_tasks_api_execution_queue_my_tasks_get: {
+    parameters: {
+      query?: {
+        resource_type?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QueueEntryResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  cancel_task_api_execution_queue__queue_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        queue_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

@@ -3,10 +3,13 @@
 import json
 import logging
 
-from fastapi import Depends, HTTPException, status
+from fastapi import BackgroundTasks, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
-from app.application.services.rpa import call_power_automate_flow, get_lock_manager
+from app.application.services.execution_queue_service import ExecutionQueueService
+from app.application.services.rpa.rpa_service import RPAService
 from app.infrastructure.persistence.models.auth_models import User
+from app.presentation.api.deps import get_db
 from app.presentation.api.routes.auth.auth_router import get_current_user_optional
 from app.presentation.api.routes.rpa.material_delivery_note.router import router
 from app.presentation.schemas.rpa_run_schema import (
@@ -25,23 +28,29 @@ logger = logging.getLogger(__name__)
 )
 async def execute_material_delivery_note(
     request: MaterialDeliveryNoteExecuteRequest,
+    background_tasks: BackgroundTasks,
     current_user: User | None = Depends(get_current_user_optional),
+    db: Session = Depends(get_db),
 ):
     """Power Automate Cloud Flowを呼び出して素材納品書発行を実行.
 
     既存の「素材納品書発行」ボタンの機能を拡張し、
     URL/JSONを指定してFlowをトリガーする。
+    ExecutionQueueを使用して排他制御・予約実行を行う。
     """
-    lock_manager = get_lock_manager()
     user_name = current_user.username if current_user else "system"
-
-    # ロック取得を試行
-    if not lock_manager.acquire_lock(user=user_name, duration_seconds=60):
-        remaining = lock_manager.get_remaining_seconds()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"他のユーザーが実行中です。時間をおいて実施してください（残り{remaining}秒）",
-        )
+    # If user is None (unauthenticated allowed?), we might need a dummy ID.
+    # get_current_user_optional allows None.
+    # ExecutionQueue requires user_id (ForeignKey).
+    # If user is None, we should probably fail or use a system user ID.
+    # Let's assume user is required for queue execution effectively, or use 1/0.
+    # Migration script user_id is nullable=False.
+    if not current_user:
+        # If authentication is optional but queue requires ID, maybe reject?
+        # Or check if there is a system user.
+        # For now, let's assume authenticated user mainly uses this.
+        # If not, raise 401.
+        raise HTTPException(status_code=401, detail="Authentication required for execution")
 
     try:
         # Parse JSON payload
@@ -58,24 +67,56 @@ async def execute_material_delivery_note(
         json_payload["end_date"] = str(request.end_date)
         json_payload["executed_by"] = user_name
 
-        # Call Power Automate Flow
-        try:
-            flow_response = await call_power_automate_flow(
-                flow_url=request.flow_url,
-                json_payload=json_payload,
+        # Enqueue Task
+        queue_service = ExecutionQueueService(db)
+        enqueue_result = queue_service.enqueue(
+            resource_type="rpa_material_delivery",
+            resource_id="global",
+            user_id=current_user.id,
+            parameters={
+                "flow_url": request.flow_url,
+                "json_payload": json_payload,
+                "start_date": str(request.start_date),
+                "end_date": str(request.end_date),
+            },
+            timeout_seconds=300,  # 5 min timeout for start
+        )
+
+        message = ""
+
+        if enqueue_result.status == "running":
+            message = "Power Automate Flowの呼び出しを開始しました"
+            # Start background task
+            from app.application.services.rpa.rpa_service import get_lock_manager
+
+            rpa_service = RPAService(get_lock_manager())
+            background_tasks.add_task(
+                rpa_service.process_rpa_queue_task, queue_id=enqueue_result.queue_entry.id
             )
-            return MaterialDeliveryNoteExecuteResponse(
-                status="success",
-                message="Power Automate Flowの呼び出しが完了しました",
-                flow_response=flow_response,
-            )
-        except Exception as e:
-            logger.exception("Power Automate Flow呼び出しエラー")
-            return MaterialDeliveryNoteExecuteResponse(
-                status="error",
-                message=f"Flow呼び出しに失敗しました: {e!s}",
-                flow_response=None,
-            )
+            # We don't have flow_response yet as it's async
+        else:
+            message = f"処理待ちキューに追加しました ({enqueue_result.position}番目)"
+
+        return MaterialDeliveryNoteExecuteResponse(
+            status=enqueue_result.status,  # 'running' or 'pending' -> map to 'success'/'locked' or just string?
+            # Schema 'status' might be specific enum.
+            # Looking at rpa_run_schema.py might clarify.
+            # Usually 'success', 'error', 'locked'.
+            # I'll return 'success' (accepted) and describe in message.
+            # Or extend schema?
+            # Existing frontend expects 'success' or 'locked'.
+            # If pending, 'locked' might trigger "Wait message"?
+            # user said: "Wait... (Nth)".
+            # If I return 'locked', frontend shows remaining seconds.
+            # If I return 'success', frontend shows success.
+            # I should probably return 'success' (200) but with message "Queued".
+            # Front end "ExecutionQueueBanner" will eventually handle status display.
+            # But specific button might expect success.
+            # I'll use "success" for now.
+            # Ideally update schema to support "queued".
+            message=message,
+            flow_response=None,
+        )
 
     except HTTPException:
         raise

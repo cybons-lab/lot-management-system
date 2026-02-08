@@ -17783,7 +17783,7 @@
           "rpa-material-delivery-note"
         ],
         "summary": "Execute Material Delivery Note",
-        "description": "Power Automate Cloud Flowを呼び出して素材納品書発行を実行.\n\n既存の「素材納品書発行」ボタンの機能を拡張し、\nURL/JSONを指定してFlowをトリガーする。",
+        "description": "Power Automate Cloud Flowを呼び出して素材納品書発行を実行.\n\n既存の「素材納品書発行」ボタンの機能を拡張し、\nURL/JSONを指定してFlowをトリガーする。\nExecutionQueueを使用して排他制御・予約実行を行う。",
         "operationId": "execute_material_delivery_note_api_rpa_material_delivery_note_execute_post",
         "requestBody": {
           "content": {
@@ -23630,6 +23630,167 @@
                   },
                   "type": "object",
                   "title": "Response Get Mermaid Er Diagram Api Schema Mermaid Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/execution-queue/status": {
+      "get": {
+        "tags": [
+          "execution-queue"
+        ],
+        "summary": "Get Queue Status",
+        "description": "Get current queue status for a resource.",
+        "operationId": "get_queue_status_api_execution_queue_status_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Resource Type (e.g. smartread_ocr)",
+              "title": "Resource Type"
+            },
+            "description": "Resource Type (e.g. smartread_ocr)"
+          },
+          {
+            "name": "resource_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Resource ID (e.g. config_id or 'global')",
+              "title": "Resource Id"
+            },
+            "description": "Resource ID (e.g. config_id or 'global')"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/execution-queue/my-tasks": {
+      "get": {
+        "tags": [
+          "execution-queue"
+        ],
+        "summary": "Get My Tasks",
+        "description": "Get all my active tasks (running/pending).",
+        "operationId": "get_my_tasks_api_execution_queue_my_tasks_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Resource Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QueueEntryResponse"
+                  },
+                  "title": "Response Get My Tasks Api Execution Queue My Tasks Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/execution-queue/{queue_id}": {
+      "delete": {
+        "tags": [
+          "execution-queue"
+        ],
+        "summary": "Cancel Task",
+        "description": "Cancel a pending task.",
+        "operationId": "cancel_task_api_execution_queue__queue_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "queue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Queue Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -37638,6 +37799,192 @@
           "maintenance_mode"
         ],
         "title": "PublicSystemSettings"
+      },
+      "QueueEntryResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "resource_type": {
+            "type": "string",
+            "title": "Resource Type"
+          },
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "requested_by_user_id": {
+            "type": "integer",
+            "title": "Requested By User Id"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parameters"
+          },
+          "priority": {
+            "type": "integer",
+            "title": "Priority"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "heartbeat_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heartbeat At"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "title": "Timeout Seconds"
+          },
+          "result_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Message"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "resource_type",
+          "resource_id",
+          "status",
+          "requested_by_user_id",
+          "parameters",
+          "priority",
+          "position",
+          "started_at",
+          "completed_at",
+          "heartbeat_at",
+          "timeout_seconds",
+          "result_message",
+          "error_message",
+          "created_at"
+        ],
+        "title": "QueueEntryResponse",
+        "description": "Execution Queue API Response Schema."
+      },
+      "QueueStatusResponse": {
+        "properties": {
+          "resource_type": {
+            "type": "string",
+            "title": "Resource Type"
+          },
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id"
+          },
+          "current_running_task": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueueEntryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "queue_length": {
+            "type": "integer",
+            "title": "Queue Length"
+          },
+          "my_position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "My Position"
+          },
+          "my_tasks": {
+            "items": {
+              "$ref": "#/components/schemas/QueueEntryResponse"
+            },
+            "type": "array",
+            "title": "My Tasks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource_type",
+          "resource_id",
+          "current_running_task",
+          "queue_length",
+          "my_position",
+          "my_tasks"
+        ],
+        "title": "QueueStatusResponse",
+        "description": "Queue Status Response."
       },
       "ReplenishmentRecommendation": {
         "properties": {
