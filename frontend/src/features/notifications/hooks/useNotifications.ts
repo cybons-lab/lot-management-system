@@ -140,9 +140,13 @@ export function useNotifications() {
       // 最新1件のみブラウザ通知
       const latest = persistentNotifications[persistentNotifications.length - 1];
       if (latest) {
-        new window.Notification(latest.title, {
+        const n = new window.Notification(latest.title, {
           body: latest.message,
         });
+        n.onclick = () => {
+          window.focus();
+          n.close();
+        };
       }
     }
   }, [notifications]);

@@ -37,6 +37,7 @@ from app.presentation.api.routes.assignments.assignment_router import router as 
 from app.presentation.api.routes.auth.auth_router import router as auth_router
 from app.presentation.api.routes.dashboard.dashboard_router import router as dashboard_router
 from app.presentation.api.routes.debug import db_browser_router
+from app.presentation.api.routes.execution_queue_router import router as execution_queue_router
 from app.presentation.api.routes.forecasts import forecasts_router
 from app.presentation.api.routes.integration.sap_router import router as sap_router
 from app.presentation.api.routes.inventory import (
@@ -211,6 +212,9 @@ def register_all_routers(app: FastAPI) -> None:
 
     # Schema inspection endpoint
     app.include_router(schema_router, prefix=prefix)
+
+    # Execution Queue endpoint
+    app.include_router(execution_queue_router, prefix=prefix)
 
 
 __all__ = [

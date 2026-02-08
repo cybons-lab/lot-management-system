@@ -28,7 +28,7 @@ export function getRoutePermission(path: string): RoutePermissionResult {
     if (permission.path.includes(":") || permission.path.includes("*")) {
       // 1. :param -> [^/]+ (パラメータ名は英数字とアンダースコア)
       // 2. * -> .* (ワイルドカード)
-      const pattern = permission.path.replace(/:[a-zA-Z0-9_]+/g, "[^/]+").replace(/\*/g, ".*");
+      const pattern = permission.path.replace(/:\w+/g, "[^/]+").replace(/\*/g, ".*");
       const regex = new RegExp(`^${pattern}$`);
       if (regex.test(path)) {
         return { allowedRoles: permission.allowedRoles, isDefined: true };

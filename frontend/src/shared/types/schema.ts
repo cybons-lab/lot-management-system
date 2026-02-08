@@ -13,7 +13,6 @@ export type FefoLotAllocation = Schema["FefoLotAllocation"];
 export type AllocationCommitRequest = Schema["AllocationCommitRequest"];
 export type AllocationCommitResponse = Schema["AllocationCommitResponse"];
 export type ManualAllocationSavePayload = Schema["ManualAllocationSavePayload"];
-// export type ManualAllocationSaveResponse = Schema["ManualAllocationSaveResponse"];
 
 // Forecasts
 export type Forecast = Schema["ForecastResponse"];
@@ -26,12 +25,9 @@ export type UpdateForecastRequest = Schema["ForecastUpdate"];
 export type BulkImportItem = Schema["ForecastBulkImportItem"];
 export type BulkImportForecastRequest = Schema["ForecastBulkImportRequest"];
 export type BulkImportForecastSummary = Schema["ForecastBulkImportSummary"];
-// export type ForecastLine = Schema["ForecastLine"]; // Not found in recent search, maybe removed or renamed
 
 // Orders
 export type OrderResponse = Schema["OrderWithLinesResponse"];
 export type OrderLineResponse = Schema["OrderLineResponse"];
-// export type WarehouseListResponse = Schema["WarehouseListResponse"]; // Not in current OpenAPI schema
 
 // Lots
-// export type Lot = Schema["Lot"]; // Likely LotRead

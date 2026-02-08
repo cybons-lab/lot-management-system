@@ -114,12 +114,12 @@ const applyDateReplacements = (
   // プレースホルダーを保持する（置換しない）
   const shippingFormatted = input.shippingDate ? formatDateToMMDD(input.shippingDate) : "";
   if (shippingFormatted) {
-    result = result.replace(/[▲]+[/][▲]+/, shippingFormatted);
+    result = result.replace(/▲+\/▲+/, shippingFormatted);
   }
 
   const deliveryFormatted = input.deliveryDate ? formatDateToMMDD(input.deliveryDate) : "";
   if (deliveryFormatted) {
-    result = result.replace(/[●]+[/][●]+/, deliveryFormatted);
+    result = result.replace(/●+\/●+/, deliveryFormatted);
   }
 
   return result;

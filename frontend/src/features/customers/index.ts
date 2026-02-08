@@ -36,10 +36,4 @@ export type {
 export * from "./validators/customer-schema";
 
 // Utils
-// Utils
-// export {
-//   parseCustomerCsv,
-//   customersToCSV,
-//   generateEmptyTemplate,
-//   downloadCSV,
-// } from "./utils/customer-csv";
+export * from "./utils/customer-csv";

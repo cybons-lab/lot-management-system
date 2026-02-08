@@ -15,6 +15,7 @@ from .auth_models import Role, User, UserRole
 from .base_model import Base
 from .calendar_models import CompanyCalendar, HolidayCalendar, OriginalDeliveryCalendar
 from .cloud_flow_models import CloudFlowConfig, CloudFlowJob, CloudFlowJobStatus
+from .execution_queue_model import ExecutionQueue
 from .forecast_models import ForecastCurrent, ForecastHistory
 from .inbound_models import ExpectedLot, InboundPlan, InboundPlanLine, InboundPlanStatus
 from .inventory_models import (
@@ -205,4 +206,6 @@ __all__ = [
     "SapConnection",
     "SapMaterialCache",
     "SapFetchLog",
+    # Execution Queue
+    "ExecutionQueue",
 ]

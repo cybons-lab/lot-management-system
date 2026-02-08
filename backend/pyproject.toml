@@ -219,6 +219,7 @@ dev = [
     "types-pyyaml>=6.0.12.20250915",
     "types-requests>=2.32.4.20260107",
     "poethepoet>=0.31.1",
+    "radon>=6.0.1",
 ]
 
 # ==============================================================================
@@ -243,6 +244,7 @@ lint = "ruff check app/"
 "lint:fix" = "ruff check app/ --fix"
 format = "ruff format app/"
 typecheck = "mypy app/"
+complexity = "radon cc app/"
 
 # ------------------------------------------------------------------------------
 # Testing (Docker推奨)
@@ -298,6 +300,10 @@ help = "Format code in Docker container"
 cmd = "docker compose exec -T backend mypy app/"
 help = "Run type checker in Docker"
 
+[tool.poe.tasks."docker:complexity"]
+cmd = "docker compose exec -T backend radon cc app/"
+help = "Run complexity check in Docker"
+
 [tool.poe.tasks."docker:test"]
 cmd = "docker compose exec -T backend pytest -v"
 help = "Run tests in Docker container"
@@ -334,11 +340,11 @@ help = "Rollback last migration in Docker"
 # Composite Tasks (複数タスクの連続実行)
 # ------------------------------------------------------------------------------
 [tool.poe.tasks.quality]
-sequence = ["lint:fix", "format", "typecheck", "test:quick"]
+sequence = ["lint:fix", "format", "typecheck", "complexity", "test:quick"]
 help = "Run all quality checks (local)"
 
 [tool.poe.tasks."docker:quality"]
-sequence = ["docker:lint:fix", "docker:format", "docker:typecheck", "docker:test:quick"]
+sequence = ["docker:lint:fix", "docker:format", "docker:typecheck", "docker:complexity", "docker:test:quick"]
 help = "Run all quality checks (Docker)"
 
 [tool.poe.tasks.ci]

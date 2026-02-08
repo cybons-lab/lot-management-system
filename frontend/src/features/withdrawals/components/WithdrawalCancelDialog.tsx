@@ -34,7 +34,6 @@ export function WithdrawalCancelDialog({
   open,
   onOpenChange,
 }: WithdrawalCancelDialogProps) {
-  /* const { toast } = useToast(); */
   const { useCancel } = useWithdrawals();
   const cancelMutation = useCancel();
 

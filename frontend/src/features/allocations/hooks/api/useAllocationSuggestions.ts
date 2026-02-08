@@ -43,12 +43,16 @@ export const useUpdateAllocationSuggestionsBatch = () => {
     mutationFn: updateAllocationSuggestionsBatch,
     onSuccess: () => {
       // Invalidate all allocationSuggestions queries (including those with params)
-      void queryClient.invalidateQueries({
-        queryKey: ["allocationSuggestions"],
-        refetchType: "all",
-      });
+      queryClient
+        .invalidateQueries({
+          queryKey: ["allocationSuggestions"],
+          refetchType: "all",
+        })
+        .catch(console.error);
       // もし引当状況サマリのクエリがあればそれも無効化
-      void queryClient.invalidateQueries({ queryKey: ["planning-allocation-summary"] });
+      queryClient
+        .invalidateQueries({ queryKey: ["planning-allocation-summary"] })
+        .catch(console.error);
     },
   });
 };

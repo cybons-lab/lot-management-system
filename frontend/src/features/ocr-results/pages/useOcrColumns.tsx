@@ -31,7 +31,7 @@ const getContentValue = (row: OcrResultItem, key: string): string => {
 };
 
 export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem) => void) => {
-  const columns = useMemo<Column<OcrResultItem>[]>(
+  return useMemo<Column<OcrResultItem>[]>(
     () =>
       [
         // Edit button column
@@ -329,6 +329,4 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
       ].filter((col) => !isReadOnly || (col.id !== "status_icon" && col.id !== "edit_action")),
     [isReadOnly, onEdit],
   );
-
-  return columns;
 };

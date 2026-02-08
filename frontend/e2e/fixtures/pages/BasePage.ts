@@ -201,11 +201,9 @@ export abstract class BasePage {
   ): Promise<{ ok: boolean; status: number }> {
     const responsePromise = this.page.waitForResponse(
       (response) => {
-        const matches =
-          typeof urlPattern === "string"
-            ? response.url().includes(urlPattern)
-            : urlPattern.test(response.url());
-        return matches;
+        return typeof urlPattern === "string"
+          ? response.url().includes(urlPattern)
+          : urlPattern.test(response.url());
       },
       { timeout: options?.timeout ?? 10000 },
     );

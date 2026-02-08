@@ -153,10 +153,13 @@ export function DbObjectDetail({
 
   const handleRowCopy = (row: Record<string, unknown>) => {
     const { __rowIndex, ...payload } = row;
-    void navigator.clipboard
+    navigator.clipboard
       .writeText(JSON.stringify(payload, null, 2))
       .then(() => toast.success("行データをコピーしました"))
-      .catch(() => toast.error("コピーに失敗しました"));
+      .catch((err) => {
+        console.error("Copy failed:", err);
+        toast.error("コピーに失敗しました");
+      });
   };
 
   if (!selected) {

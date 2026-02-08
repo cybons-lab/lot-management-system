@@ -89,6 +89,10 @@ export const ERROR_CODE_MESSAGES: Record<string, string> = {
   OCR_PROCESSING_FAILED: "OCR処理に失敗しました。画像を確認してください。",
   OCR_TIMEOUT: "OCR処理がタイムアウトしました。再度お試しください。",
 
+  // キュー関連
+  TASK_ALREADY_RUNNING: "タスクは既に実行中です。",
+  TASK_CANCEL_FAILED: "タスクのキャンセルに失敗しました。既に完了しているか、権限がありません。",
+
   // 汎用
   NOT_FOUND: "データが見つかりません。既に削除された可能性があります。",
   FORBIDDEN: "この操作を行う権限がありません。",
