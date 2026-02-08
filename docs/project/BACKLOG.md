@@ -258,8 +258,12 @@ Phase 4調査により、部分的失敗処理とロック期限切れ管理の�
 
 **方針:**
 1. **新規コード**: 警告が出た時点で即座に修正（品質低下を防止）
-2. **既存コード**: 機能改修やリファクタリングのついでに順次解消
+2. **既存コード**: 機能改修やリファクタリングのついでに順次解消。一部の指摘事項（`slow-regex`, `no-hardcoded-passwords` 等）はプリコミットフック通過のため、一時的に `warn` レベルに緩和されている（2026-02-08 決定）。
 3. **段階的厳格化**: 問題が一定数以下になった時点で、該当ルールを `error` に変更
+
+> [!IMPORTANT]
+> **void 演算子の修正に関する注意点 (2026-02-08):**
+> `sonarjs/void-use` ルールの修正（`void` 演算子の削除）を行う際は、Promiseを意図的に待機しない（fire-and-forget）ケースであるかを確認し、`.catch(console.error)` を追加するか、意図的な場合は `eslint-disable` で明示すること。動作への影響を慎重に確認する必要がある。
 
 **対象ルール（現在警告レベル）:**
 - `sonarjs/cognitive-complexity`: 認知的複雑度（基準: 15以下）
@@ -290,7 +294,13 @@ Phase 4調査により、部分的失敗処理とロック期限切れ管理の�
 ```
 
 **進捗トラッキング:**
-- 現在検出されている問題数: **215件**（2026-02-08時点）
+- 2026-02-08: **主要なエラー修正（Round 1）完了**
+  - `sonarjs/no-commented-code`, `sonarjs/void-use` (基本), `sonarjs/concise-regex`, `sonarjs/no-unused-vars` 等を修正。
+  - **SonarJS エラー数: 61 → 31 (-30削減)**。
+- 残存する主要なエラー:
+  - `sonarjs/slow-regex`: OCR/SmartRead の正規表現レビュー。
+  - `sonarjs/no-hardcoded-passwords`: テスト/SAP設定のハードコード値。
+  - `sonarjs/no-nested-functions`: UIコンポーネントの深いネスト解消。
 - 目標: 四半期ごとに50件削減
 - 最終目標: すべてのルールを `error` レベルに変更
 

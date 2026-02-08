@@ -26,7 +26,7 @@ export function parseSupplierCsv(csvText: string): { rows: SupplierBulkRow[]; er
     return { rows, errors };
   }
 
-  const header = headerLine.split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+  const header = headerLine.split(",").map((h) => h.trim().replace(/(^"|"$)/g, ""));
   const headerIndices = CSV_HEADERS.map((h) => header.indexOf(h));
 
   for (let i = 0; i < CSV_HEADERS.length; i++) {

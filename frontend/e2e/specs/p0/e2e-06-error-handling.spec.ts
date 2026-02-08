@@ -69,7 +69,6 @@ test.describe("E2E-06: 失敗系テスト（エラーハンドリング）", () 
       const emptyState = page.getByText(/データがありません|見つかりません/);
       if (await emptyState.isVisible().catch(() => false)) {
         console.log("エラーがグレースフルに空状態として表示");
-        errorFound = true;
       }
     }
 

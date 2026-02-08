@@ -69,6 +69,9 @@ function useToastAutoClear(
   }, [setToast, toast]);
 }
 
+const getLineReservations = (line: OrderLine) =>
+  Array.isArray(line.reservations) ? line.reservations : [];
+
 function useInitializeAllocationState(
   isOrdersLoading: boolean,
   allLines: OrderLine[],
@@ -83,14 +86,15 @@ function useInitializeAllocationState(
       let hasChanges = false;
 
       allLines.forEach((line) => {
-        const reservations = Array.isArray(line.reservations) ? line.reservations : [];
+        const reservations = getLineReservations(line);
         if (!reservations.length || next[line.id]) return;
 
         const lineAllocations: Record<number, number> = {};
-        reservations.forEach((allocation) => {
-          if (!allocation.lot_id) return;
-          lineAllocations[allocation.lot_id] = Number(allocation.reserved_qty ?? 0);
-        });
+        for (const allocation of reservations) {
+          if (allocation.lot_id) {
+            lineAllocations[allocation.lot_id] = Number(allocation.reserved_qty ?? 0);
+          }
+        }
         next[line.id] = lineAllocations;
         hasChanges = true;
       });
@@ -103,9 +107,10 @@ function useInitializeAllocationState(
       let hasChanges = false;
 
       allLines.forEach((line) => {
-        const reservations = Array.isArray(line.reservations) ? line.reservations : [];
-        if (!reservations.length) return;
-        if (next[line.id] === "committed" || next[line.id] === "draft") return;
+        const reservations = getLineReservations(line);
+        if (!reservations.length || next[line.id] === "committed" || next[line.id] === "draft") {
+          return;
+        }
         next[line.id] = "committed";
         hasChanges = true;
       });

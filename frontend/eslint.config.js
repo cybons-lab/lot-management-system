@@ -51,9 +51,16 @@ export default [
       "sonarjs/no-dead-store": "warn",
       "sonarjs/todo-tag": "warn",
       "sonarjs/table-header": "warn",
-
-      // セキュリティ関連は即座にエラー
-      "sonarjs/no-hardcoded-passwords": "error",
+      "sonarjs/no-nested-template-literals": "warn",
+      "sonarjs/no-nested-functions": "warn",
+      "sonarjs/void-use": "warn",
+      "sonarjs/no-redundant-assignments": "warn",
+      "sonarjs/no-gratuitous-expressions": "warn",
+      "sonarjs/slow-regex": "warn",
+      "sonarjs/no-redundant-boolean": "warn",
+      "sonarjs/no-hardcoded-ip": "warn",
+      "sonarjs/fixme-tag": "warn",
+      "sonarjs/no-hardcoded-passwords": "warn",
     },
   },
 

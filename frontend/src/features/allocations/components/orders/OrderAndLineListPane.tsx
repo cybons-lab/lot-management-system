@@ -13,8 +13,6 @@ import { selectedOrderIdAtom, selectedLineIdAtom } from "../../store/atoms";
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDateTime } from "@/shared/utils/date";
 import { formatOrderCode } from "@/shared/utils/order";
-// type OrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
-// type OrderLineResponse = components["schemas"]["OrderLineResponse"];
 
 interface OrderAndLineListPaneProps {
   orders: OrderWithLinesResponse[];

@@ -90,7 +90,8 @@ export function useChangeAllocationHandler({
         // If clamped value is 0, remove the lot from allocations
         // 【設計】0の場合はキーを削除し、オブジェクトをクリーンに保つ
         if (clampedValue === 0) {
-          const { [lotId]: _, ...rest } = lineAllocations;
+          const rest = { ...lineAllocations };
+          delete rest[lotId];
           return { ...prev, [lineId]: rest };
         }
 

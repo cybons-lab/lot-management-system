@@ -197,7 +197,7 @@ export function ForecastListPage() {
     }
   };
 
-  void navigate;
+  // navigate is already used in other functions
 
   return (
     <PageContainer>

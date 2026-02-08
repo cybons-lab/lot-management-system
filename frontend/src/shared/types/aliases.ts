@@ -100,7 +100,6 @@ export type LotResponse = ApiLotResponse & {
   is_assigned_supplier?: boolean;
 };
 export type LotCreate = Partial<LotResponse>;
-export type LotWithStock = LotResponse;
 
 // ---- Allocation ----
 // AllocatedLot is imported from allocation-types.ts to avoid circular dependencies
@@ -326,7 +325,7 @@ export interface FefoLotAllocation {
   available_qty?: number | null;
 }
 
-export interface getLotCandidates {
+export interface GetLotCandidatesResponse {
   items: FefoLotAllocation[];
   warnings?: string[];
 }

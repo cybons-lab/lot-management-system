@@ -94,24 +94,7 @@ export function useLotAllocation() {
     // but the user asked for "values buried".
 
     // Let's try to run it.
-    // ★以下の自動引当ループをコメントアウトして無効化★
-    /*
-        allLines.forEach((line) => {
-          // Check if already allocated (in DB or UI)
-          // If DB has allocations, we might not want to overwrite?
-          // But the user wants "Soft Allocation" (Draft) to be applied.
-          // If DB has "hard" allocations, they are loaded as "allocated_quantity" in the line?
-          // No, OrderLine has `allocations` relationship?
-          // If so, we should load them.
-    
-          // Assuming we want to fill *unallocated* portion.
-          // autoAllocate logic checks `dbAllocated` and fills the rest.
-    
-          if (!allocationsByLine[line.id]) {
-            autoAllocate(line.id);
-          }
-        });
-        */
+    // ★自動引当ループは設計方針に従い無効化されています★
 
     hasAutoAllocatedRef.current = true;
   }, [ordersQuery.isLoading, isCandidatesLoading, allLines, autoAllocate, allocationsByLine]);

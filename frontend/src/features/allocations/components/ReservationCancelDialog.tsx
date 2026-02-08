@@ -37,8 +37,6 @@ export function ReservationCancelDialog({
   onOpenChange,
   onSuccess,
 }: ReservationCancelDialogProps) {
-  /* const { toast } = useToast(); */
-
   const [reason, setReason] = useState<ReservationCancelReason>("input_error");
   const [note, setNote] = useState("");
 

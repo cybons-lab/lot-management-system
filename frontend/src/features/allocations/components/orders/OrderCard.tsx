@@ -39,7 +39,6 @@ export function OrderCard({ order, isSelected, onClick, lockedBy, lockedAt }: Or
   const isFullyAllocated = order.unallocatedQty === 0;
   const isPartiallyAllocated =
     order.unallocatedQty > 0 && order.unallocatedQty < order.totalQuantity;
-  // const isUnallocated = order.unallocatedQty === order.totalQuantity;
 
   let cardStyle = "border-transparent hover:bg-gray-50";
   if (isSelected) {

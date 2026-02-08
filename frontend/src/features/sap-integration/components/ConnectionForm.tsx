@@ -62,7 +62,8 @@ export function ConnectionForm({
       onSubmit={handleSubmit((data) => {
         // Remove empty string for passwd in edit mode (means no change)
         if (isEdit && !data.passwd) {
-          const { passwd: _passwd, ...rest } = data;
+          const rest = { ...data };
+          delete (rest as { passwd?: string }).passwd;
           onSubmit(rest as SapConnectionUpdateRequest);
           return;
         }
