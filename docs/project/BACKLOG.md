@@ -58,6 +58,11 @@ Phase 4の調査により、SmartReadのOCR編集機能で**高リスクの競�
 - 全行一括保存により、他ユーザーの変更が消失するリスク
 - 現在の保護機構: トランザクションレベルのみ（不十分）
 
+**追加要望 (2026-02-08):**
+- **同時実行制御と予約機能:**
+  - 同時実行ができないため、後から実行しようとしたユーザーに対し「○○さんが利用中なので次に実行します（予約）」といったフィードバックを出す。
+  - RPA系の作業だけでなく、将来的なSAP連携などの重い処理全般に適用可能な仕組みを検討する。
+
 **実装内容:**
 1. **マイグレーション:** `version` カラム追加（INTEGER, DEFAULT 1）
 2. **モデル更新:** ORM に version フィールド追加
@@ -240,6 +245,60 @@ Phase 4調査により、部分的失敗処理とロック期限切れ管理の�
 - 特に `max-lines-per-function`, `complexity` が主な原因であるため、コンポーネント分割やフック抽出を行う。
 
 ---
+
+### 1-D. SonarJSルールの段階的厳格化
+
+**優先度:** 中（長期的に解消）
+**作成:** 2026-02-08
+**カテゴリ:** コード品質・リファクタリング
+**現状:**
+- `eslint-plugin-sonarjs@3.0.6` を導入し、コード品質問題を検出中
+- 既存コードへの影響を最小限にするため、現在は**警告レベル**に設定
+- 検出問題: 認知的複雑度違反、ネストされた三項演算子、重複コード、型エイリアス不使用など
+
+**方針:**
+1. **新規コード**: 警告が出た時点で即座に修正（品質低下を防止）
+2. **既存コード**: 機能改修やリファクタリングのついでに順次解消
+3. **段階的厳格化**: 問題が一定数以下になった時点で、該当ルールを `error` に変更
+
+**対象ルール（現在警告レベル）:**
+- `sonarjs/cognitive-complexity`: 認知的複雑度（基準: 15以下）
+- `sonarjs/no-nested-conditional`: ネストされた三項演算子
+- `sonarjs/no-duplicate-string`: 重複文字列（基準: 3回以上）
+- `sonarjs/no-identical-functions`: 重複関数
+- `sonarjs/no-duplicated-branches`: 重複分岐
+- その他（`use-type-alias`, `pseudo-random`, `no-dead-store`など）
+
+**厳格化の目標設定（推奨）:**
+
+```javascript
+{
+  rules: {
+    // セキュリティ強化（すでにエラー ✅）
+    "sonarjs/no-hardcoded-credentials": "error",
+    "sonarjs/no-hardcoded-passwords": "error",
+    
+    // コード品質向上（段階的にerrorへ）
+    "sonarjs/no-duplicate-string": ["error", { threshold: 3 }],
+    "sonarjs/no-identical-functions": "error",
+    "sonarjs/prefer-immediate-return": "error",
+    
+    // 認知的複雑度を15から12に厳格化（既存のcomplexityと統一）
+    "sonarjs/cognitive-complexity": ["error", 12],
+  },
+}
+```
+
+**進捗トラッキング:**
+- 現在検出されている問題数: **215件**（2026-02-08時点）
+- 目標: 四半期ごとに50件削減
+- 最終目標: すべてのルールを `error` レベルに変更
+
+**関連:**
+- 評価レポート: `eslint_sonarjs_review.md`
+- ESLint設定: `frontend/eslint.config.js`
+
+
 
 ## 2. 優先度: 中 (UI/UX・不整合修正)
 

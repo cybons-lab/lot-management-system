@@ -5,6 +5,7 @@ import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import importX from "eslint-plugin-import-x";
+import sonarjs from "eslint-plugin-sonarjs";
 import unusedImports from "eslint-plugin-unused-imports";
 // Note: tailwindcss eslint plugin removed due to Tailwind v4 incompatibility
 // Tailwind class ordering is handled by prettier-plugin-tailwindcss instead
@@ -30,6 +31,31 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic, // Enforce consistent styling as well
+  sonarjs.configs.recommended,
+
+  // SonarJS custom configuration
+  {
+    rules: {
+      // 段階的導入のため、既存コードでは警告レベルに緩和
+      // TODO: バックログを参照して順次エラーレベルに厳格化
+      "sonarjs/cognitive-complexity": "warn",
+      "sonarjs/no-nested-conditional": "warn",
+      "sonarjs/no-duplicate-string": "warn",
+      "sonarjs/no-identical-functions": "warn",
+      "sonarjs/prefer-immediate-return": "warn",
+      "sonarjs/no-duplicated-branches": "warn",
+      "sonarjs/use-type-alias": "warn",
+      "sonarjs/pseudo-random": "warn",
+      "sonarjs/no-invariant-returns": "warn",
+      "sonarjs/single-character-alternation": "warn",
+      "sonarjs/no-dead-store": "warn",
+      "sonarjs/todo-tag": "warn",
+      "sonarjs/table-header": "warn",
+
+      // セキュリティ関連は即座にエラー
+      "sonarjs/no-hardcoded-passwords": "error",
+    },
+  },
 
   {
     files: ["src/**/*.{ts,tsx,js,jsx}"],
@@ -356,6 +382,15 @@ export default [
       "@typescript-eslint/no-empty-function": "off",
       "@typescript-eslint/no-invalid-void-type": "off",
       "preserve-caught-error": "off",
+      "sonarjs/no-hardcoded-passwords": "off", // E2Eテストフィクスチャでは許容
+    },
+  },
+
+  // shadcn/ui components: relax SonarJS table rules
+  {
+    files: ["src/components/ui/**/*.tsx"],
+    rules: {
+      "sonarjs/table-header": "off", // shadcn/uiのテーブルコンポーネントでは不要
     },
   },
 
